@@ -58,15 +58,21 @@ export interface PipelineStageRecord {
 
 const DATA_ROOT = process.env.DEEPASTRO_DATA_PATH
   ? path.resolve(process.env.DEEPASTRO_DATA_PATH)
-  : path.resolve(process.cwd(), 'data');
+  : (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+      ? path.resolve('/tmp', 'deepastro_data')
+      : path.resolve(process.cwd(), 'data'));
 
 const REPORTS_DIR = path.join(DATA_ROOT, 'reports');
 const PDFS_DIR = path.join(DATA_ROOT, 'pdfs');
 const JOBS_DIR = path.join(DATA_ROOT, 'jobs');
 
 function ensureDir(dir: string) {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err: any) {
+    console.warn(`[ReportStore] ensureDir caught error for ${dir}:`, err.message);
   }
 }
 

@@ -1,0 +1,14 @@
+.git
+.env*
+key.env
+node_modules
+/tests/
+/dist/
+/server/dist/
+/scratch/
+*.log
+*.md
+/system-verification.json
+/product-acceptance-results.json
+/uploads/
+/data/
