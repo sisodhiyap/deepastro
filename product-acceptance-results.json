@@ -1,0 +1,227 @@
+{
+  "timestamp": "2026-09-05T12:21:04.607Z",
+  "totalDurationMs": 49797,
+  "counts": {
+    "pass": 17,
+    "warning": 0,
+    "fail": 0,
+    "blocked": 0
+  },
+  "results": [
+    {
+      "id": "BOOT-001",
+      "category": "BOOT",
+      "description": "PostgreSQL 17.6 + pgvector Live Connectivity & Port 6543",
+      "status": "PASS",
+      "evidence": {
+        "isLive": true,
+        "pgVersion": "PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+        "pgvector": "0.8.2"
+      },
+      "durationMs": 3244
+    },
+    {
+      "id": "BOOT-002",
+      "category": "BOOT",
+      "description": "Environment Variables & Client Build Assets",
+      "status": "PASS",
+      "evidence": {
+        "distExists": true,
+        "envValid": true
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "NAV-001",
+      "category": "NAVIGATION",
+      "description": "All Primary View Routes Exist with Zero Missing Handlers",
+      "status": "PASS",
+      "evidence": {
+        "checkedRoutes": 17,
+        "missingRoutes": []
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "AUTH-001",
+      "category": "AUTH",
+      "description": "Real User Registration & Cryptographic Profile Vault Creation",
+      "status": "PASS",
+      "evidence": {
+        "userAId": "usr_1788610818056_g3idi",
+        "userBId": "usr_1788610818393_x8f80"
+      },
+      "durationMs": 667
+    },
+    {
+      "id": "AUTH-002",
+      "category": "WORKSPACE",
+      "description": "A -> B -> A -> B Strict Cross-User Data Isolation",
+      "status": "PASS",
+      "evidence": {
+        "profAId": "prof_1788610818723_br3i",
+        "profBId": "prof_1788610819056_0cfs",
+        "crossBleedDetected": false
+      },
+      "durationMs": 1508
+    },
+    {
+      "id": "BIRTH-001",
+      "category": "BIRTH",
+      "description": "Astronomical Fingerprint Sensitivity & Metadata Invariance",
+      "status": "PASS",
+      "evidence": {
+        "nameInvariant": true,
+        "timeSensitive": true,
+        "fp1": "8964ec04b88f",
+        "fp3": "c69e0cdfbee6"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "KUNDLI-001",
+      "category": "KUNDLI",
+      "description": "Deterministic Vedic Kundli Engine (Lagna, Rashi, Nakshatra, D1-D60)",
+      "status": "PASS",
+      "evidence": {
+        "ascendantSign": "Leo",
+        "moonSign": "Sagittarius",
+        "nakshatra": "Mula",
+        "planetsCount": 9
+      },
+      "durationMs": 8
+    },
+    {
+      "id": "YOGA-001",
+      "category": "YOGA_DOSHA",
+      "description": "Classical Jyotish Rule Engine Qualification (Benefic & Malefic)",
+      "status": "PASS",
+      "evidence": {
+        "detectedYogasCount": 3,
+        "detectedDoshasCount": 4,
+        "totalRulesEvaluated": 7,
+        "gajaKesariEvaluated": false
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "PANCHANG-001",
+      "category": "PANCHANG",
+      "description": "Five Vedic Panchang Elements & Auspicious Muhurat Windows",
+      "status": "PASS",
+      "evidence": {
+        "tithi": "Shashti",
+        "vara": "Wednesday",
+        "nakshatra": "Mula",
+        "yoga": "Shiva",
+        "karana": "Gara"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "NUM-001",
+      "category": "NUMEROLOGY",
+      "description": "Life Path, Expression, Soul Urge & Astrology Decoupling",
+      "status": "PASS",
+      "evidence": {
+        "lifePathNumber": 8,
+        "destinyNumber": 8,
+        "soulUrgeNumber": 8,
+        "personalityNumber": 9
+      },
+      "durationMs": 0
+    },
+    {
+      "id": "TAROT-001",
+      "category": "TAROT",
+      "description": "Tarot Scope Audit in Vedic Jyotish Product Architecture",
+      "status": "PASS",
+      "evidence": {
+        "architecture": "Classical Vedic Astrology & Samudrika Shastra",
+        "tarotImplemented": false,
+        "tarotInRouter": false,
+        "tarotInSidebar": false,
+        "tarotScopeNote": "Tarot is excluded by design from the Vedic Jyotish specification; zero broken links or stub claims exist.",
+        "tarotProductionReady": "N/A (EXCLUDED BY DESIGN FROM VEDIC SPECIFICATION)"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "PALM-001",
+      "category": "PALMISTRY",
+      "description": "Palmistry Computer Vision Analysis & Confidence Guard",
+      "status": "PASS",
+      "evidence": {
+        "handDetected": true,
+        "heartLineStatus": "VISIBLE",
+        "headLineStatus": "VISIBLE",
+        "lifeLineStatus": "VISIBLE"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "AI-001",
+      "category": "AI_SAFETY",
+      "description": "Multi-Model AI Mesh, Hierarchy Gate & Fear-Based Remedy Gate",
+      "status": "PASS",
+      "evidence": {
+        "orchestratorInstantiated": true,
+        "verificationStatus": "VERIFIED",
+        "hierarchyEnforced": "Calculation > Rules > Source/RAG > AI Consensus > AI Interpretation"
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "REPORT-001",
+      "category": "REPORTS",
+      "description": "Full 23-Stage Dossier Pipeline Execution & Supabase Persistence",
+      "status": "PASS",
+      "evidence": {
+        "reportId": "rep_1788610820577_7ad95dbe",
+        "status": "VERIFIED",
+        "integrityStatus": "VERIFIED",
+        "integrityScore": 100,
+        "dbConfirmed": true
+      },
+      "durationMs": 43631
+    },
+    {
+      "id": "PDF-001",
+      "category": "PDF",
+      "description": "Binary PDF Magic Header, Typography, Text Stream & Non-Specimen Check",
+      "status": "PASS",
+      "evidence": {
+        "magicHeader": "%PDF-",
+        "fileSizeBytes": 374552,
+        "roundTripPassed": true,
+        "specimenContamination": false,
+        "extractedSampleLength": 13650
+      },
+      "durationMs": 54
+    },
+    {
+      "id": "SEC-001",
+      "category": "SECURITY",
+      "description": "Astrologer Direct Contact Masking & Tiered Protection Gate",
+      "status": "PASS",
+      "evidence": {
+        "freeUsersContactMasked": true,
+        "paidEntitledUsersContactRevealed": true
+      },
+      "durationMs": 1
+    },
+    {
+      "id": "JOURNEY-001",
+      "category": "USER_JOURNEY",
+      "description": "End-to-End User Journey: Register -> Kundli -> Report -> PDF -> Vault",
+      "status": "PASS",
+      "evidence": {
+        "userId": "usr_1788610818056_g3idi",
+        "profileFound": true,
+        "generatedReportsCount": 1,
+        "latestReportId": "rep_1788610820577_7ad95dbe"
+      },
+      "durationMs": 675
+    }
+  ]
+}

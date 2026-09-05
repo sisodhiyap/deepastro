@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark Cosmic Mode (Default) */
+  --bg-cosmic: #05060A;
+  --surface-cosmic: #0B1020;
+  --card-cosmic: #111827;
+  --border-cosmic: #243047;
+  --primary-cyan: #00E5FF;
+  --secondary-indigo: #6366F1;
+  --cosmic-violet: #8B5CF6;
+  --divine-gold: #F5C76A;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --glass-bg: rgba(11, 16, 32, 0.75);
+}
+
+.light {
+  /* Premium Light Mode */
+  --bg-cosmic: #F8FAFC;
+  --surface-cosmic: #FFFFFF;
+  --card-cosmic: #F1F5F9;
+  --border-cosmic: #E2E8F0;
+  --primary-cyan: #0099B8;
+  --secondary-indigo: #4F46E5;
+  --cosmic-violet: #7C3AED;
+  --divine-gold: #D97706;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+}
+
+body {
+  background-color: var(--bg-cosmic);
+  color: var(--text-main);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphic card utility */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-cosmic);
+}
+
+.glow-border-cyan {
+  border-color: var(--primary-cyan);
+  box-shadow: 0 0 15px -3px rgba(0, 229, 255, 0.3);
+}
+
+.glow-border-violet {
+  border-color: var(--cosmic-violet);
+  box-shadow: 0 0 15px -3px rgba(139, 92, 246, 0.3);
+}
+
+.glow-border-gold {
+  border-color: var(--divine-gold);
+  box-shadow: 0 0 15px -3px rgba(245, 199, 106, 0.3);
+}
+
+/* Custom Cosmic Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-cosmic);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #243047;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-cyan);
+}

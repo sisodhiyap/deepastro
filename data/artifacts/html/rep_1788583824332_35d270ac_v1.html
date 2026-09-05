@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MY LIFE BLUEPRINT — Priya Sharma — DeepAstro</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #04060C;
+      color: #F1F5F9;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    /* Print Controls Bar */
+    .print-controls-bar {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: #070A14;
+      border-bottom: 1px solid #D4AF37;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.7);
+    }
+    .btn-action {
+      background: #D4AF37;
+      color: #04060C;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+      background: #F3E5AB;
+      transform: translateY(-1px);
+    }
+
+    /* Fixed A4 Page Container */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      height: 297mm;
+      max-height: 297mm;
+      margin: 0 auto 20px auto;
+      padding: 10mm 13mm 8mm 13mm;
+      background: #070A14;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+      border: 1px solid #1E293B;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    @media print {
+      body { background: transparent; }
+      .print-controls-bar { display: none !important; }
+      .page {
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
+        padding: 10mm 13mm 8mm 13mm !important;
+        box-sizing: border-box !important;
+        page-break-after: always !important;
+      }
+    }
+
+    /* Header & Footer */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      color: #94A3B8;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-bottom: 0.8px solid #243047;
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+    }
+
+    .page-footer {
+      margin-top: auto;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      color: #64748B;
+      text-align: center;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      border-top: 0.8px solid #1E293B;
+      padding-top: 6px;
+    }
+
+    /* Headings & Badges */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Cinzel', serif;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #F1F5F9;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 8px 0 6px 0;
+    }
+    .sec-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 19px;
+      height: 19px;
+      border: 1px solid #D4AF37;
+      color: #D4AF37;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 9.5px;
+      font-weight: 800;
+      border-radius: 4px;
+    }
+
+    /* Frames & Cards */
+    .gold-box {
+      border: 1px solid #D4AF37;
+      background: rgba(212, 175, 55, 0.02);
+      border-radius: 7px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+
+    .subtle-box {
+      border: 1px solid #1E293B;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    /* Tables */
+    table.cosmic-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9px;
+    }
+    table.cosmic-table th {
+      background: #0D1527;
+      color: #D4AF37;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 5px 8px;
+      text-align: left;
+      border: 0.8px solid #243047;
+    }
+    table.cosmic-table td {
+      padding: 5px 8px;
+      border: 0.8px solid #1E293B;
+      color: #E2E8F0;
+    }
+    table.cosmic-table tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-block;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 8px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-present { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid #10B981; }
+    .badge-check { background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid #F59E0B; }
+    .badge-absent { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid #EF4444; }
+
+    /* Glyphs Bar */
+    .glyphs-bar {
+      font-size: 15px;
+      color: #D4AF37;
+      letter-spacing: 11px;
+      text-align: center;
+      margin: 6px 0;
+    }
+
+    /* Action Badges */
+    .action-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 17px;
+      height: 17px;
+      background: #D4AF37;
+      color: #070A14;
+      font-weight: 900;
+      border-radius: 50%;
+      font-size: 9.5px;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Printable Top Bar (Hidden on Print) -->
+  <div class="print-controls-bar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="color: #D4AF37; font-size: 18px;">✦</span>
+      <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 0.5px;">DEEPASTRO — MY LIFE BLUEPRINT</span>
+      <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid #D4AF37; color: #D4AF37; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">OFFICIAL DOSSIER</span>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <button onclick="window.print()" class="btn-action">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 1 ==================== -->
+  <div class="page">
+    <div>
+      <div class="page-header">
+        <span>MY LIFE BLUEPRINT &bull; PREMIUM JANAM KUNDLI</span>
+        <span>PAGE 01 / 05</span>
+      </div>
+
+      <!-- Center Logo & Title -->
+      <div style="text-align: center; margin-top: 2px; margin-bottom: 6px;">
+        <svg viewBox="0 0 100 100" width="48" height="48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+      <circle cx="50" cy="50" r="46" stroke="#E5C158" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <circle cx="50" cy="50" r="36" stroke="#D4AF37" stroke-width="1.2"/>
+      <circle cx="50" cy="50" r="26" stroke="#E5C158" stroke-width="1"/>
+      <circle cx="50" cy="50" r="16" stroke="#F3E5AB" stroke-width="1"/>
+      <circle cx="50" cy="50" r="6" fill="#E5C158"/>
+      <line x1="50" y1="4" x2="50" y2="96" stroke="#D4AF37" stroke-width="0.8" stroke-opacity="0.6"/>
+      <line x1="4" y1="50" x2="96" y2="50" stroke="#D4AF37" stroke-width="0.8" stroke-opacity="0.6"/>
+      <polygon points="50,18 60,38 82,50 60,62 50,82 40,62 18,50 40,38" stroke="#E5C158" stroke-width="1" fill="none"/>
+    </svg>
+        <h1 style="font-family: 'Cinzel', serif; font-size: 21px; font-weight: 900; letter-spacing: 3px; color: #F1F5F9; margin: 3px 0 2px 0;">
+          JANAM KUNDLI
+        </h1>
+        <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 9px; font-weight: 800; color: #D4AF37; letter-spacing: 2px; text-transform: uppercase;">
+          VEDIC ASTROLOGY &amp; NUMEROLOGY REPORT
+        </div>
+        <div class="glyphs-bar" style="font-size: 13px; margin: 3px 0; letter-spacing: 10px;">☉ ☽ ♂ ☿ ♃ ♀ ♄ ☊ ☋</div>
+        <div style="font-size: 8.5px; color: #94A3B8; font-style: italic;">
+          A Sovereign Life Blueprint — Graha Positions &bull; Dasha Progression &bull; Numerology &bull; Strategic Guidance
+        </div>
+      </div>
+
+      <!-- Native Info Box -->
+      <div class="gold-box" style="padding: 6px 12px; margin-bottom: 6px;">
+        <table style="width: 100%; font-size: 9.5px; border-collapse: collapse;">
+          <tr>
+            <td style="color: #94A3B8; text-transform: uppercase; font-weight: 700; width: 130px; padding: 2.5px 0;">NAME</td>
+            <td style="font-weight: 800; color: #F1F5F9; font-size: 11px; text-align: right;">Priya Sharma</td>
+          </tr>
+          <tr>
+            <td style="color: #94A3B8; text-transform: uppercase; font-weight: 700; padding: 2.5px 0;">DATE OF BIRTH</td>
+            <td style="font-weight: 700; color: #F1F5F9; text-align: right;">1995-10-24</td>
+          </tr>
+          <tr>
+            <td style="color: #94A3B8; text-transform: uppercase; font-weight: 700; padding: 2.5px 0;">TIME OF BIRTH</td>
+            <td style="font-weight: 700; color: #F1F5F9; text-align: right;">14:30</td>
+          </tr>
+          <tr>
+            <td style="color: #94A3B8; text-transform: uppercase; font-weight: 700; padding: 2.5px 0;">PLACE OF BIRTH</td>
+            <td style="font-weight: 700; color: #F1F5F9; text-align: right;">Varanasi, India (Lat: 25.32°, Lon: 82.97°, UTC+5.5)</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="text-align: center; color: #D4AF37; margin-bottom: 4px; font-size: 9px;">✦</div>
+
+      <!-- Section 1: Birth Profile & Kundli Snapshot -->
+      <div class="section-title" style="margin: 3px 0 5px 0; font-size: 12px;">
+        <span class="sec-num" style="width: 18px; height: 18px; font-size: 9.5px;">1</span>
+        <span>BIRTH PROFILE &amp; KUNDLI SNAPSHOT</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 7px;">
+        <div class="subtle-box" style="padding: 7px 10px;">
+          <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">LAGNA (ASCENDANT)</td>
+              <td style="font-weight: 800; color: #F1F5F9; text-align: right;">Leo · Simha</td>
+            </tr>
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">RASHI (MOON SIGN)</td>
+              <td style="font-weight: 800; color: #F1F5F9; text-align: right;">Libra · Tula</td>
+            </tr>
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">TITHI</td>
+              <td style="font-weight: 700; color: #F1F5F9; text-align: right;">Krishna Pratipada</td>
+            </tr>
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">DAY (VAAR)</td>
+              <td style="font-weight: 700; color: #F1F5F9; text-align: right;">Tuesday</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="subtle-box" style="padding: 7px 10px;">
+          <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">NAKSHATRA</td>
+              <td style="font-weight: 800; color: #F1F5F9; text-align: right;">Swati</td>
+            </tr>
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">PADA</td>
+              <td style="font-weight: 800; color: #F1F5F9; text-align: right;">Pada 1</td>
+            </tr>
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">VARNA / GANA</td>
+              <td style="font-weight: 700; color: #F1F5F9; text-align: right;">Vaishya &bull; Deva</td>
+            </tr>
+            <tr>
+              <td style="color: #94A3B8; padding: 2px 0;">YOGA (PANCHANG)</td>
+              <td style="font-weight: 700; color: #F1F5F9; text-align: right;">Vajra</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5 Pills -->
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; text-align: center; margin-bottom: 8px;">
+        <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 4px; padding: 4px 2px;">
+          <div style="font-size: 7px; color: #94A3B8; text-transform: uppercase;">VASHYA</div>
+          <div style="font-size: 8.5px; font-weight: 700; color: #F1F5F9; margin-top: 1px;">Manava</div>
+        </div>
+        <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 4px; padding: 4px 2px;">
+          <div style="font-size: 7px; color: #94A3B8; text-transform: uppercase;">YONI</div>
+          <div style="font-size: 8.5px; font-weight: 700; color: #F1F5F9; margin-top: 1px;">Buffalo</div>
+        </div>
+        <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 4px; padding: 4px 2px;">
+          <div style="font-size: 7px; color: #94A3B8; text-transform: uppercase;">NADI</div>
+          <div style="font-size: 8.5px; font-weight: 700; color: #F1F5F9; margin-top: 1px;">Antya</div>
+        </div>
+        <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 4px; padding: 4px 2px;">
+          <div style="font-size: 7px; color: #94A3B8; text-transform: uppercase;">PAYA</div>
+          <div style="font-size: 8.5px; font-weight: 700; color: #F1F5F9; margin-top: 1px;">Copper</div>
+        </div>
+        <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 4px; padding: 4px 2px;">
+          <div style="font-size: 7px; color: #94A3B8; text-transform: uppercase;">KARANA</div>
+          <div style="font-size: 8.5px; font-weight: 700; color: #F1F5F9; margin-top: 1px;">Balava</div>
+        </div>
+      </div>
+
+      <!-- Philosophical Inscription -->
+      <div style="text-align: center; margin-top: 4px; border-top: 0.8px dashed rgba(212, 175, 55, 0.2); padding-top: 6px;">
+        <p style="font-style: italic; color: #D4AF37; font-size: 9px; margin: 0 0 2px 0;">
+          &ldquo;As the grahas stood at the moment of the first breath, so is woven the rhythm of a lifetime.&rdquo;
+        </p>
+        <p style="font-size: 8px; color: #94A3B8; max-width: 520px; margin: 0 auto; line-height: 1.35;">
+          This blueprint synthesizes five classical Vedic sciences — Rashi, Nakshatra, Dasha, Yoga and Ank Jyotish (numerology) — into a verified personal roadmap for deliberate self-direction.
+        </p>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div>DEEPASTRO OFFICIAL DOSSIER &bull; Designed &amp; Created by Prashant Sisodhiya &bull; &copy; 2026 DeepAstro. All Rights Reserved.</div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2 ==================== -->
+  <div class="page">
+    <div>
+      <div class="page-header">
+        <span>MY LIFE BLUEPRINT &bull; PREMIUM JANAM KUNDLI</span>
+        <span>PAGE 02 / 05</span>
+      </div>
+
+      <!-- Section 2: Rashi Kundli -->
+      <div class="section-title">
+        <span class="sec-num">2</span>
+        <span>RASHI KUNDLI &bull; NORTH INDIAN STYLE</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 12px; align-items: center; margin-bottom: 10px;">
+        <div>
+          <svg viewBox="0 0 400 400" width="300" height="300" style="margin: 0 auto; display: block; background: #070A14; border-radius: 8px; border: 1px solid #D4AF37;">
+        <rect x="8" y="8" width="384" height="384" fill="none" stroke="#D4AF37" stroke-width="1.5"/>
+        <line x1="8" y1="8" x2="392" y2="392" stroke="#8B732B" stroke-width="1"/>
+        <line x1="392" y1="8" x2="8" y2="392" stroke="#8B732B" stroke-width="1"/>
+        <polygon points="200,8 392,200 200,392 8,200" fill="none" stroke="#D4AF37" stroke-width="1.5"/>
+        
+        <text x="200" y="145" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">5</text>
+        <text x="200" y="110" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle">Asc</text>
+      
+        <text x="130" y="75" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">6</text>
+        <text x="100" y="55" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle">☿</text>
+      
+        <text x="75" y="130" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">7</text>
+        <text x="55" y="100" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle">☽ ♀ ☊</text>
+      
+        <text x="155" y="200" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">8</text>
+        <text x="120" y="200" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle">♂ ♃</text>
+      
+        <text x="75" y="270" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">9</text>
+        <text x="55" y="300" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle"></text>
+      
+        <text x="130" y="325" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">10</text>
+        <text x="100" y="345" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle"></text>
+      
+        <text x="200" y="255" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">11</text>
+        <text x="200" y="290" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle">♄</text>
+      
+        <text x="270" y="325" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">12</text>
+        <text x="300" y="345" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle"></text>
+      
+        <text x="325" y="270" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">1</text>
+        <text x="345" y="300" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle">☉ ☋</text>
+      
+        <text x="245" y="200" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">2</text>
+        <text x="280" y="200" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle"></text>
+      
+        <text x="325" y="130" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">3</text>
+        <text x="345" y="100" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle"></text>
+      
+        <text x="270" y="75" fill="#94A3B8" font-size="10" font-weight="600" text-anchor="middle">4</text>
+        <text x="300" y="55" fill="#F1F5F9" font-size="12" font-weight="800" text-anchor="middle"></text>
+      
+      </svg>
+        </div>
+        <div class="subtle-box" style="padding: 12px;">
+          <h4 style="font-family: 'Cinzel', serif; font-size: 11px; font-weight: 800; color: #D4AF37; margin: 0 0 6px 0; text-transform: uppercase;">
+            Reading the Chart
+          </h4>
+          <ul style="padding-left: 14px; margin: 0; font-size: 9px; color: #CBD5E1; line-height: 1.55;">
+            <li><strong>House 1 (top central diamond)</strong> holds the Lagna — marked <strong style="color: #00E5FF;">Asc</strong>.</li>
+            <li>Signs advance counter-clockwise in natural 12-sign whole order.</li>
+            <li>Planetary glyphs occupy the exact bhava determined at birth time.</li>
+            <li style="margin-top: 4px; color: #94A3B8; font-size: 8.5px;">
+              <strong style="color: #F1F5F9;">Su</strong> Surya &bull; <strong style="color: #F1F5F9;">Mo</strong> Chandra &bull; <strong style="color: #F1F5F9;">Ma</strong> Mangala &bull; <strong style="color: #F1F5F9;">Me</strong> Budha &bull; <strong style="color: #F1F5F9;">Ju</strong> Guru &bull; <strong style="color: #F1F5F9;">Ve</strong> Shukra &bull; <strong style="color: #F1F5F9;">Sa</strong> Shani &bull; <strong style="color: #F1F5F9;">Ra</strong> Rahu &bull; <strong style="color: #F1F5F9;">Ke</strong> Ketu
+            </li>
+          </ul>
+
+          <div style="margin-top: 8px; padding-top: 6px; border-top: 0.5px solid #243047; font-size: 8.5px; color: #94A3B8;">
+            <div>Ascendant Degree: <strong style="color: #F1F5F9;">9°38'</strong> &bull; Lahiri Ayanamsha</div>
+            <div style="margin-top: 2px;">Lagna Lord: <strong style="color: #D4AF37;">Sun</strong> &bull; Moon Lord: <strong style="color: #D4AF37;">Venus</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: #D4AF37; margin: 4px 0;">✦</div>
+
+      <!-- Section 3: Planetary Placements -->
+      <div class="section-title">
+        <span class="sec-num">3</span>
+        <span>PLANETARY PLACEMENTS (GRAHA SPHUTA)</span>
+      </div>
+
+      <table class="cosmic-table" style="margin-bottom: 8px;">
+        <thead>
+          <tr>
+            <th>GRAHA</th>
+            <th>RASHI (SIGN)</th>
+            <th>BHAVA</th>
+            <th>DEGREE</th>
+            <th>NAKSHATRA &amp; PADA</th>
+            <th>DIGNITY</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Sun</strong> <span style="font-size: 8px; color: #94A3B8;">(Surya (सूर्य))</span></td>
+              <td>Aries</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">9</td>
+              <td style="font-family: monospace; font-weight: 600;">06°44'</td>
+              <td>Ashwini · P3</td>
+              <td style="color: #34D399; font-weight: 600;">Exalted</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Moon</strong> <span style="font-size: 8px; color: #94A3B8;">(Chandra (चन्द्र))</span></td>
+              <td>Libra</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">3</td>
+              <td style="font-family: monospace; font-weight: 600;">07°33'</td>
+              <td>Swati · P1</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Neutral</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Mars</strong> <span style="font-size: 8px; color: #94A3B8;">(Mangala (मंगल))</span></td>
+              <td>Scorpio</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">4</td>
+              <td style="font-family: monospace; font-weight: 600;">08°42'</td>
+              <td>Anuradha · P2</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Own Sign</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Mercury</strong> <span style="font-size: 8px; color: #94A3B8;">(Budha (बुध))</span></td>
+              <td>Virgo</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">2</td>
+              <td style="font-family: monospace; font-weight: 600;">19°18'</td>
+              <td>Hasta · P3</td>
+              <td style="color: #34D399; font-weight: 600;">Exalted</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Jupiter</strong> <span style="font-size: 8px; color: #94A3B8;">(Guru (बृहस्पति))</span></td>
+              <td>Scorpio</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">4</td>
+              <td style="font-family: monospace; font-weight: 600;">20°43'</td>
+              <td>Jyeshtha · P2</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Friend</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Venus</strong> <span style="font-size: 8px; color: #94A3B8;">(Shukra (शुक्र))</span></td>
+              <td>Libra</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">3</td>
+              <td style="font-family: monospace; font-weight: 600;">23°42'</td>
+              <td>Vishakha · P2</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Own Sign</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Saturn</strong> <span style="font-size: 8px; color: #94A3B8;">(Shani (शनि))</span></td>
+              <td>Aquarius</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">7</td>
+              <td style="font-family: monospace; font-weight: 600;">24°49'</td>
+              <td>Purva Bhadrapada · P2</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Own Sign</td>
+              <td style="font-size: 8px; color: #94A3B8;">Direct</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Rahu</strong> <span style="font-size: 8px; color: #94A3B8;">(Rahu (राहु))</span></td>
+              <td>Libra</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">3</td>
+              <td style="font-family: monospace; font-weight: 600;">02°16'</td>
+              <td>Chitra · P3</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Friend</td>
+              <td style="font-size: 8px; color: #FBBF24;">Retrograde (R)</td>
+            </tr>
+          
+            <tr>
+              <td><strong style="color: #F1F5F9;">Ketu</strong> <span style="font-size: 8px; color: #94A3B8;">(Ketu (केतु))</span></td>
+              <td>Aries</td>
+              <td style="font-weight: 700; color: #D4AF37; text-align: center;">9</td>
+              <td style="font-family: monospace; font-weight: 600;">02°16'</td>
+              <td>Ashwini · P1</td>
+              <td style="color: #E2E8F0; font-weight: 600;">Friend</td>
+              <td style="font-size: 8px; color: #FBBF24;">Retrograde (R)</td>
+            </tr>
+          
+        </tbody>
+      </table>
+
+      <!-- Section 3.1: Planetary Strength & Dignities Summary -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 4px;">
+        <div class="subtle-box" style="padding: 6px;">
+          <div style="font-size: 7.5px; color: #D4AF37; font-weight: 800; text-transform: uppercase;">EXALTED / OWN</div>
+          <div style="font-size: 9px; font-weight: 700; color: #F1F5F9; margin-top: 2px;">
+            Sun, Mercury, Mars, Venus, Saturn
+          </div>
+        </div>
+        <div class="subtle-box" style="padding: 6px;">
+          <div style="font-size: 7.5px; color: #D4AF37; font-weight: 800; text-transform: uppercase;">RETROGRADE (VAKRI)</div>
+          <div style="font-size: 9px; font-weight: 700; color: #F1F5F9; margin-top: 2px;">
+            Rahu, Ketu
+          </div>
+        </div>
+        <div class="subtle-box" style="padding: 6px;">
+          <div style="font-size: 7.5px; color: #D4AF37; font-weight: 800; text-transform: uppercase;">COMBUST (ASTA)</div>
+          <div style="font-size: 9px; font-weight: 700; color: #F1F5F9; margin-top: 2px;">
+            None (Clear)
+          </div>
+        </div>
+        <div class="subtle-box" style="padding: 6px;">
+          <div style="font-size: 7.5px; color: #D4AF37; font-weight: 800; text-transform: uppercase;">LUNAR BALANCE</div>
+          <div style="font-size: 9px; font-weight: 700; color: #F1F5F9; margin-top: 2px;">
+            Krishna Pratipada
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div>DEEPASTRO OFFICIAL DOSSIER &bull; VERIFIED AGAINST LAHIRI SIDEREAL EPHEMERIS &bull; &copy; 2026 DEEPASTRO</div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3 ==================== -->
+  <div class="page">
+    <div>
+      <div class="page-header">
+        <span>MY LIFE BLUEPRINT &bull; PREMIUM JANAM KUNDLI</span>
+        <span>PAGE 03 / 05</span>
+      </div>
+
+      <!-- Section 4: House by House -->
+      <div class="section-title">
+        <span class="sec-num">4</span>
+        <span>HOUSE-BY-HOUSE INTERPRETATION (12 BHAVAS)</span>
+      </div>
+      <p style="font-size: 8.5px; color: #94A3B8; margin: 0 0 7px 0;">
+        Each Bhava anchors a vital dimension of destiny. Read alongside planetary placements, these cards reveal where each graha's cosmic energy is concentrated.
+      </p>
+
+      <!-- 12 House Grid (3 cols x 4 rows) with balanced heights -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;">
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  1ST BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Leo</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Tanu Bhava · Self, Vitality & Disposition
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Sun &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Sun placed in Leo (Tanu Bhava). Operates smoothly through the dispositor Sun; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Sun's current through steady focus on self, vitality & disposition.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  2ND BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Virgo</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Dhana Bhava · Wealth, Speech & Family
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Mercury &bull; Occupants: Mercury
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Mercury placed in Virgo (Dhana Bhava). Activated directly by Mercury, establishing this domain as an energized sphere of dynamic manifestation.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Mercury's current through steady focus on wealth, speech & family.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  3RD BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Libra</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Sahaja Bhava · Enterprise, Courage & Siblings
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Venus &bull; Occupants: Moon, Venus, Rahu
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Venus placed in Libra (Sahaja Bhava). Activated directly by Moon, Venus, Rahu, establishing this domain as an energized sphere of dynamic manifestation.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Venus's current through steady focus on enterprise, courage & siblings.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  4TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Scorpio</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Sukha Bhava · Inner Peace, Mother & Home
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Mars &bull; Occupants: Mars, Jupiter
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Mars placed in Scorpio (Sukha Bhava). Activated directly by Mars, Jupiter, establishing this domain as an energized sphere of dynamic manifestation.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Mars's current through steady focus on inner peace, mother & home.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  5TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Sagittarius</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Putra Bhava · Intellect, Discernment & Creativity
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Jupiter &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Jupiter placed in Sagittarius (Putra Bhava). Operates smoothly through the dispositor Jupiter; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Jupiter's current through steady focus on intellect, discernment & creativity.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  6TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Capricorn</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Ari Bhava · Service, Problem Solving & Resilience
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Saturn &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Saturn placed in Capricorn (Ari Bhava). Operates smoothly through the dispositor Saturn; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Saturn's current through steady focus on service, problem solving & resilience.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  7TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Aquarius</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Yuvati Bhava · Partnerships, Marriage & Alliances
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Saturn &bull; Occupants: Saturn
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Saturn placed in Aquarius (Yuvati Bhava). Activated directly by Saturn, establishing this domain as an energized sphere of dynamic manifestation.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Saturn's current through steady focus on partnerships, marriage & alliances.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  8TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Pisces</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Randhra Bhava · Transformation & Deep Research
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Jupiter &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Jupiter placed in Pisces (Randhra Bhava). Operates smoothly through the dispositor Jupiter; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Jupiter's current through steady focus on transformation & deep research.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  9TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Aries</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Dharma Bhava · Higher Wisdom, Ethics & Fortune
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Mars &bull; Occupants: Sun, Ketu
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Mars placed in Aries (Dharma Bhava). Activated directly by Sun, Ketu, establishing this domain as an energized sphere of dynamic manifestation.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Mars's current through steady focus on higher wisdom, ethics & fortune.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  10TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Taurus</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Karma Bhava · Career, Authority & Public Status
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Venus &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Venus placed in Taurus (Karma Bhava). Operates smoothly through the dispositor Venus; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Venus's current through steady focus on career, authority & public status.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  11TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Gemini</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Labha Bhava · Compounding Gains & High Aspirations
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Mercury &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Mercury placed in Gemini (Labha Bhava). Operates smoothly through the dispositor Mercury; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Mercury's current through steady focus on compounding gains & high aspirations.
+            </div>
+          </div>
+        
+          <div style="border: 0.8px solid #243047; background: #0B1020; border-radius: 6px; padding: 7px 8px; height: 165px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase;">
+                  12TH BHAVA
+                </span>
+                <span style="font-size: 7px; color: #64748B; font-weight: 600;">Cancer</span>
+              </div>
+              <div style="font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 800; color: #F1F5F9; margin: 2px 0 3px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Vyaya Bhava · Spiritual Liberation & Foreign Horizons
+              </div>
+              <div style="font-size: 7.5px; color: #38BDF8; font-weight: 700; margin-bottom: 3px;">
+                Lord: Moon &bull; Aspect-driven
+              </div>
+              <div style="font-size: 8px; color: #CBD5E1; line-height: 1.35;">
+                Governed by Moon placed in Cancer (Vyaya Bhava). Operates smoothly through the dispositor Moon; rewards consistent habits and disciplined follow-through.
+              </div>
+            </div>
+            <div style="font-size: 7px; color: #94A3B8; border-top: 0.5px solid #1E293B; padding-top: 3px; font-style: italic;">
+              Channel Moon's current through steady focus on spiritual liberation & foreign horizons.
+            </div>
+          </div>
+        
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div>MY LIFE BLUEPRINT &bull; 12 BHAVAS SOVEREIGN LIFE GUIDE &bull; DEEPASTRO</div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 4 ==================== -->
+  <div class="page">
+    <div>
+      <div class="page-header">
+        <span>MY LIFE BLUEPRINT &bull; PREMIUM JANAM KUNDLI</span>
+        <span>PAGE 04 / 05</span>
+      </div>
+
+      <!-- Top Row: Section 5 & Section 6 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px;">
+        <!-- Section 5: Yogas & Doshas -->
+        <div>
+          <div class="section-title" style="margin-top: 0;">
+            <span class="sec-num">5</span>
+            <span>YOGAS &amp; DOSHAS</span>
+          </div>
+
+          <div style="space-y-3">
+            
+              <div style="display: flex; gap: 6px; align-items: flex-start; margin-bottom: 5px;">
+                <span class="badge badge-present">PRESENT</span>
+                <div style="font-size: 8.5px;">
+                  <strong style="color: #F1F5F9;">Ruchaka Yoga</strong> — <span style="color: #94A3B8;">Courage, magnetic authority, executive power, victory in strategic endeavors, and physical vitality.</span>
+                </div>
+              </div>
+            
+              <div style="display: flex; gap: 6px; align-items: flex-start; margin-bottom: 5px;">
+                <span class="badge badge-present">PRESENT</span>
+                <div style="font-size: 8.5px;">
+                  <strong style="color: #F1F5F9;">Shasha Yoga</strong> — <span style="color: #94A3B8;">Steadfast perseverance, mastery over masses, enduring institutional command, and self-mastery.</span>
+                </div>
+              </div>
+            
+
+            
+              <div style="display: flex; gap: 6px; align-items: flex-start; margin-bottom: 5px;">
+                <span class="badge badge-present">PRESENT</span>
+                <div style="font-size: 8.5px;">
+                  <strong style="color: #F1F5F9;">Manglik Dosha</strong> — <span style="color: #94A3B8;">Chant the Mangal Gayatri Mantra, observe Tuesday fasting, or worship Lord Hanuman to channel martial fire into disciplined vitality.</span>
+                </div>
+              </div>
+            
+              <div style="display: flex; gap: 6px; align-items: flex-start; margin-bottom: 5px;">
+                <span class="badge badge-absent">ABSENT</span>
+                <div style="font-size: 8.5px;">
+                  <strong style="color: #F1F5F9;">Sade Sati</strong> — <span style="color: #94A3B8;">Native is currently free from Shani Sade Sati transit.</span>
+                </div>
+              </div>
+            
+              <div style="display: flex; gap: 6px; align-items: flex-start; margin-bottom: 5px;">
+                <span class="badge badge-absent">ABSENT</span>
+                <div style="font-size: 8.5px;">
+                  <strong style="color: #F1F5F9;">Kaal Sarp Pattern</strong> — <span style="color: #94A3B8;">Planets are freely distributed across the cosmic mandala, unencumbered by the nodal axis.</span>
+                </div>
+              </div>
+            
+
+            <!-- Currently Running Box -->
+            <div class="subtle-box" style="margin-top: 6px; border-left: 2px solid #D4AF37; padding: 6px 8px;">
+              <div style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase; letter-spacing: 0.8px;">CURRENTLY RUNNING</div>
+              <div style="font-size: 9px; font-weight: 800; color: #F1F5F9; margin: 2px 0;">
+                Jupiter Mahadasha &bull; Rahu Antardasha
+              </div>
+              <div style="font-size: 8px; color: #94A3B8; line-height: 1.35;">
+                Jupiter Mahadasha · Rahu Antardasha favors strategic learning, disciplined negotiation, and precision in professional execution.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 6: Vimshottari Dasha -->
+        <div>
+          <div class="section-title" style="margin-top: 0;">
+            <span class="sec-num">6</span>
+            <span>VIMSHOTTARI DASHA</span>
+          </div>
+
+          <table class="cosmic-table">
+            <thead>
+              <tr>
+                <th style="width: 55px;">CYCLE</th>
+                <th style="width: 85px;">LORDS</th>
+                <th>THEMATIC FOCUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td style="font-weight: 700; color: #D4AF37;">1995–12</td>
+                  <td style="font-weight: 700; color: #F1F5F9;">Jupiter &rarr; Rahu</td>
+                  <td style="color: #94A3B8; font-size: 8px;">Structure & responsibility</td>
+                </tr>
+              
+                <tr>
+                  <td style="font-weight: 700; color: #D4AF37;">2012–28</td>
+                  <td style="font-weight: 700; color: #F1F5F9;">Jupiter &rarr; Saturn</td>
+                  <td style="color: #94A3B8; font-size: 8px;">Learning & communication</td>
+                </tr>
+              
+                <tr>
+                  <td style="font-weight: 700; color: #D4AF37;">2028–47</td>
+                  <td style="font-weight: 700; color: #F1F5F9;">Jupiter &rarr; Ketu</td>
+                  <td style="color: #94A3B8; font-size: 8px;">Reassessment & specialisation</td>
+                </tr>
+              
+                <tr>
+                  <td style="font-weight: 700; color: #D4AF37;">2047–64</td>
+                  <td style="font-weight: 700; color: #F1F5F9;">Jupiter &rarr; Sun</td>
+                  <td style="color: #94A3B8; font-size: 8px;">Relationships & creative themes</td>
+                </tr>
+              
+                <tr>
+                  <td style="font-weight: 700; color: #D4AF37;">2064–71</td>
+                  <td style="font-weight: 700; color: #F1F5F9;">Jupiter &rarr; Mars</td>
+                  <td style="color: #94A3B8; font-size: 8px;">Recognition & visibility</td>
+                </tr>
+              
+            </tbody>
+          </table>
+          <div style="font-size: 7.5px; color: #64748B; font-style: italic; margin-top: 4px;">
+            Dasha cycles represent temporal weather and psychological orientation, not predetermined fate.
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: #D4AF37; margin: 4px 0;">✦</div>
+
+      <!-- Key Transits to Watch -->
+      <div style="margin-bottom: 8px;">
+        <div style="font-family: 'Cinzel', serif; font-size: 10.5px; font-weight: 800; color: #F1F5F9; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;">
+          <span style="color: #D4AF37;">◆</span> KEY TRANSITS TO WATCH
+        </div>
+        <div class="subtle-box" style="line-height: 1.5; font-size: 8.5px; color: #CBD5E1; padding: 6px 10px;">
+          <div><span style="color: #D4AF37;">✦</span> Saturn transiting natal House 8 — a season for structured consolidation, boundary-setting, and accountability.</div><div><span style="color: #D4AF37;">✦</span> Jupiter energizing natal House 12 — supportive for professional expansion, wisdom, and auspicious alliances.</div><div><span style="color: #D4AF37;">✦</span> Rahu–Ketu axis traversing Houses 7/1 — reorienting aspirations, personal initiative, and deeper intuitive perception.</div>
+        </div>
+      </div>
+
+      <!-- Section 7: 2026-2035 Forecast -->
+      <div class="section-title">
+        <span class="sec-num">7</span>
+        <span>2026–2035 10-YEAR LIFE TRAJECTORY FORECAST</span>
+      </div>
+
+      <table class="cosmic-table">
+        <thead>
+          <tr>
+            <th style="width: 55px;">YEAR</th>
+            <th style="width: 140px;">THEME &amp; FOCUS</th>
+            <th>STRATEGIC DIRECTION &amp; OPPORTUNITY</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2026</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Foundation & Operational Reset</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Consolidate authoritative foundations, audit personal systems, and refine repeatable craft.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2027</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Skill Mastery & Visibility</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Active learning, technical skill acquisition, and public portfolio development.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2028</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Domain Specialisation</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Deepen niche authority; establish recognized domain competence.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2029</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Financial & Network Expansion</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Monetize specialized expertise through compounding alliances and strategic syndicates.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2030</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Leadership & Mentorship</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Transition into governance, organizational oversight, and mentoring successors.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2031</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Strategic Realignment</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Prune stagnant ventures, renegotiate legacy contracts, and invest in next-generation platforms.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2032</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Creative & Intellectual Zenith</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Authoritative authorship, proprietary research, and mentoring elite practitioners.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2033</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Institutional Anchoring</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Establish permanent physical or legal institutions; consolidate real estate and long-term equity.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2034</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Philanthropic & Community Impact</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Establish endowments, community grants, and educational initiatives for aspiring talent.</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 700; color: #D4AF37; font-size: 8.5px;">2035</td>
+              <td style="font-weight: 700; color: #F1F5F9; font-size: 8.5px;">Long-Cycle Dharma Synthesis</td>
+              <td style="color: #CBD5E1; font-size: 8px; line-height: 1.35;">Synthesize lifetime insights, balance external honors with serene inner contemplation.</td>
+            </tr>
+          
+        </tbody>
+      </table>
+    </div>
+
+    <div class="page-footer">
+      <div>MY LIFE BLUEPRINT &bull; VIMSHOTTARI DASHA &amp; 2026–2035 FORECAST &bull; DEEPASTRO</div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 5 ==================== -->
+  <div class="page">
+    <div>
+      <div class="page-header">
+        <span>MY LIFE BLUEPRINT &bull; PREMIUM JANAM KUNDLI</span>
+        <span>PAGE 05 / 05</span>
+      </div>
+
+      <!-- Two Col: Section 8 & Section 9 -->
+      <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 10px; margin-bottom: 8px;">
+        <!-- Section 8: Career, Business & Finance -->
+        <div>
+          <div class="section-title" style="margin-top: 0;">
+            <span class="sec-num">8</span>
+            <span>CAREER, BUSINESS &amp; FINANCE</span>
+          </div>
+          <div class="subtle-box" style="font-size: 8.5px; line-height: 1.4; space-y-2; padding: 7px 10px;">
+            <p style="margin: 0 0 4px 0;"><strong style="color: #D4AF37;">Career</strong> — High natural aptitude for sophisticated creative systems, design architecture, luxury brand diplomacy, media platforms, and high-trust commercial partnerships under Venus.</p>
+            <p style="margin: 0 0 4px 0;"><strong style="color: #D4AF37;">Business</strong> — Strong alignment with scalable services and digital knowledge assets governed by Saturn and Mercury where compounding reputation drives recurring client value.</p>
+            <p style="margin: 0;"><strong style="color: #D4AF37;">Finance</strong> — Focus on systematic savings, conservative liquidity buffers, and disciplined long-term asset allocation. The 2nd house in Virgo (Mercury) favors steady compounding over speculative volatility.</p>
+          </div>
+        </div>
+
+        <!-- Section 9: Numerology -->
+        <div>
+          <div class="section-title" style="margin-top: 0;">
+            <span class="sec-num">9</span>
+            <span>ANK JYOTISH (NUMEROLOGY)</span>
+          </div>
+          <table class="cosmic-table">
+            <thead>
+              <tr>
+                <th>METRIC</th>
+                <th style="width: 30px;">NO.</th>
+                <th>MEANING</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight: 700;">Life Path</td>
+                <td style="font-weight: 800; color: #D4AF37;">4</td>
+                <td>Structure & Stability</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">Destiny</td>
+                <td style="font-weight: 800; color: #D4AF37;">2</td>
+                <td>Destiny vibration 2 reveals your core evolutionary vocation and outward talent expression in society.</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">Soul Urge</td>
+                <td style="font-weight: 800; color: #D4AF37;">5</td>
+                <td>Heart's desire vibration 5 exposes your subconscious emotional longing and spiritual yearnings.</td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">Personality</td>
+                <td style="font-weight: 800; color: #D4AF37;">6</td>
+                <td>Articulate, composed, and intellectually poised social presence</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 10: Gemstones & Traditional Remedies -->
+      <div class="section-title" style="margin-top: 2px;">
+        <span class="sec-num">10</span>
+        <span>GEMSTONE &amp; TRADITIONAL REMEDIES</span>
+      </div>
+      <div class="subtle-box" style="font-size: 8.5px; color: #CBD5E1; line-height: 1.4; margin-bottom: 7px; padding: 7px 10px;">
+        <div style="font-weight: 700; color: #D4AF37; margin-bottom: 2px;">
+          Recommended Stone: Yellow Sapphire (Pukhraj) &bull; Graha: Guru (Jupiter)
+        </div>
+        <div>
+          Strengthens functional benefic ascendant/9th house currents. Metal: <strong style="color: #F1F5F9;">Gold or Panchdhatu</strong> &bull; Finger: <strong style="color: #F1F5F9;">Index or Little Finger</strong> &bull; Mantra: <em>Om Gurave Namaha / Om Budhaya Namaha</em>
+        </div>
+        <div style="font-size: 7.5px; color: #94A3B8; margin-top: 2px;">
+          Gemstone recommendations are chart-specific only, weighed strictly against planetary lordship, house placement, dignity, and active dasha period. No gemstone is prescribed when functional lordship is inconclusive.
+        </div>
+      </div>
+
+      <!-- Section 11: What to Do & Avoid -->
+      <div class="section-title" style="margin-top: 2px;">
+        <span class="sec-num">11</span>
+        <span>WHAT TO DO &amp; AVOID</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 7px;">
+        <div class="subtle-box" style="border-left: 2px solid #10B981; padding: 6px 9px;">
+          <div style="font-weight: 800; color: #34D399; font-size: 8.5px; text-transform: uppercase; margin-bottom: 3px;">WHAT TO DO</div>
+          <ul style="margin: 0; padding-left: 12px; font-size: 8px; color: #CBD5E1; line-height: 1.45;">
+            <li>Invest steadily in foundational skills and personal craft.</li><li>Build consistent, repeatable operational and morning habits.</li><li>Review savings, investments, and expenses on a fixed quarterly schedule.</li><li>Communicate openly, directly, and constructively across partnerships.</li>
+          </ul>
+        </div>
+        <div class="subtle-box" style="border-left: 2px solid #EF4444; padding: 6px 9px;">
+          <div style="font-weight: 800; color: #F87171; font-size: 8.5px; text-transform: uppercase; margin-bottom: 3px;">WHAT TO AVOID</div>
+          <ul style="margin: 0; padding-left: 12px; font-size: 8px; color: #CBD5E1; line-height: 1.45;">
+            <li>Fear-based, fatalistic, or superstitious astrological assumptions.</li><li>Medical self-diagnosis or abandoning professional healthcare advice.</li><li>Guaranteed financial gambles or unhedged speculative volatility.</li><li>Unsupported gemstone prescriptions without verifying functional lordship.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Section 12: Final Personal Blueprint -->
+      <div class="section-title" style="margin-top: 2px;">
+        <span class="sec-num">12</span>
+        <span>FINAL PERSONAL BLUEPRINT</span>
+      </div>
+      <div class="gold-box" style="padding: 8px 10px; margin-bottom: 6px;">
+        <p style="font-size: 8.5px; color: #E2E8F0; line-height: 1.4; margin: 0 0 6px 0;">
+          Priya Sharma enters this lifecycle carrying Leo Lagna leadership tempered by a Libra Moon's patience — a balanced pairing of visible drive and quiet endurance. The current Jupiter Mahadasha favors structured growth: deliberate skill acquisition anchors the cycle, while collaborative networks build durable long-term stability.
+        </p>
+        <div style="font-size: 7.5px; font-weight: 800; color: #D4AF37; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">
+          TOP 3 STRATEGIC PRIORITIES FOR THE YEAR AHEAD
+        </div>
+        <div style="space-y-3; font-size: 8px; color: #F1F5F9;">
+          <div style="margin-bottom: 3px;"><span class="action-badge">1</span> Codify one core skill into a repeatable, teachable professional system.</div>
+          <div style="margin-bottom: 3px;"><span class="action-badge">2</span> Set a disciplined quarterly review cadence for personal savings and investments.</div>
+          <div><span class="action-badge">3</span> Nurture two or three high-trust, value-aligned professional and personal relationships.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div>DISCLAIMER: TRADITIONAL VEDIC GUIDANCE FOR SELF-REFLECTION &bull; NOT MEDICAL, FINANCIAL OR LEGAL ADVICE &bull; Designed &amp; Created by Prashant Sisodhiya &bull; &copy; 2026 DEEPASTRO</div>
+    </div>
+  </div>
+
+</body>
+</html>
