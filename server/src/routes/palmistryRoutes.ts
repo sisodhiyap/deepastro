@@ -34,19 +34,25 @@ router.post(
       const isDominant = req.body.isDominant !== 'false';
       const ageRange = req.body.ageRange || '25-35';
 
-      let fileName = 'palm_sample.jpg';
+      if (!req.file && !req.body.imageData) {
+        return res.status(400).json({
+          error: 'IMAGE_REQUIRED',
+          details: 'Please upload a photo of your palm (JPG, PNG, or WEBP) to perform Hastarekha vision analysis.',
+        });
+      }
+
+      let fileName = 'uploaded_palm.jpg';
       let mimeType = 'image/jpeg';
 
       if (req.file) {
         fileName = req.file.originalname;
         mimeType = req.file.mimetype;
       } else if (req.body.imageData) {
-        // Base64 image payload fallback
         fileName = 'uploaded_palm.webp';
         mimeType = 'image/webp';
       }
 
-      const fileSize = req.file ? req.file.size : (req.body.imageData ? Buffer.byteLength(req.body.imageData, 'utf8') : 250000);
+      const fileSize = req.file ? req.file.size : Buffer.byteLength(req.body.imageData, 'utf8');
 
       const analysis = PalmistryVisionService.analyzePalmImage(
         fileName,

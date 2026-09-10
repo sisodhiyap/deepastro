@@ -1,11 +1,13 @@
 /**
  * Planet Engine
- * Deterministic astronomical positions for the Navagrahas:
+ * High-precision celestial mechanics for the Navagrahas:
  * Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu
- * Incorporates sidereal conversion (Lahiri), retrograde calculation,
- * combustion, dignity, and Vedic aspects (Drishti).
+ * Incorporates VSOP87 & ELP-2000 theory via astronomy-engine,
+ * true apparent geocentric motions, Lahiri Ayanamsha (Chitra Paksha),
+ * retrograde calculation, classical combustion, dignities, and Vedic aspects (Drishti).
  */
 
+import * as Astronomy from 'astronomy-engine';
 import { getLahiriAyanamsha, normalizeDegrees, toRadians, toDegrees, ZODIAC_SIGNS } from './astronomyMath.js';
 import { getNakshatraInfo, NakshatraInfo } from './NakshatraEngine.js';
 
@@ -30,7 +32,7 @@ export interface PlanetData {
   degreeInSign: number;
   minutes: number;
   seconds: number;
-  house: number; // 1-12 relative to Ascendant
+  house: number; // 1-12 relative to Ascendant (Whole Sign)
   speed: number; // deg / day
   isRetrograde: boolean;
   isCombust: boolean;
@@ -39,31 +41,66 @@ export interface PlanetData {
   aspectsToHouses: number[]; // houses aspected by this planet
 }
 
-// Classical Combustion Limits (in degrees from the Sun)
-const COMBUSTION_LIMITS: Partial<Record<PlanetName, number>> = {
-  Moon: 12.0,
-  Mars: 17.0,
-  Mercury: 14.0,
-  Jupiter: 11.0,
-  Venus: 10.0,
-  Saturn: 15.0,
+export const SANSKRIT_PLANET_NAMES: Record<PlanetName, string> = {
+  Sun: 'Surya (सूर्य)',
+  Moon: 'Chandra (चन्द्र)',
+  Mars: 'Mangala (मंगल)',
+  Mercury: 'Budha (बुध)',
+  Jupiter: 'Guru (बृहस्पति)',
+  Venus: 'Shukra (शुक्र)',
+  Saturn: 'Shani (शनि)',
+  Rahu: 'Rahu (राहु)',
+  Ketu: 'Ketu (केतु)',
 };
 
-// Exaltation (Uchcha) and Debilitation (Neecha) Signs
+export const PLANET_SYMBOLS: Record<PlanetName, string> = {
+  Sun: '☉',
+  Moon: '☽',
+  Mars: '♂',
+  Mercury: '☿',
+  Jupiter: '♃',
+  Venus: '♀',
+  Saturn: '♄',
+  Rahu: '☊',
+  Ketu: '☋',
+};
+
+// Classical Combustion Limits (in angular separation degrees from the Sun)
+const COMBUSTION_LIMITS: Partial<Record<PlanetName, { normal: number; retro: number }>> = {
+  Moon: { normal: 12.0, retro: 12.0 },
+  Mars: { normal: 17.0, retro: 17.0 },
+  Mercury: { normal: 14.0, retro: 12.0 },
+  Jupiter: { normal: 11.0, retro: 11.0 },
+  Venus: { normal: 10.0, retro: 8.0 },
+  Saturn: { normal: 15.0, retro: 15.0 },
+};
+
+// Exaltation (Uchcha) and Debilitation (Neecha) Signs and Degrees
 const EXALTATION_SIGNS: Record<PlanetName, { exaltedSign: number; deepDegree: number; debilitatedSign: number }> = {
-  Sun: { exaltedSign: 0, deepDegree: 10, debilitatedSign: 6 }, // Aries 10 / Libra 10
-  Moon: { exaltedSign: 1, deepDegree: 3, debilitatedSign: 7 },  // Taurus 3 / Scorpio 3
-  Mars: { exaltedSign: 9, deepDegree: 28, debilitatedSign: 3 }, // Cap 28 / Cancer 28
-  Mercury: { exaltedSign: 5, deepDegree: 15, debilitatedSign: 11 }, // Virgo 15 / Pisces 15
-  Jupiter: { exaltedSign: 3, deepDegree: 5, debilitatedSign: 9 },  // Cancer 5 / Cap 5
-  Venus: { exaltedSign: 11, deepDegree: 27, debilitatedSign: 5 }, // Pisces 27 / Virgo 27
-  Saturn: { exaltedSign: 6, deepDegree: 20, debilitatedSign: 0 }, // Libra 20 / Aries 20
-  Rahu: { exaltedSign: 1, deepDegree: 20, debilitatedSign: 7 },  // Taurus / Scorpio
-  Ketu: { exaltedSign: 7, deepDegree: 20, debilitatedSign: 1 },  // Scorpio / Taurus
+  Sun: { exaltedSign: 0, deepDegree: 10, debilitatedSign: 6 },     // Aries 10° / Libra 10°
+  Moon: { exaltedSign: 1, deepDegree: 3, debilitatedSign: 7 },      // Taurus 3° / Scorpio 3°
+  Mars: { exaltedSign: 9, deepDegree: 28, debilitatedSign: 3 },     // Capricorn 28° / Cancer 28°
+  Mercury: { exaltedSign: 5, deepDegree: 15, debilitatedSign: 11 }, // Virgo 15° / Pisces 15°
+  Jupiter: { exaltedSign: 3, deepDegree: 5, debilitatedSign: 9 },   // Cancer 5° / Capricorn 5°
+  Venus: { exaltedSign: 11, deepDegree: 27, debilitatedSign: 5 },   // Pisces 27° / Virgo 27°
+  Saturn: { exaltedSign: 6, deepDegree: 20, debilitatedSign: 0 },   // Libra 20° / Aries 20°
+  Rahu: { exaltedSign: 1, deepDegree: 20, debilitatedSign: 7 },     // Taurus / Scorpio
+  Ketu: { exaltedSign: 7, deepDegree: 20, debilitatedSign: 1 },     // Scorpio / Taurus
+};
+
+// Moolatrikona ranges per BPHS
+const MOOLATRIKONA_RANGES: Partial<Record<PlanetName, { signIndex: number; startDeg: number; endDeg: number }>> = {
+  Sun: { signIndex: 4, startDeg: 0, endDeg: 20 },      // Leo 0-20°
+  Moon: { signIndex: 1, startDeg: 3, endDeg: 30 },     // Taurus 3-30°
+  Mars: { signIndex: 0, startDeg: 0, endDeg: 12 },     // Aries 0-12°
+  Mercury: { signIndex: 5, startDeg: 15, endDeg: 20 }, // Virgo 15-20°
+  Jupiter: { signIndex: 8, startDeg: 0, endDeg: 10 },  // Sagittarius 0-10°
+  Venus: { signIndex: 6, startDeg: 0, endDeg: 15 },    // Libra 0-15°
+  Saturn: { signIndex: 10, startDeg: 0, endDeg: 20 },  // Aquarius 0-20°
 };
 
 // Planet Lordship of Signs (0 = Aries, 1 = Taurus, ... 11 = Pisces)
-const SIGN_LORDS: PlanetName[] = [
+export const SIGN_LORDS: PlanetName[] = [
   'Mars',    // 0 Aries
   'Venus',   // 1 Taurus
   'Mercury', // 2 Gemini
@@ -78,274 +115,196 @@ const SIGN_LORDS: PlanetName[] = [
   'Jupiter'  // 11 Pisces
 ];
 
-// High-precision Keplerian orbital elements for the J2000 epoch
-interface OrbitalElements {
-  a0: number; // semi-major axis (AU)
-  e0: number; // eccentricity
-  i0: number; // inclination (deg)
-  L0: number; // mean longitude (deg)
-  w0: number; // longitude of perihelion (deg)
-  N0: number; // longitude of ascending node (deg)
-  // rates per century
-  a_dot: number;
-  e_dot: number;
-  i_dot: number;
-  L_dot: number;
-  w_dot: number;
-  N_dot: number;
-}
-
-const ORBITAL_DATA: Record<Exclude<PlanetName, 'Rahu' | 'Ketu'>, OrbitalElements> = {
-  Sun: {
-    a0: 1.00000261, e0: 0.01671123, i0: 0.00001531, L0: 100.46457166, w0: 102.93768193, N0: 0.0,
-    a_dot: 0.00000562, e_dot: -0.00004392, i_dot: -0.01294668, L_dot: 35999.37244981, w_dot: 0.32327364, N_dot: 0.0
-  },
-  Moon: { // Lunar geocentric approximate orbit
-    a0: 0.00257, e0: 0.05490, i0: 5.145, L0: 218.3164477, w0: 83.3532465, N0: 125.0445550,
-    a_dot: 0.0, e_dot: 0.0, i_dot: 0.0, L_dot: 481267.88128, w_dot: 4069.0137287, N_dot: -1934.13626197
-  },
-  Mercury: {
-    a0: 0.38709927, e0: 0.20563593, i0: 7.00497902, L0: 252.25032350, w0: 77.45779628, N0: 48.33076593,
-    a_dot: 0.00000037, e_dot: 0.00001906, i_dot: -0.00594749, L_dot: 149472.67411175, w_dot: 0.16047687, N_dot: -0.12534081
-  },
-  Venus: {
-    a0: 0.72333566, e0: 0.00677672, i0: 3.39467605, L0: 181.97909950, w0: 131.60246718, N0: 76.67984255,
-    a_dot: 0.00000067, e_dot: -0.00004107, i_dot: -0.00078890, L_dot: 58517.81538729, w_dot: 0.00268329, N_dot: -0.27769418
-  },
-  Mars: {
-    a0: 1.52371034, e0: 0.09339410, i0: 1.84969142, L0: -4.55343205, w0: -23.94362959, N0: 49.55953891,
-    a_dot: 0.00001847, e_dot: 0.00007882, i_dot: -0.00813131, L_dot: 19140.30268499, w_dot: 0.44441088, N_dot: -0.29257343
-  },
-  Jupiter: {
-    a0: 5.20288700, e0: 0.04838624, i0: 1.30439695, L0: 34.39644051, w0: 14.72847983, N0: 100.47390909,
-    a_dot: -0.00011607, e_dot: -0.00013257, i_dot: -0.00183714, L_dot: 3034.74612775, w_dot: 0.21252668, N_dot: 0.20469106
-  },
-  Saturn: {
-    a0: 9.53667594, e0: 0.05386179, i0: 2.48599187, L0: 49.95424423, w0: 92.59887831, N0: 113.66242448,
-    a_dot: -0.00125060, e_dot: -0.00050991, i_dot: 0.00193609, L_dot: 1222.49362201, w_dot: -0.41897216, N_dot: -0.28867794
-  }
+// Natural friendships according to Parasara
+const NATURAL_FRIENDS: Record<PlanetName, PlanetName[]> = {
+  Sun: ['Moon', 'Mars', 'Jupiter'],
+  Moon: ['Sun', 'Mercury'],
+  Mars: ['Sun', 'Moon', 'Jupiter'],
+  Mercury: ['Sun', 'Venus'],
+  Jupiter: ['Sun', 'Moon', 'Mars'],
+  Venus: ['Mercury', 'Saturn'],
+  Saturn: ['Mercury', 'Venus'],
+  Rahu: ['Mercury', 'Venus', 'Saturn'],
+  Ketu: ['Mars', 'Venus'],
 };
 
-// Solve Kepler's equation M = E - e * sin(E)
-function solveKepler(M_deg: number, e: number): number {
-  const M_rad = toRadians(normalizeDegrees(M_deg));
-  let E = M_rad;
-  for (let i = 0; i < 15; i++) {
-    const dE = (M_rad - (E - e * Math.sin(E))) / (1.0 - e * Math.cos(E));
-    E += dE;
-    if (Math.abs(dE) < 1e-7) break;
-  }
-  return toDegrees(E);
-}
+const NATURAL_ENEMIES: Record<PlanetName, PlanetName[]> = {
+  Sun: ['Venus', 'Saturn'],
+  Moon: [],
+  Mars: ['Mercury'],
+  Mercury: ['Moon'],
+  Jupiter: ['Mercury', 'Venus'],
+  Venus: ['Sun', 'Moon'],
+  Saturn: ['Sun', 'Moon', 'Mars'],
+  Rahu: ['Sun', 'Moon'],
+  Ketu: ['Sun', 'Moon'],
+};
 
-// Compute heliocentric/geocentric tropical position and speed
-function computeRawPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, jd: number): { lon: number; speed: number } {
-  const T = (jd - 2451545.0) / 36525.0;
-  const el = ORBITAL_DATA[name];
-
-  const a = el.a0 + el.a_dot * T;
-  const e = el.e0 + el.e_dot * T;
-  const L = el.L0 + el.L_dot * T;
-  const w = el.w0 + el.w_dot * T;
-
-  const M = L - w;
-  const E = solveKepler(M, e);
-  const E_rad = toRadians(E);
-
-  // Heliocentric coordinates in orbital plane
-  const x = a * (Math.cos(E_rad) - e);
-  const y = a * Math.sqrt(1.0 - e * e) * Math.sin(E_rad);
-
-  const r = Math.sqrt(x * x + y * y);
-  const v = toDegrees(Math.atan2(y, x)); // True anomaly
-  const trueLon = normalizeDegrees(v + w);
-
-  // Speed approximation (change over 0.5 day)
-  const T_next = ((jd + 0.5) - 2451545.0) / 36525.0;
-  const L_next = el.L0 + el.L_dot * T_next;
-  const M_next = L_next - (el.w0 + el.w_dot * T_next);
-  const E_next = solveKepler(M_next, e);
-  const v_next = toDegrees(Math.atan2(Math.sin(toRadians(E_next)), Math.cos(toRadians(E_next)) - e));
-  const trueLon_next = normalizeDegrees(v_next + (el.w0 + el.w_dot * T_next));
-  
-  let speed = (trueLon_next - trueLon) * 2;
-  if (speed > 180) speed -= 360;
-  if (speed < -180) speed += 360;
-
-  // Geocentric correction for planets other than Sun & Moon
-  if (name !== 'Sun' && name !== 'Moon') {
-    const sunEl = ORBITAL_DATA.Sun;
-    const sunM = (sunEl.L0 + sunEl.L_dot * T) - (sunEl.w0 + sunEl.w_dot * T);
-    const sunE = solveKepler(sunM, sunEl.e0);
-    const sunV = toDegrees(Math.atan2(Math.sin(toRadians(sunE)), Math.cos(toRadians(sunE)) - sunEl.e0));
-    const sunTrueLon = normalizeDegrees(sunV + sunEl.w0);
-    const sunR = sunEl.a0;
-
-    const xPlanet = r * Math.cos(toRadians(trueLon));
-    const yPlanet = r * Math.sin(toRadians(trueLon));
-    const xSun = sunR * Math.cos(toRadians(sunTrueLon));
-    const ySun = sunR * Math.sin(toRadians(sunTrueLon));
-    // Vector from Earth to Sun is (xSun, ySun)
-    // Vector from Sun to Planet is (xPlanet, yPlanet)
-    // By vector addition, Vector from Earth to Planet is (xSun + xPlanet, ySun + yPlanet)
-    const xGeo = xSun + xPlanet;
-    const yGeo = ySun + yPlanet;
-    const geoLon = normalizeDegrees(toDegrees(Math.atan2(yGeo, xGeo)));
-
-    return { lon: geoLon, speed: speed > 0 ? speed : -0.1 };
-  }
-
-  return { lon: trueLon, speed };
-}
-
-// Compute Rahu and Ketu (Mean Lunar Nodes)
-function computeNodes(jd: number): { rahuLon: number; ketuLon: number } {
-  const T = (jd - 2451545.0) / 36525.0;
-  // Node mean longitude
-  let node = 125.04452 - 1934.136261 * T + 0.0020708 * T * T;
-  node = normalizeDegrees(node);
-  const ketu = normalizeDegrees(node + 180.0);
-  return { rahuLon: node, ketuLon: ketu };
-}
-
-// Calculate Vedic planetary dignity
-export function calculateDignity(planet: PlanetName, signIndex: number): DignityType {
+/**
+ * Calculate Vedic planetary dignity (Exalted, Moolatrikona, Own Sign, Friend, Neutral, Enemy, Debilitated)
+ */
+export function calculateDignity(planet: PlanetName, signIndex: number, degreeInSign: number): DignityType {
   const exaltInfo = EXALTATION_SIGNS[planet];
   if (signIndex === exaltInfo.exaltedSign) return 'Exalted';
   if (signIndex === exaltInfo.debilitatedSign) return 'Debilitated';
 
+  const moola = MOOLATRIKONA_RANGES[planet];
+  if (moola && signIndex === moola.signIndex && degreeInSign >= moola.startDeg && degreeInSign < moola.endDeg) {
+    return 'Moolatrikona';
+  }
+
   const lord = SIGN_LORDS[signIndex];
   if (lord === planet) return 'Own Sign';
 
-  // Natural friendships according to Parasara
-  const friends: Record<PlanetName, PlanetName[]> = {
-    Sun: ['Moon', 'Mars', 'Jupiter'],
-    Moon: ['Sun', 'Mercury'],
-    Mars: ['Sun', 'Moon', 'Jupiter'],
-    Mercury: ['Sun', 'Venus'],
-    Jupiter: ['Sun', 'Moon', 'Mars'],
-    Venus: ['Mercury', 'Saturn'],
-    Saturn: ['Mercury', 'Venus'],
-    Rahu: ['Mercury', 'Venus', 'Saturn'],
-    Ketu: ['Mars', 'Venus'],
-  };
-
-  const enemies: Record<PlanetName, PlanetName[]> = {
-    Sun: ['Venus', 'Saturn'],
-    Moon: [],
-    Mars: ['Mercury'],
-    Mercury: ['Moon'],
-    Jupiter: ['Mercury', 'Venus'],
-    Venus: ['Sun', 'Moon'],
-    Saturn: ['Sun', 'Moon', 'Mars'],
-    Rahu: ['Sun', 'Moon'],
-    Ketu: ['Sun', 'Moon'],
-  };
-
-  if (friends[planet]?.includes(lord)) return 'Friend';
-  if (enemies[planet]?.includes(lord)) return 'Enemy';
+  if (NATURAL_FRIENDS[planet]?.includes(lord)) return 'Friend';
+  if (NATURAL_ENEMIES[planet]?.includes(lord)) return 'Enemy';
   return 'Neutral';
 }
 
-// Compute Vedic aspects (Drishti)
-export function getPlanetAspects(planet: PlanetName, currentHouse: number): number[] {
-  const aspectHouses = new Set<number>();
-  // 7th full aspect for all planets
-  aspectHouses.add(((currentHouse + 6 - 1) % 12) + 1);
+/**
+ * Compute Vedic planetary aspects (Drishti)
+ */
+export function getPlanetAspects(planet: PlanetName, house: number): number[] {
+  const aspects: number[] = [];
+  const addHouse = (offset: number) => {
+    aspects.push(((house - 1 + offset) % 12) + 1);
+  };
 
-  // Special Vedic full aspects
+  // All planets aspect 7th house from their location
+  addHouse(7);
+
+  // Special aspects per Parashara
   if (planet === 'Mars') {
-    aspectHouses.add(((currentHouse + 3 - 1) % 12) + 1); // 4th
-    aspectHouses.add(((currentHouse + 7 - 1) % 12) + 1); // 8th
+    addHouse(4);
+    addHouse(8);
   } else if (planet === 'Jupiter' || planet === 'Rahu' || planet === 'Ketu') {
-    aspectHouses.add(((currentHouse + 4 - 1) % 12) + 1); // 5th
-    aspectHouses.add(((currentHouse + 8 - 1) % 12) + 1); // 9th
+    addHouse(5);
+    addHouse(9);
   } else if (planet === 'Saturn') {
-    aspectHouses.add(((currentHouse + 2 - 1) % 12) + 1); // 3rd
-    aspectHouses.add(((currentHouse + 9 - 1) % 12) + 1); // 10th
+    addHouse(3);
+    addHouse(10);
   }
 
-  return Array.from(aspectHouses).sort((a, b) => a - b);
+  return [...new Set(aspects)].sort((a, b) => a - b);
 }
 
-const SANSKRIT_PLANET_NAMES: Record<PlanetName, string> = {
-  Sun: 'Surya (सूर्य)',
-  Moon: 'Chandra (चन्द्र)',
-  Mars: 'Mangala (मंगल)',
-  Mercury: 'Budha (बुध)',
-  Jupiter: 'Guru (बृहस्पति)',
-  Venus: 'Shukra (शुक्र)',
-  Saturn: 'Shani (शनि)',
-  Rahu: 'Rahu (राहु)',
-  Ketu: 'Ketu (केतु)',
-};
+/**
+ * Compute Apparent Geocentric Tropical Longitude and Speed for Sun, Moon, and 5 True Planets
+ */
+function getApparentPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, time: Astronomy.AstroTime): { lon: number; speed: number } {
+  const dt = 0.01; // 14.4 minutes step for speed derivative
+  const timeNext = time.AddDays(dt);
 
-const PLANET_SYMBOLS: Record<PlanetName, string> = {
-  Sun: '☉',
-  Moon: '☽',
-  Mars: '♂',
-  Mercury: '☿',
-  Jupiter: '♃',
-  Venus: '♀',
-  Saturn: '♄',
-  Rahu: '☊',
-  Ketu: '☋',
-};
+  let lon1 = 0;
+  let lon2 = 0;
 
-// Main execution function: calculate all 9 planets
+  if (name === 'Sun') {
+    const p1 = Astronomy.SunPosition(time);
+    const p2 = Astronomy.SunPosition(timeNext);
+    lon1 = p1.elon;
+    lon2 = p2.elon;
+  } else if (name === 'Moon') {
+    const m1 = Astronomy.GeoMoon(time);
+    const m2 = Astronomy.GeoMoon(timeNext);
+    lon1 = Astronomy.Ecliptic(m1).elon;
+    lon2 = Astronomy.Ecliptic(m2).elon;
+  } else {
+    // Mercury, Venus, Mars, Jupiter, Saturn
+    const bodyMap: Record<string, Astronomy.Body> = {
+      Mercury: Astronomy.Body.Mercury,
+      Venus: Astronomy.Body.Venus,
+      Mars: Astronomy.Body.Mars,
+      Jupiter: Astronomy.Body.Jupiter,
+      Saturn: Astronomy.Body.Saturn,
+    };
+    const body = bodyMap[name];
+    const v1 = Astronomy.GeoVector(body, time, true);
+    const v2 = Astronomy.GeoVector(body, timeNext, true);
+    lon1 = Astronomy.Ecliptic(v1).elon;
+    lon2 = Astronomy.Ecliptic(v2).elon;
+  }
+
+  let diff = lon2 - lon1;
+  if (diff > 180.0) diff -= 360.0;
+  if (diff < -180.0) diff += 360.0;
+  const speed = diff / dt;
+
+  return { lon: normalizeDegrees(lon1), speed };
+}
+
+/**
+ * Compute Mean Lunar Nodes (Rahu and Ketu) using IAU theory
+ */
+function getLunarNodes(time: Astronomy.AstroTime): { rahuLon: number; ketuLon: number; speed: number } {
+  const T = time.tt / 36525.0;
+  // IAU / Simon & Chapront Mean Ascending Node of the Moon (Rahu)
+  let omega = 125.0445550 - 1934.1361849 * T + 0.0020762 * T * T + (T * T * T) / 467410.0 - (T * T * T * T) / 60616000.0;
+  omega = normalizeDegrees(omega);
+  const ketu = normalizeDegrees(omega + 180.0);
+  const speed = -1934.1361849 / 36525.0; // ~ -0.05295 deg/day
+
+  return { rahuLon: omega, ketuLon: ketu, speed };
+}
+
+/**
+ * Main execution function: calculate all 9 Navagrahas with sub-arcminute celestial precision
+ */
 export function calculateAllPlanets(jd: number, ascendantLongitude: number): PlanetData[] {
-  const ayanamsha = getLahiriAyanamsha(jd);
-  const ascSign = Math.floor(ascendantLongitude / 30);
+  const ms = (jd - 2440587.5) * 86400000.0;
+  const time = Astronomy.MakeTime(new Date(ms));
+  const ayanamsha = getLahiriAyanamsha(time);
+  const ascSign = Math.floor(ascendantLongitude / 30.0);
 
   // First compute Sun for combustion baseline
-  const sunRaw = computeRawPlanetPosition('Sun', jd);
-  const sunSidereal = normalizeDegrees(sunRaw.lon - ayanamsha);
+  const sunPos = getApparentPlanetPosition('Sun', time);
+  const sunSidereal = normalizeDegrees(sunPos.lon - ayanamsha);
 
-  const { rahuLon, ketuLon } = computeNodes(jd);
+  const { rahuLon, ketuLon, speed: nodeSpeed } = getLunarNodes(time);
 
   const planetNames: PlanetName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
   const results: PlanetData[] = [];
 
   for (const name of planetNames) {
     let siderealLon: number;
-    let speed = 1.0;
-    let isRetro = false;
+    let speed: number;
+    let isRetro: boolean;
 
     if (name === 'Rahu') {
       siderealLon = normalizeDegrees(rahuLon - ayanamsha);
-      speed = -0.05; // Nodes always move retrograde in mean motion
-      isRetro = true;
+      speed = nodeSpeed;
+      isRetro = true; // Nodes are always retrograde in mean motion
     } else if (name === 'Ketu') {
       siderealLon = normalizeDegrees(ketuLon - ayanamsha);
-      speed = -0.05;
+      speed = nodeSpeed;
       isRetro = true;
     } else {
-      const raw = computeRawPlanetPosition(name, jd);
+      const raw = getApparentPlanetPosition(name, time);
       siderealLon = normalizeDegrees(raw.lon - ayanamsha);
       speed = raw.speed;
       isRetro = speed < 0;
     }
 
-    const signIndex = Math.floor(siderealLon / 30);
-    const signRemainder = siderealLon % 30;
+    const signIndex = Math.floor(siderealLon / 30.0);
+    const signRemainder = siderealLon % 30.0;
     const degInSign = Math.floor(signRemainder);
-    const minRemainder = (signRemainder - degInSign) * 60;
+    const minRemainder = (signRemainder - degInSign) * 60.0;
     const minutes = Math.floor(minRemainder);
-    const seconds = Math.floor((minRemainder - minutes) * 60);
+    const seconds = Math.floor((minRemainder - minutes) * 60.0);
 
-    // Calculate house (1-12) relative to Ascendant
+    // Calculate house (1-12) relative to Ascendant (Whole Sign standard)
     const house = (((signIndex - ascSign + 12) % 12)) + 1;
 
     // Combustion check against Sun
     let isCombust = false;
-    const limit = COMBUSTION_LIMITS[name];
-    if (limit && name !== 'Sun') {
+    const limitObj = COMBUSTION_LIMITS[name];
+    if (limitObj && name !== 'Sun') {
+      const limit = isRetro ? limitObj.retro : limitObj.normal;
       let diff = Math.abs(siderealLon - sunSidereal);
-      if (diff > 180) diff = 360 - diff;
+      if (diff > 180.0) diff = 360.0 - diff;
       if (diff <= limit) isCombust = true;
     }
 
-    const dignity = calculateDignity(name, signIndex);
+    const dignity = calculateDignity(name, signIndex, signRemainder);
     const nakshatra = getNakshatraInfo(siderealLon);
     const aspectsToHouses = getPlanetAspects(name, house);
 

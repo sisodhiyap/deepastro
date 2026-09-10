@@ -2,9 +2,25 @@ import React, { useState } from 'react';
 import { Flame, CheckCircle2, Circle, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
 
 export const LalKitabPage: React.FC = () => {
-  const [completedRemedies, setCompletedRemedies] = useState<Record<string, boolean>>({
-    'rem-1': true,
+  const [completedRemedies, setCompletedRemedies] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('deepastro_remedies_progress');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return {};
   });
+
+  const toggleRemedy = (id: string) => {
+    setCompletedRemedies((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      try {
+        localStorage.setItem('deepastro_remedies_progress', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const remedies = [
     {
@@ -44,10 +60,6 @@ export const LalKitabPage: React.FC = () => {
       precautions: 'Do not bring the donated oil back into your home kitchen.',
     },
   ];
-
-  const toggleRemedy = (id: string) => {
-    setCompletedRemedies((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   return (
     <div className="space-y-10 animate-fadeIn">

@@ -19,6 +19,28 @@ export const ReportsPage: React.FC = () => {
     gender: 'Other',
   });
 
+  // Automatically load saved chart profile if one exists
+  React.useEffect(() => {
+    fetch('/api/astrology/chart')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const bd = data?.birthData || data?.chart?.birthData;
+        if (bd && bd.name && bd.birthDate) {
+          setBirthData({
+            name: bd.name,
+            birthDate: bd.birthDate,
+            birthTime: bd.birthTime || '',
+            birthPlace: bd.birthPlace || '',
+            latitude: bd.latitude?.toString() || '',
+            longitude: bd.longitude?.toString() || '',
+            timezone: bd.timezone?.toString() || '5.5',
+            gender: bd.gender || 'Other',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleGenerate = async () => {
     setErrorMsg(null);
     if (!birthData.name || !birthData.birthDate || !birthData.birthTime || !birthData.birthPlace) {

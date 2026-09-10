@@ -18,15 +18,19 @@ export const PalmistryPage: React.FC = () => {
     }
   };
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handleAnalyze = async () => {
+    if (!selectedFile) {
+      setErrorMessage('Please upload a palm photo before analyzing.');
+      return;
+    }
+
+    setErrorMessage(null);
     setIsLoading(true);
     try {
       const formData = new FormData();
-      if (selectedFile) {
-        formData.append('palmImage', selectedFile);
-      } else {
-        formData.append('imageData', 'sample_fallback_palm');
-      }
+      formData.append('palmImage', selectedFile);
       formData.append('handType', handType);
       formData.append('isDominant', isDominant.toString());
       formData.append('ageRange', ageRange);
@@ -39,9 +43,12 @@ export const PalmistryPage: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setAnalysis(data.analysis);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setErrorMessage(err.details || err.error || 'Failed to analyze palm photo.');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error communicating with palmistry engine.');
     } finally {
       setIsLoading(false);
     }
@@ -133,10 +140,20 @@ export const PalmistryPage: React.FC = () => {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+              {errorMessage}
+            </div>
+          )}
+
           <button
             onClick={handleAnalyze}
-            disabled={isLoading}
-            className="w-full py-3.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-extrabold text-xs uppercase tracking-wider transition-all shadow-glow-cyan flex items-center justify-center gap-2"
+            disabled={!selectedFile || isLoading}
+            className={`w-full py-3.5 rounded-2xl font-display font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+              !selectedFile || isLoading
+                ? 'bg-cosmic-card border border-cosmic-border text-cosmic-muted cursor-not-allowed'
+                : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-glow-cyan'
+            }`}
           >
             <span>{isLoading ? 'Scanning Palm Geometry...' : 'Analyze Palm Features'}</span>
             <ArrowRight className="w-4 h-4" />

@@ -10,6 +10,9 @@ interface AppShellProps {
   onSelectTab: (tab: NavTabId) => void;
   userPlan?: string;
   userName?: string;
+  currentUser?: any;
+  onOpenAuth?: (mode: 'login' | 'register') => void;
+  onLogout?: () => void;
   chartContext?: any;
   children: React.ReactNode;
 }
@@ -19,6 +22,9 @@ export const AppShell: React.FC<AppShellProps> = ({
   onSelectTab,
   userPlan = 'FREE',
   userName = 'Cosmic Seeker',
+  currentUser,
+  onOpenAuth,
+  onLogout,
   chartContext,
   children,
 }) => {
@@ -66,6 +72,9 @@ export const AppShell: React.FC<AppShellProps> = ({
           onNavigate={onSelectTab}
           userPlan={userPlan}
           userName={userName}
+          currentUser={currentUser}
+          onOpenAuth={onOpenAuth}
+          onLogout={onLogout}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">

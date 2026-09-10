@@ -1,8 +1,10 @@
 /**
  * DeepAstro Astronomical Calculation Engine
  * High-precision sidereal planetary calculations using Lahiri Ayanamsha (Chitra Paksha).
- * Computes Julian Day, Local Sidereal Time, Ecliptic coordinates, and Ascendant (Lagna).
+ * Powered by VSOP87 planetary theory & ELP-2000/82 lunar theory via astronomy-engine.
  */
+
+import * as Astronomy from 'astronomy-engine';
 
 export interface GeoLocation {
   latitude: number;
@@ -20,98 +22,13 @@ export interface BirthTimeInput {
   second?: number;
 }
 
-// Convert Gregorian Date to Julian Day Number (UT)
-export function getJulianDay(input: BirthTimeInput, tzOffsetHours: number): number {
-  let { year, month, day, hour, minute } = input;
-  const second = input.second || 0;
-
-  // Convert local time to UTC decimal hours
-  const localDecimalHours = hour + minute / 60.0 + second / 3600.0;
-  let utcDecimalHours = localDecimalHours - tzOffsetHours;
-
-  if (utcDecimalHours < 0) {
-    utcDecimalHours += 24.0;
-    day -= 1;
-  } else if (utcDecimalHours >= 24.0) {
-    utcDecimalHours -= 24.0;
-    day += 1;
-  }
-
-  if (month <= 2) {
-    year -= 1;
-    month += 12;
-  }
-
-  const A = Math.floor(year / 100);
-  const B = 2 - A + Math.floor(A / 4);
-
-  const JD = Math.floor(365.25 * (year + 4716)) +
-             Math.floor(30.6001 * (month + 1)) +
-             day + B - 1524.5 +
-             (utcDecimalHours / 24.0);
-
-  return JD;
-}
-
-// Lahiri Ayanamsha calculation (standard Vedic sidereal reference, ~23°51' at 2000)
-export function getLahiriAyanamsha(jd: number): number {
-  // Epoch J2000.0 is JD 2451545.0
-  const T = (jd - 2451545.0) / 36525.0;
-  // Precise Lahiri polynomial formula
-  const ayanamsha = 23.85805 + 1.396042 * T + 0.000308 * (T * T);
-  return ayanamsha;
-}
-
-// Greenwhich Mean Sidereal Time (GMST) in degrees
-export function getGMST(jd: number): number {
-  const T = (jd - 2451545.0) / 36525.0;
-  let gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) +
-             0.000387933 * T * T - (T * T * T) / 38710000.0;
-  gmst = normalizeDegrees(gmst);
-  return gmst;
-}
-
-// Local Sidereal Time (LST) in degrees
-export function getLST(jd: number, longitude: number): number {
-  const gmst = getGMST(jd);
-  return normalizeDegrees(gmst + longitude);
-}
-
-// Calculate Ascendant (Lagna) in tropical degrees, then convert to sidereal
-export function calculateAscendant(jd: number, geo: GeoLocation): number {
-  const lstDeg = getLST(jd, geo.longitude);
-  const lstRad = toRadians(lstDeg);
-  const latRad = toRadians(geo.latitude);
-
-  // Mean obliquity of ecliptic (eps)
-  const T = (jd - 2451545.0) / 36525.0;
-  const epsDeg = 23.439291 - 0.0130042 * T;
-  const epsRad = toRadians(epsDeg);
-
-  // Ascendant formula: tan(Asc) = -cos(RAMC) / (sin(RAMC)*cos(eps) + tan(lat)*sin(eps))
-  const sinLst = Math.sin(lstRad);
-  const cosLst = Math.cos(lstRad);
-  const sinEps = Math.sin(epsRad);
-  const cosEps = Math.cos(epsRad);
-  const tanLat = Math.tan(latRad);
-
-  const y = -cosLst;
-  const x = sinLst * cosEps + tanLat * sinEps;
-  let tropicalAsc = toDegrees(Math.atan2(y, x));
-  tropicalAsc = normalizeDegrees(tropicalAsc);
-
-  // Apply Lahiri Ayanamsha to obtain Sidereal Lagna (Nirayana)
-  const ayanamsha = getLahiriAyanamsha(jd);
-  const siderealAsc = normalizeDegrees(tropicalAsc - ayanamsha);
-
-  return siderealAsc;
-}
-
-// Utility angle transformations
+/**
+ * Normalizes an angle in degrees to [0, 360)
+ */
 export function normalizeDegrees(deg: number): number {
-  let d = deg % 360;
-  if (d < 0) d += 360;
-  return d;
+  let d = deg % 360.0;
+  if (d < 0) d += 360.0;
+  return Math.abs(d) < 1e-12 ? 0 : d;
 }
 
 export function toRadians(deg: number): number {
@@ -120,6 +37,155 @@ export function toRadians(deg: number): number {
 
 export function toDegrees(rad: number): number {
   return (rad * 180.0) / Math.PI;
+}
+
+/**
+ * Convert local birth date & time to a UTC Date object using the exact tzOffsetHours
+ */
+export function getUtcDateFromLocal(input: BirthTimeInput, tzOffsetHours: number): Date {
+  const { year, month, day, hour, minute } = input;
+  const second = input.second || 0;
+  // Compute total UTC milliseconds
+  const localUtcMs = Date.UTC(year, month - 1, day, hour, minute, second);
+  const offsetMs = Math.round(tzOffsetHours * 3600 * 1000);
+  return new Date(localUtcMs - offsetMs);
+}
+
+/**
+ * Convert Gregorian Date to Julian Day Number (Universal Time, UT1 / UTC)
+ * Mathematically rigorous: safe against month/year rollovers.
+ */
+export function getJulianDay(input: BirthTimeInput, tzOffsetHours: number): number {
+  const utcDate = getUtcDateFromLocal(input, tzOffsetHours);
+  return getJulianDayFromDate(utcDate);
+}
+
+/**
+ * Compute Julian Day directly from a UTC Date object
+ */
+export function getJulianDayFromDate(utcDate: Date): number {
+  // Epoch for JD: 2000-01-01 12:00:00 UTC = JD 2451545.0
+  const ms = utcDate.getTime();
+  const jd = 2440587.5 + ms / 86400000.0;
+  return jd;
+}
+
+/**
+ * Create an Astronomy.AstroTime from a UTC Date
+ */
+export function makeAstroTime(utcDate: Date): Astronomy.AstroTime {
+  return Astronomy.MakeTime(utcDate);
+}
+
+/**
+ * High-Precision Lahiri Ayanamsha (Chitra Paksha).
+ * Calibrated so Spica (Alpha Virginis / Chitra Nakshatra) is at exact sidereal 180°00'00".
+ * Uses IAU 2006 precession model and IAU nutation in longitude.
+ *
+ * J2000.0 (2000-01-01 12:00:00 TT) Mean Lahiri = 23° 51' 25.533" = 23.8570925°
+ */
+export function getLahiriAyanamsha(jdOrTime: number | Astronomy.AstroTime): number {
+  let time: Astronomy.AstroTime;
+  if (typeof jdOrTime === 'number') {
+    // Convert JD to Date
+    const ms = (jdOrTime - 2440587.5) * 86400000.0;
+    time = Astronomy.MakeTime(new Date(ms));
+  } else {
+    time = jdOrTime;
+  }
+
+  // T in Julian centuries from J2000.0 TT
+  const T = time.tt / 36525.0;
+
+  // IAU 2006 general precession in longitude (in degrees)
+  const p = (5028.796195 * T + 1.1054348 * T * T + 0.0000769 * T * T * T) / 3600.0;
+
+  // Mean Lahiri ayanamsha at J2000: 23° 51' 25.533"
+  const meanAyanamsha = (23 + 51 / 60 + 25.533 / 3600) + p;
+
+  // Nutation in longitude (dpsi is in arcseconds from astronomy-engine)
+  const tilt = Astronomy.e_tilt(time);
+  const dpsiDeg = tilt.dpsi / 3600.0;
+
+  // True Lahiri Ayanamsha incorporates nutation:
+  // Apparent Tropical Longitude - True Ayanamsha = Sidereal Longitude (Mean Equator of Date)
+  const trueAyanamsha = meanAyanamsha + dpsiDeg * Math.cos(toRadians(tilt.tobl));
+
+  return trueAyanamsha;
+}
+
+/**
+ * Greenwich Mean Sidereal Time (GMST) in degrees
+ */
+export function getGMST(jd: number): number {
+  const ms = (jd - 2440587.5) * 86400000.0;
+  const time = Astronomy.MakeTime(new Date(ms));
+  // Greenwich Apparent Sidereal Time in hours -> degrees
+  const gastHours = Astronomy.SiderealTime(time);
+  return normalizeDegrees(gastHours * 15.0);
+}
+
+/**
+ * Local Apparent Sidereal Time (LST / RAMC) in degrees
+ */
+export function getLST(jd: number, longitude: number): number {
+  const gmst = getGMST(jd);
+  return normalizeDegrees(gmst + longitude);
+}
+
+/**
+ * Topocentric Ascendant (Lagna) and Midheaven (MC) in Sidereal degrees (Lahiri).
+ * Computes exact Local Apparent Sidereal Time (RAMC) and true obliquity.
+ */
+export function calculateAscendant(jd: number, geo: GeoLocation): number {
+  const ms = (jd - 2440587.5) * 86400000.0;
+  const time = Astronomy.MakeTime(new Date(ms));
+
+  // GAST in hours -> degrees
+  const gastHours = Astronomy.SiderealTime(time);
+  const ramcDeg = normalizeDegrees(gastHours * 15.0 + geo.longitude);
+  const ramcRad = toRadians(ramcDeg);
+  const latRad = toRadians(geo.latitude);
+
+  // True obliquity of date
+  const tilt = Astronomy.e_tilt(time);
+  const epsRad = toRadians(tilt.tobl);
+
+  // Exact Ascendant formula:
+  // tan(Asc) = cos(RAMC) / (-sin(RAMC)*cos(eps) - tan(lat)*sin(eps))
+  const y = Math.cos(ramcRad);
+  const x = -Math.sin(ramcRad) * Math.cos(epsRad) - Math.tan(latRad) * Math.sin(epsRad);
+  let tropicalAsc = toDegrees(Math.atan2(y, x));
+  tropicalAsc = normalizeDegrees(tropicalAsc);
+
+  // Apply True Lahiri Ayanamsha
+  const ayanamsha = getLahiriAyanamsha(time);
+  const siderealAsc = normalizeDegrees(tropicalAsc - ayanamsha);
+
+  return siderealAsc;
+}
+
+/**
+ * Calculate Tropical and Sidereal Midheaven (MC)
+ */
+export function calculateMidheaven(jd: number, geo: GeoLocation): { tropicalMC: number; siderealMC: number } {
+  const ms = (jd - 2440587.5) * 86400000.0;
+  const time = Astronomy.MakeTime(new Date(ms));
+
+  const gastHours = Astronomy.SiderealTime(time);
+  const ramcDeg = normalizeDegrees(gastHours * 15.0 + geo.longitude);
+  const ramcRad = toRadians(ramcDeg);
+
+  const tilt = Astronomy.e_tilt(time);
+  const epsRad = toRadians(tilt.tobl);
+
+  let tropicalMC = toDegrees(Math.atan2(Math.sin(ramcRad), Math.cos(ramcRad) * Math.cos(epsRad)));
+  tropicalMC = normalizeDegrees(tropicalMC);
+
+  const ayanamsha = getLahiriAyanamsha(time);
+  const siderealMC = normalizeDegrees(tropicalMC - ayanamsha);
+
+  return { tropicalMC, siderealMC };
 }
 
 // Convert decimal degrees to Sign, Degree, Minute, Second
@@ -146,12 +212,12 @@ export const VEDIC_RASHI_NAMES = [
 
 export function getDegreeDetails(totalDeg: number): DegreeDetails {
   const norm = normalizeDegrees(totalDeg);
-  const signIndex = Math.floor(norm / 30);
-  const signRemainder = norm % 30;
+  const signIndex = Math.floor(norm / 30.0);
+  const signRemainder = norm % 30.0;
   const deg = Math.floor(signRemainder);
-  const minRemainder = (signRemainder - deg) * 60;
+  const minRemainder = (signRemainder - deg) * 60.0;
   const minutes = Math.floor(minRemainder);
-  const seconds = Math.floor((minRemainder - minutes) * 60);
+  const seconds = Math.floor((minRemainder - minutes) * 60.0);
 
   return {
     signIndex,

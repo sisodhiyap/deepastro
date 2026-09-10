@@ -78,8 +78,9 @@ export class ReportComposer {
   public static compose(
     profile: BirthProfileInput,
     chartStyle: 'north' | 'south' | 'east' = 'north',
-    userId?: string,
-    parsedCandidate?: UnverifiedParsedKundli
+    userIdOrKundli?: string | FullKundliResult,
+    parsedCandidate?: UnverifiedParsedKundli,
+    existingKundli?: FullKundliResult
   ): ComposedReportEnvelope {
     // 0. Safety Check: Block accidental publication of specimen demo data
     const isTestMode = process.env.NODE_ENV === 'test' || process.env.ALLOW_TEST_FIXTURES === 'true';
@@ -87,8 +88,51 @@ export class ReportComposer {
       throw new Error('SPECIMEN_DATA_DETECTED: Specimen test data ("Aarav Mehta") detected. Production reports must use genuine user birth details.');
     }
 
-    // 1. Calculate Authoritative Vedic Astrology Coordinates
-    const kundli: FullKundliResult = VedicAstroEngine.calculateKundli(profile);
+    let userId: string | undefined;
+    let kundliToUse: FullKundliResult | undefined;
+
+    if (typeof userIdOrKundli === 'object' && userIdOrKundli !== null) {
+      kundliToUse = userIdOrKundli;
+    } else {
+      userId = userIdOrKundli;
+      kundliToUse = existingKundli;
+    }
+
+    // 1. Consume Existing Calculation Snapshot or Calculate Authoritative Coordinates
+    let kundli: FullKundliResult;
+    if (kundliToUse) {
+      if ((kundliToUse as any).astronomy) {
+        kundli = kundliToUse as FullKundliResult;
+      } else if ((kundliToUse as any).ayanamsha) {
+        const snap = kundliToUse as any;
+        kundli = {
+          profile,
+          astronomy: {
+            julianDay: snap.julianDay,
+            ayanamshaName: snap.ayanamsha.name,
+            ayanamshaDegrees: snap.ayanamsha.degrees,
+          },
+          ascendant: snap.ascendant,
+          sunSign: snap.planets.find((p: any) => p.name === 'Sun')?.details || snap.ascendant.details,
+          moonSign: snap.planets.find((p: any) => p.name === 'Moon')?.details || snap.ascendant.details,
+          moonNakshatra: snap.ascendant.nakshatra,
+          planets: snap.planets,
+          houses: snap.houses,
+          vargas: snap.vargas,
+          shodashvargas: snap.shodashvargas,
+          dashas: snap.dashas,
+          yogas: snap.yogas,
+          doshas: snap.doshas,
+          remedies: [],
+          predictions: {} as any,
+          fingerprint: snap.fingerprint,
+        };
+      } else {
+        kundli = VedicAstroEngine.calculateKundli(profile);
+      }
+    } else {
+      kundli = VedicAstroEngine.calculateKundli(profile);
+    }
     const ascSignIndex = kundli.ascendant.details.signIndex;
 
     // 2. Build Fact Ledger and Audit Astronomical Parity
@@ -101,7 +145,7 @@ export class ReportComposer {
     const chartSvg = this.generateNorthIndianSvg(ascSignIndex, kundli.planets);
 
     // 4. Adapt into canonical KundliReport
-    const report = ReportDataAdapter.adapt(profile, chartStyle, chartSvg, userId);
+    const report = ReportDataAdapter.adapt(profile, chartStyle, chartSvg, userId, kundli);
 
     // 5. Validate through Quality & Safety Gate
     const validation = PDFQualityValidator.validate(report);

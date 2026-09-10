@@ -14,7 +14,7 @@ export class UserRepository {
     this.client = client;
   }
 
-  public async createUser(user: Partial<UserRecord> & { email: string; passwordHash: string; role: 'CLIENT' | 'ASTROLOGER' | 'ADMIN' | 'SUPER_ADMIN' }): Promise<UserRecord> {
+  public async createUser(user: Partial<UserRecord> & { email: string; passwordHash: string; role: 'USER' | 'CLIENT' | 'ASTROLOGER' | 'ADMIN' | 'SUPER_ADMIN' }): Promise<UserRecord> {
     const record: UserRecord = {
       id: user.id || `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       email: user.email.toLowerCase().trim(),

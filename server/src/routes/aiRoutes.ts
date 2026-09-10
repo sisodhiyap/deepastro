@@ -6,8 +6,8 @@
 import { Router, Response } from 'express';
 import { AIOrchestrator } from '../ai/AIOrchestrator.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
-import { VedicAstroEngine } from '../astrology/VedicAstroEngine.js';
-import { DEMO_BIRTH_PROFILE } from './astrologyRoutes.js';
+import { VedicAstroEngine, BirthProfileInput } from '../astrology/VedicAstroEngine.js';
+import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { db } from '../database/db.js';
 import { EnvLoader } from '../config/envLoader.js';
 
@@ -277,24 +277,21 @@ router.post('/chat', optionalAuth, async (req: AuthenticatedRequest, res: Respon
 
     // Determine chart context
     let kundli = chartContext;
-    if (!kundli) {
-      let birthProfile = DEMO_BIRTH_PROFILE;
-      if (req.user) {
-        const saved = db.getBirthProfile(req.user.userId);
-        if (saved) {
-          birthProfile = {
-            name: saved.fullName,
-            birthDate: saved.birthDate,
-            birthTime: saved.birthTime,
-            birthPlace: saved.birthPlace,
-            latitude: saved.latitude,
-            longitude: saved.longitude,
-            timezone: saved.timezone,
-            gender: saved.gender,
-          };
-        }
+    if (!kundli && req.user) {
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
+      if (saved && saved.birthDate && saved.birthTime) {
+        const birthProfile: BirthProfileInput = {
+          name: saved.fullName,
+          birthDate: saved.birthDate,
+          birthTime: saved.birthTime,
+          birthPlace: saved.birthPlace,
+          latitude: saved.latitude,
+          longitude: saved.longitude,
+          timezone: saved.timezone,
+          gender: saved.gender,
+        };
+        kundli = VedicAstroEngine.calculateKundli(birthProfile);
       }
-      kundli = VedicAstroEngine.calculateKundli(birthProfile);
     }
 
     const isProUser = req.user ? db.getSubscription(req.user.userId).planId === 'PRO' : false;

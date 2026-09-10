@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Sparkles, Menu, ShieldCheck, User, Activity, RefreshCw, Key, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, Bell, Sparkles, Menu, ShieldCheck, User, Activity, RefreshCw, Key, CheckCircle2, XCircle, LogIn, LogOut } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle.js';
 import { NavTabId } from './Sidebar.js';
 
@@ -8,6 +8,9 @@ interface TopNavProps {
   onNavigate: (tab: NavTabId) => void;
   userPlan?: string;
   userName?: string;
+  currentUser?: any;
+  onOpenAuth?: (mode: 'login' | 'register') => void;
+  onLogout?: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -15,12 +18,28 @@ export const TopNav: React.FC<TopNavProps> = ({
   onNavigate,
   userPlan = 'FREE',
   userName = 'Cosmic Seeker',
+  currentUser,
+  onOpenAuth,
+  onLogout,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showApiModal, setShowApiModal] = useState(false);
   const [apiStatus, setApiStatus] = useState<any>(null);
   const [isTestingApis, setIsTestingApis] = useState(false);
+  const [livePanchang, setLivePanchang] = useState<any>(null);
+
+  const fetchLivePanchang = async () => {
+    try {
+      const res = await fetch('/api/astrology/panchang');
+      if (res.ok) {
+        const data = await res.json();
+        setLivePanchang(data);
+      }
+    } catch {
+      // Offline fallback
+    }
+  };
 
   const fetchApiConnections = async () => {
     try {
@@ -51,13 +70,8 @@ export const TopNav: React.FC<TopNavProps> = ({
 
   useEffect(() => {
     fetchApiConnections();
+    fetchLivePanchang();
   }, []);
-
-  const notifications = [
-    { id: '1', title: 'Daily Prediction Ready', desc: 'Solar and Jupiter trine highlights career clarity today.', time: '10m ago' },
-    { id: '2', title: 'Moon Transitioned into Rohini', desc: 'Auspicious creative hours in effect until dusk.', time: '1h ago' },
-    { id: '3', title: 'Astrologer Available for Video Call', desc: 'Dr. Meenakshi Ramanathan is currently online.', time: '3h ago' },
-  ];
 
   return (
     <header className="h-16 border-b border-cosmic-border bg-cosmic-surface/80 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 select-none">
@@ -84,13 +98,15 @@ export const TopNav: React.FC<TopNavProps> = ({
         </div>
 
         {/* Live Cosmic Weather Quick Pill */}
-        <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border border-cosmic-border bg-cosmic-card/40 text-xs text-cosmic-muted">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="font-semibold text-cosmic-text">Today's Energy:</span>
-          <span className="text-cyan-400 font-bold">86% Favorable</span>
-          <span className="text-cosmic-muted">&bull;</span>
-          <span>Chandra in Rohini</span>
-        </div>
+        {livePanchang && (
+          <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border border-cosmic-border bg-cosmic-card/40 text-xs text-cosmic-muted">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="font-semibold text-cosmic-text">{livePanchang.vara?.name}:</span>
+            <span className="text-cyan-400 font-bold">{livePanchang.tithi?.name}</span>
+            <span className="text-cosmic-muted">&bull;</span>
+            <span>Chandra in {livePanchang.nakshatra?.name}</span>
+          </div>
+        )}
       </div>
 
       {/* Right Actions */}
@@ -114,25 +130,18 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="p-2 rounded-xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-400/50 transition-colors relative text-cosmic-text"
           >
             <Bell className="w-4 h-4 text-cosmic-muted" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-400" />
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-cosmic-border bg-cosmic-surface p-3 shadow-2xl z-50 animate-float space-y-2">
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-cosmic-border bg-cosmic-surface p-4 shadow-2xl z-50 animate-float space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-cosmic-border/60">
                 <span className="text-xs font-bold text-cosmic-text uppercase tracking-wider">Cosmic Alerts</span>
-                <span className="text-[10px] text-cyan-400 font-bold">3 New</span>
+                <span className="text-[10px] text-cosmic-muted font-semibold">Live Telemetry</span>
               </div>
-              <div className="space-y-1.5 max-h-60 overflow-y-auto">
-                {notifications.map((n) => (
-                  <div key={n.id} className="p-2.5 rounded-xl bg-cosmic-card/60 hover:bg-cosmic-card transition-colors text-left">
-                    <div className="flex items-center justify-between">
-                      <h5 className="text-xs font-bold text-cosmic-text">{n.title}</h5>
-                      <span className="text-[9px] text-cosmic-muted">{n.time}</span>
-                    </div>
-                    <p className="text-[11px] text-cosmic-muted mt-1 leading-snug">{n.desc}</p>
-                  </div>
-                ))}
+              <div className="py-4 text-center space-y-2">
+                <Bell className="w-6 h-6 mx-auto text-cosmic-muted/40" />
+                <p className="text-xs text-cosmic-text font-semibold">No unread cosmic alerts</p>
+                <p className="text-[11px] text-cosmic-muted">Real-time planetary shifts will be streamed here.</p>
               </div>
             </div>
           )}
@@ -250,19 +259,49 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Theme Toggle */}
         <ThemeToggle />
 
-        {/* User Profile Trigger */}
-        <button
-          onClick={() => onNavigate('profile')}
-          className="flex items-center gap-2 pl-2 border-l border-cosmic-border/80"
-        >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center text-black font-extrabold text-xs shadow-glow-cyan/30">
-            {userName.substring(0, 1).toUpperCase()}
+        {/* User Profile / Auth Trigger */}
+        {currentUser ? (
+          <div className="flex items-center gap-2 pl-2 border-l border-cosmic-border/80">
+            <button
+              onClick={() => onNavigate('profile')}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              title="View Profile"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center text-black font-extrabold text-xs shadow-glow-cyan/30">
+                {(currentUser.name || userName || 'U').substring(0, 1).toUpperCase()}
+              </div>
+              <div className="text-left hidden md:block">
+                <span className="text-xs font-bold text-cosmic-text block leading-none">{currentUser.name || userName}</span>
+                <span className="text-[10px] text-cosmic-muted capitalize">{(currentUser.plan || userPlan || 'FREE').toLowerCase()} Seeker</span>
+              </div>
+            </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-1.5 text-cosmic-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-1"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-          <div className="text-left hidden md:block">
-            <span className="text-xs font-bold text-cosmic-text block leading-none">{userName}</span>
-            <span className="text-[10px] text-cosmic-muted capitalize">{userPlan.toLowerCase()} Seeker</span>
+        ) : (
+          <div className="flex items-center gap-2 pl-2 border-l border-cosmic-border/80">
+            <button
+              onClick={() => onOpenAuth?.('login')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/20 transition-colors"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+            <button
+              onClick={() => onOpenAuth?.('register')}
+              className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-bold bg-cosmic-gold/10 text-cosmic-gold border border-cosmic-gold/30 rounded-lg hover:bg-cosmic-gold/20 transition-colors"
+            >
+              Register
+            </button>
           </div>
-        </button>
+        )}
       </div>
     </header>
   );

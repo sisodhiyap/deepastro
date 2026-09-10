@@ -283,7 +283,7 @@ export class ReportGenerationService {
 
       // ─── STAGE 18: REPORT_COMPOSITION ───────────────────────────────────────
       const envelope = await runner.runStage('REPORT_COMPOSITION', async () => {
-        return ReportComposer.compose(request.profile, request.chartStyle || 'north', request.userId || undefined);
+        return ReportComposer.compose(request.profile, request.chartStyle || 'north', request.userId || undefined, undefined, kundli);
       });
 
       // ─── STAGE 19: HTML_RENDER ──────────────────────────────────────────────

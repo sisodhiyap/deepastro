@@ -1,36 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Calendar, Clock, Compass, Sparkles, Briefcase, Heart, DollarSign, Activity, Users, Feather, ShieldAlert, CheckCircle2, ChevronRight, Moon, Orbit } from 'lucide-react';
+import { Sun, Clock, Sparkles, Briefcase, Heart, DollarSign, Activity, Users, Feather, ShieldAlert, CheckCircle2, Moon, Orbit } from 'lucide-react';
 
 export const DailyPredictionsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'thisWeek' | 'thisMonth'>('today');
   const [kundliData, setKundliData] = useState<any>(null);
+  const [panchangData, setPanchangData] = useState<any>(null);
   const [factSet, setFactSet] = useState<any>(null);
   const [domainPredictions, setDomainPredictions] = useState<any>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('Career');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch base chart and deep domain predictions
+    // Fetch base chart, domain predictions, and live Panchang
     Promise.all([
-      fetch('/api/astrology/chart').then((res) => res.json()),
+      fetch('/api/astrology/chart').then((res) => (res.ok ? res.json() : null)),
       fetch('/api/astrology/predictions/domains', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).then((res) => res.json()),
+      }).then((res) => (res.ok ? res.json() : null)),
+      fetch('/api/astrology/panchang').then((res) => (res.ok ? res.json() : null)),
     ])
-      .then(([chartRes, domainRes]) => {
-        setKundliData(chartRes);
+      .then(([chartRes, domainRes, panchangRes]) => {
+        if (chartRes && (chartRes.ascendant || chartRes.chart?.ascendant)) {
+          setKundliData(chartRes.chart || chartRes);
+        } else {
+          setKundliData(null);
+        }
+
         if (domainRes && domainRes.predictions) {
           setFactSet(domainRes.factSet);
           setDomainPredictions(domainRes.predictions);
         }
+
+        if (panchangRes) {
+          setPanchangData(panchangRes);
+        }
+
         setIsLoading(false);
       })
       .catch(() => setIsLoading(false));
   }, []);
 
-  const predictions = kundliData?.predictions;
+  const chart = kundliData;
+  const hasBirthProfile = Boolean(chart && chart.ascendant);
+  const predictions = chart?.predictions;
   const current = predictions ? predictions[activeTab] : null;
 
   const tabs = [
@@ -56,6 +70,65 @@ export const DailyPredictionsPage: React.FC = () => {
 
   const activeDomainData = domainPredictions ? domainPredictions[selectedDomain] : null;
 
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/50 p-12 text-center animate-pulse">
+          <Sparkles className="w-6 h-6 text-cyan-400 mx-auto mb-3 animate-spin" />
+          <p className="text-xs text-cosmic-muted">Aligning planetary transits and Gochara coordinates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Authentic Empty State when no real birth profile exists
+  if (!hasBirthProfile) {
+    return (
+      <div className="space-y-8 animate-fadeIn">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+            <Sun className="w-3.5 h-3.5" /> Real-Time Transit Intelligence (Gochara)
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
+            Today in Your Cosmos
+          </h1>
+          <p className="text-xs text-cosmic-muted">
+            Dynamic astronomical transits cross-referenced against your natal Lagna, Moon, and active Vimshottari Dasha.
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-dashed border-cosmic-border bg-cosmic-surface/40 p-12 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
+            <Sun className="w-7 h-7" />
+          </div>
+          <div className="space-y-1 max-w-md mx-auto">
+            <h3 className="text-base font-bold text-cosmic-text">Birth Profile Required for Gochara Transits</h3>
+            <p className="text-xs text-cosmic-muted leading-relaxed">
+              Vedic daily transit predictions are calculated from the current sidereal sky relative to your natal Moon sign (Chandra Lagna), natal Ascendant, and current Mahadasha period.
+            </p>
+          </div>
+          <a
+            href="#kundli"
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.hash = 'kundli';
+            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-glow-cyan"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Calculate Your Birth Chart</span>
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const moonSign = chart?.moonSign?.signName || chart?.planets?.find((p: any) => p.name === 'Moon')?.sign;
+  const moonNakshatra = chart?.moonNakshatra?.name || chart?.planets?.find((p: any) => p.name === 'Moon')?.nakshatra;
+  const moonPada = chart?.moonNakshatra?.pada;
+  const mahadasha = chart?.dashas?.currentMahadasha?.planet;
+  const antardasha = chart?.dashas?.currentAntardasha?.planet;
+
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Header */}
@@ -80,10 +153,14 @@ export const DailyPredictionsPage: React.FC = () => {
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">Chandra</span>
           </div>
           <div className="text-lg font-display font-extrabold text-cosmic-text">
-            {kundliData?.moonSign?.signName || 'Taurus'}
+            {moonSign || 'Calculated Moon'}
           </div>
           <p className="text-[11px] text-cosmic-muted">
-            Nakshatra: <span className="text-cosmic-text font-medium">{kundliData?.moonNakshatra?.name || 'Rohini'}</span> (Pada {kundliData?.moonNakshatra?.pada || 2})
+            {moonNakshatra ? (
+              <>Nakshatra: <span className="text-cosmic-text font-medium">{moonNakshatra}</span> {moonPada ? `(Pada ${moonPada})` : ''}</>
+            ) : (
+              'Sidereal placement'
+            )}
           </p>
         </div>
 
@@ -94,10 +171,10 @@ export const DailyPredictionsPage: React.FC = () => {
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20">Vimshottari</span>
           </div>
           <div className="text-lg font-display font-extrabold text-cosmic-text">
-            {kundliData?.dashas?.currentMahadasha?.planet || 'Jupiter'} Mahadasha
+            {mahadasha ? `${mahadasha} Mahadasha` : 'Active Mahadasha'}
           </div>
           <p className="text-[11px] text-cosmic-muted">
-            Antardasha: <span className="text-cosmic-text font-medium">{kundliData?.dashas?.currentAntardasha?.planet || 'Saturn'}</span>
+            Antardasha: <span className="text-cosmic-text font-medium">{antardasha || 'Calculated'}</span>
           </p>
         </div>
 
@@ -111,21 +188,21 @@ export const DailyPredictionsPage: React.FC = () => {
             {factSet?.sadeSati?.isInSadeSati ? 'Sade Sati Active' : 'No Sade Sati'}
           </div>
           <p className="text-[11px] text-cosmic-muted truncate">
-            {factSet?.sadeSati?.currentPhase || 'Saturn transiting harmonious houses'}
+            {factSet?.sadeSati?.currentPhase || 'Saturn transiting non-afflicted houses'}
           </p>
         </div>
 
         {/* Auspicious Windows */}
         <div className="p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface space-y-2">
           <div className="flex items-center justify-between text-xs text-emerald-400 font-bold uppercase tracking-wider">
-            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Abhijit Muhurat</span>
+            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Auspicious Windows</span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">Panchang</span>
           </div>
           <div className="text-lg font-display font-extrabold text-emerald-400">
-            11:52 AM - 12:44 PM
+            {panchangData?.muhurat?.abhijit || current?.favorableHours || 'Morning Window'}
           </div>
           <p className="text-[11px] text-cosmic-muted">
-            Rahu Kalam: <span className="text-amber-400 font-medium">{current?.cautionHours || '04:30 PM - 06:00 PM'}</span>
+            Rahu Kalam: <span className="text-amber-400 font-medium">{panchangData?.rahuKalam || current?.cautionHours || 'Check Panchang'}</span>
           </p>
         </div>
       </div>
@@ -156,19 +233,21 @@ export const DailyPredictionsPage: React.FC = () => {
                 Cosmic Energy Quotient &bull; {current.period}
               </span>
               <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-cosmic-text">
-                Favorable Planetary Momentum
+                Planetary Momentum
               </h2>
               <p className="text-xs text-cosmic-muted mt-1 max-w-xl">
-                Benefic planetary aspects stimulate creative insight and decisive execution across your active Mahadasha.
+                Sidereal transits interacting with your natal chart lords across your active dasha period.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-cosmic-surface border border-cyan-500/30 text-center min-w-[120px] shadow-glow-cyan/20">
-              <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Vitality Score</span>
-              <span className="text-3xl font-display font-black text-cyan-400">
-                {current.overallEnergyScore}%
-              </span>
-            </div>
+            {current.overallEnergyScore !== undefined && (
+              <div className="p-4 rounded-2xl bg-cosmic-surface border border-cyan-500/30 text-center min-w-[120px] shadow-glow-cyan/20">
+                <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Energy Score</span>
+                <span className="text-3xl font-display font-black text-cyan-400">
+                  {current.overallEnergyScore}%
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Core Life Pillars Grid */}
@@ -191,12 +270,14 @@ export const DailyPredictionsPage: React.FC = () => {
                       </div>
                       <span className="text-xs font-bold text-cosmic-text">{p.label}</span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-cyan-400">{p.data?.score}%</span>
+                    {p.data?.score !== undefined && (
+                      <span className="text-xs font-mono font-bold text-cyan-400">{p.data.score}%</span>
+                    )}
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-cosmic-text">{p.data?.headline}</h4>
-                    <p className="text-[11px] text-cosmic-muted mt-1 leading-snug">{p.data?.insight}</p>
+                    <h4 className="text-xs font-semibold text-cosmic-text">{p.data?.headline || 'Observing Influences'}</h4>
+                    <p className="text-[11px] text-cosmic-muted mt-1 leading-snug">{p.data?.insight || 'Favorable alignment with key house lords.'}</p>
                   </div>
                 </div>
               );
@@ -204,25 +285,33 @@ export const DailyPredictionsPage: React.FC = () => {
           </div>
 
           {/* Timings & Mantra Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 text-xs">
-            <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Favorable Hours</span>
-              <span className="text-base font-bold text-cosmic-text block">{current.favorableHours}</span>
-              <p className="text-[11px] text-cosmic-muted leading-tight">Optimal period for critical negotiations, creative output, and agreements.</p>
-            </div>
+          {(current.favorableHours || current.cautionHours || current.dailyMantra) && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 text-xs">
+              {current.favorableHours && (
+                <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-1">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Favorable Hours</span>
+                  <span className="text-base font-bold text-cosmic-text block">{current.favorableHours}</span>
+                  <p className="text-[11px] text-cosmic-muted leading-tight">Optimal period for critical negotiations and decisive steps.</p>
+                </div>
+              )}
 
-            <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-1">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Caution Hours (Rahu Kalam)</span>
-              <span className="text-base font-bold text-cosmic-text block">{current.cautionHours}</span>
-              <p className="text-[11px] text-cosmic-muted leading-tight">Postpone major financial commitments or contentious confrontations.</p>
-            </div>
+              {current.cautionHours && (
+                <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-1">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Caution Hours (Rahu Kalam)</span>
+                  <span className="text-base font-bold text-cosmic-text block">{current.cautionHours}</span>
+                  <p className="text-[11px] text-cosmic-muted leading-tight">Postpone major commitments or contentious confrontations.</p>
+                </div>
+              )}
 
-            <div className="p-5 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 space-y-1">
-              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">Harmonizing Mantra</span>
-              <span className="text-base font-display font-extrabold text-cosmic-text block">{current.dailyMantra}</span>
-              <p className="text-[11px] text-cosmic-muted leading-tight">Chant 108 times at sunrise facing {current.helpfulDirection}.</p>
+              {current.dailyMantra && (
+                <div className="p-5 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 space-y-1">
+                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">Harmonizing Mantra</span>
+                  <span className="text-base font-display font-extrabold text-cosmic-text block">{current.dailyMantra}</span>
+                  <p className="text-[11px] text-cosmic-muted leading-tight">Chant at sunrise facing {current.helpfulDirection || 'East'}.</p>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -234,7 +323,7 @@ export const DailyPredictionsPage: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5" /> 11 Astrological Life Domains
             </div>
             <h2 className="text-2xl font-display font-extrabold text-cosmic-text">
-              Grounded Domain Forecasts & Guidance
+              Grounded Domain Forecasts &amp; Guidance
             </h2>
             <p className="text-xs text-cosmic-muted">
               Deep Parashari interpretations with astrological citations and non-fatalistic practical guidance.

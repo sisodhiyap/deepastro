@@ -15,6 +15,7 @@ import { evaluateMuhurats } from '../astrology/MuhuratEngine.js';
 import { calculateNumerology } from '../astrology/NumerologyEngine.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { db, BirthProfileRecord } from '../database/db.js';
+import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { NormalizationEngine } from '../reports/ReportIntelligenceEngine/NormalizationEngine.js';
 
 const router = Router();
@@ -125,7 +126,7 @@ router.post('/calculate-kundli', optionalAuth, (req: AuthenticatedRequest, res: 
 });
 
 // POST /api/astrology/kundli
-router.post('/kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+router.post('/kundli', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const rawDob = req.body.birthDate || req.body.dateOfBirth;
     const rawTob = req.body.birthTime || req.body.timeOfBirth;
@@ -150,7 +151,7 @@ router.post('/kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) 
         isApproximateTime: Boolean(req.body.isApproximateTime),
       };
     } else if (req.user) {
-      const saved = db.getBirthProfile(req.user.userId);
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
       if (saved && saved.birthDate && saved.birthTime) {
         profile = {
           name: saved.fullName,
@@ -161,19 +162,22 @@ router.post('/kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) 
           longitude: saved.longitude,
           timezone: saved.timezone,
           gender: saved.gender,
+          isApproximateTime: saved.isApproximateTime,
         };
       }
     }
 
     if (!profile) {
-      // Fallback for demo page preview ONLY if no data and no user
-      profile = DEMO_BIRTH_PROFILE;
+      return res.status(400).json({
+        error: 'BIRTH_PROFILE_REQUIRED',
+        details: 'Birth date and birth time are required for authoritative astrological calculation. DeepAstro strictly avoids synthetic default profiles.',
+      });
     }
 
     const input = profile;
     const kundli = VedicAstroEngine.calculateKundli(input);
 
-    // If user is logged in, link/save to profile
+    // If user is logged in, link/save to database repository
     if (req.user) {
       const birthRecord: BirthProfileRecord = {
         id: `bp_${req.user.userId}`,
@@ -196,6 +200,7 @@ router.post('/kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) 
         currentAntardasha: kundli.dashas.currentAntardasha.planet,
         createdAt: new Date().toISOString(),
       };
+      await birthProfileRepository.saveProfile(birthRecord);
       db.birthProfiles.set(req.user.userId, birthRecord);
     }
 
@@ -206,57 +211,33 @@ router.post('/kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) 
 });
 
 // POST /api/astrology/fact-set (Universal Immutable Fact Object)
-router.post('/fact-set', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+router.post('/fact-set', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const input: BirthProfileInput = {
-      name: req.body.name || 'Cosmic Seeker',
-      birthDate: req.body.birthDate || DEMO_BIRTH_PROFILE.birthDate,
-      birthTime: req.body.birthTime || DEMO_BIRTH_PROFILE.birthTime,
-      birthPlace: req.body.birthPlace || DEMO_BIRTH_PROFILE.birthPlace,
-      latitude: parseFloat(req.body.latitude) || DEMO_BIRTH_PROFILE.latitude,
-      longitude: parseFloat(req.body.longitude) || DEMO_BIRTH_PROFILE.longitude,
-      timezone: parseFloat(req.body.timezone) || DEMO_BIRTH_PROFILE.timezone,
-      gender: req.body.gender || 'Other',
-      isApproximateTime: Boolean(req.body.isApproximateTime),
-    };
+    let input: BirthProfileInput | null = null;
+    const rawDob = req.body.birthDate || req.body.dateOfBirth;
+    const rawTob = req.body.birthTime || req.body.timeOfBirth;
 
-    const factSet = VedicAstroEngine.createAstrologyFactSet(input);
-    return res.json(factSet);
-  } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to generate canonical AstrologyFactSet.', details: err.message });
-  }
-});
-
-// POST /api/astrology/predictions/domains (Deep Domain Predictions from FactSet)
-router.post('/predictions/domains', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const input: BirthProfileInput = {
-      name: req.body.name || 'Cosmic Seeker',
-      birthDate: req.body.birthDate || DEMO_BIRTH_PROFILE.birthDate,
-      birthTime: req.body.birthTime || DEMO_BIRTH_PROFILE.birthTime,
-      birthPlace: req.body.birthPlace || DEMO_BIRTH_PROFILE.birthPlace,
-      latitude: parseFloat(req.body.latitude) || DEMO_BIRTH_PROFILE.latitude,
-      longitude: parseFloat(req.body.longitude) || DEMO_BIRTH_PROFILE.longitude,
-      timezone: parseFloat(req.body.timezone) || DEMO_BIRTH_PROFILE.timezone,
-      gender: req.body.gender || 'Other',
-      isApproximateTime: Boolean(req.body.isApproximateTime),
-    };
-
-    const factSet = VedicAstroEngine.createAstrologyFactSet(input);
-    const domainPredictions = PredictionEngine.generateDomainPredictions(factSet);
-    return res.json({ factSet, predictions: domainPredictions });
-  } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to generate domain predictions.', details: err.message });
-  }
-});
-
-// GET /api/astrology/chart
-router.get('/chart', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
-  try {
-    let input = DEMO_BIRTH_PROFILE;
-    if (req.user) {
-      const saved = db.getBirthProfile(req.user.userId);
-      if (saved) {
+    if (rawDob && rawTob) {
+      const loc = NormalizationEngine.normalizeLocation(
+        req.body.birthPlace,
+        req.body.latitude ? parseFloat(req.body.latitude) : undefined,
+        req.body.longitude ? parseFloat(req.body.longitude) : undefined,
+        req.body.timezone ? parseFloat(req.body.timezone) : undefined
+      );
+      input = {
+        name: (req.body.name || '').trim() || 'Cosmic Seeker',
+        birthDate: rawDob,
+        birthTime: rawTob,
+        birthPlace: loc.placeName,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        timezone: loc.timezone,
+        gender: req.body.gender || 'Other',
+        isApproximateTime: Boolean(req.body.isApproximateTime),
+      };
+    } else if (req.user) {
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
+      if (saved && saved.birthDate && saved.birthTime) {
         input = {
           name: saved.fullName,
           birthDate: saved.birthDate,
@@ -271,7 +252,159 @@ router.get('/chart', optionalAuth, (req: AuthenticatedRequest, res: Response) =>
       }
     }
 
-    const kundli = VedicAstroEngine.calculateKundli(input);
+    if (!input) {
+      return res.status(400).json({
+        error: 'BIRTH_PROFILE_REQUIRED',
+        details: 'Birth date and birth time are required to create an astrology fact set.',
+      });
+    }
+
+    const factSet = VedicAstroEngine.createAstrologyFactSet(input);
+    return res.json(factSet);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to generate canonical AstrologyFactSet.', details: err.message });
+  }
+});
+
+// POST /api/astrology/calculation-snapshot (Universal Immutable CalculationSnapshot)
+router.post(['/calculation-snapshot', '/snapshot'], optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    let input: BirthProfileInput | null = null;
+    const rawDob = req.body.birthDate || req.body.dateOfBirth;
+    const rawTob = req.body.birthTime || req.body.timeOfBirth;
+
+    if (rawDob && rawTob) {
+      const loc = NormalizationEngine.normalizeLocation(
+        req.body.birthPlace,
+        req.body.latitude ? parseFloat(req.body.latitude) : undefined,
+        req.body.longitude ? parseFloat(req.body.longitude) : undefined,
+        req.body.timezone ? parseFloat(req.body.timezone) : undefined
+      );
+      input = {
+        name: (req.body.name || '').trim() || 'Cosmic Seeker',
+        birthDate: rawDob,
+        birthTime: rawTob,
+        birthPlace: loc.placeName,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        timezone: loc.timezone,
+        gender: req.body.gender || 'Other',
+        isApproximateTime: Boolean(req.body.isApproximateTime),
+      };
+    } else if (req.user) {
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
+      if (saved && saved.birthDate && saved.birthTime) {
+        input = {
+          name: saved.fullName,
+          birthDate: saved.birthDate,
+          birthTime: saved.birthTime,
+          birthPlace: saved.birthPlace,
+          latitude: saved.latitude,
+          longitude: saved.longitude,
+          timezone: saved.timezone,
+          gender: saved.gender,
+          isApproximateTime: saved.isApproximateTime,
+        };
+      }
+    }
+
+    if (!input) {
+      return res.status(400).json({
+        error: 'BIRTH_PROFILE_REQUIRED',
+        details: 'Birth date and birth time are required to generate an immutable calculation snapshot.',
+      });
+    }
+
+    const snapshot = VedicAstroEngine.createCalculationSnapshot(input, req.user?.userId);
+    return res.json(snapshot);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to generate canonical CalculationSnapshot.', details: err.message });
+  }
+});
+
+// POST /api/astrology/predictions/domains (Deep Domain Predictions from FactSet)
+router.post('/predictions/domains', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    let input: BirthProfileInput | null = null;
+    const rawDob = req.body.birthDate || req.body.dateOfBirth;
+    const rawTob = req.body.birthTime || req.body.timeOfBirth;
+
+    if (rawDob && rawTob) {
+      const loc = NormalizationEngine.normalizeLocation(
+        req.body.birthPlace,
+        req.body.latitude ? parseFloat(req.body.latitude) : undefined,
+        req.body.longitude ? parseFloat(req.body.longitude) : undefined,
+        req.body.timezone ? parseFloat(req.body.timezone) : undefined
+      );
+      input = {
+        name: (req.body.name || '').trim() || 'Cosmic Seeker',
+        birthDate: rawDob,
+        birthTime: rawTob,
+        birthPlace: loc.placeName,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        timezone: loc.timezone,
+        gender: req.body.gender || 'Other',
+        isApproximateTime: Boolean(req.body.isApproximateTime),
+      };
+    } else if (req.user) {
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
+      if (saved && saved.birthDate && saved.birthTime) {
+        input = {
+          name: saved.fullName,
+          birthDate: saved.birthDate,
+          birthTime: saved.birthTime,
+          birthPlace: saved.birthPlace,
+          latitude: saved.latitude,
+          longitude: saved.longitude,
+          timezone: saved.timezone,
+          gender: saved.gender,
+          isApproximateTime: saved.isApproximateTime,
+        };
+      }
+    }
+
+    if (!input) {
+      return res.status(400).json({
+        error: 'NO_BIRTH_PROFILE',
+        details: 'Please provide or configure a birth profile to generate domain predictions.',
+      });
+    }
+
+    const factSet = VedicAstroEngine.createAstrologyFactSet(input);
+    const domainPredictions = PredictionEngine.generateDomainPredictions(factSet);
+    return res.json({ factSet, predictions: domainPredictions });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to generate domain predictions.', details: err.message });
+  }
+});
+
+// GET /api/astrology/chart
+router.get('/chart', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    let profile: BirthProfileInput | null = null;
+    if (req.user) {
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
+      if (saved && saved.birthDate && saved.birthTime) {
+        profile = {
+          name: saved.fullName,
+          birthDate: saved.birthDate,
+          birthTime: saved.birthTime,
+          birthPlace: saved.birthPlace,
+          latitude: saved.latitude,
+          longitude: saved.longitude,
+          timezone: saved.timezone,
+          gender: saved.gender,
+          isApproximateTime: saved.isApproximateTime,
+        };
+      }
+    }
+
+    if (!profile) {
+      return res.json({ chart: null, message: 'No saved birth profile found for this cosmic session.' });
+    }
+
+    const kundli = VedicAstroEngine.calculateKundli(profile);
     return res.json(kundli);
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to retrieve astrology chart.', details: err.message });
@@ -281,21 +414,30 @@ router.get('/chart', optionalAuth, (req: AuthenticatedRequest, res: Response) =>
 // GET /api/astrology/panchang
 router.get('/panchang', (req: Request, res: Response) => {
   try {
-    const lat = parseFloat(req.query.lat as string) || 28.6139;
-    const lon = parseFloat(req.query.lon as string) || 77.2090;
-    // Compute current real-time panchang
+    const lat = parseFloat((req.query.lat || req.query.latitude) as string) || 28.6139;
+    const lon = parseFloat((req.query.lon || req.query.lng || req.query.longitude) as string) || 77.2090;
+    const tz = parseFloat(req.query.tz as string) || 5.5;
+
+    const dateStr = (req.query.date as string) || new Date().toISOString().split('T')[0];
+    const timeStr = (req.query.time as string) || '12:00';
+
+    const targetDate = new Date(`${dateStr}T${timeStr}:00.000Z`);
+
     const currentKundli = VedicAstroEngine.calculateKundli({
-      ...DEMO_BIRTH_PROFILE,
-      birthDate: new Date().toISOString().split('T')[0],
-      birthTime: '12:00',
+      name: 'Panchang Observation',
+      birthDate: dateStr,
+      birthTime: timeStr,
+      birthPlace: 'Local Observation Coordinates',
       latitude: lat,
       longitude: lon,
+      timezone: tz,
+      gender: 'Other',
     });
 
     const sunLon = currentKundli.planets.find((p) => p.name === 'Sun')!.siderealLongitude;
     const moonLon = currentKundli.planets.find((p) => p.name === 'Moon')!.siderealLongitude;
 
-    const panchang = calculatePanchang(sunLon, moonLon, new Date(), lat, lon);
+    const panchang = calculatePanchang(sunLon, moonLon, targetDate, lat, lon);
     return res.json(panchang);
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to calculate Panchang.', details: err.message });
@@ -305,9 +447,11 @@ router.get('/panchang', (req: Request, res: Response) => {
 // GET /api/astrology/muhurat
 router.get('/muhurat', (req: Request, res: Response) => {
   try {
-    const muhurats = evaluateMuhurats(new Date());
+    const dateStr = (req.query.date as string) || new Date().toISOString().split('T')[0];
+    const targetDate = new Date(`${dateStr}T12:00:00.000Z`);
+    const muhurats = evaluateMuhurats(targetDate);
     return res.json({
-      date: new Date().toISOString().split('T')[0],
+      date: dateStr,
       muhurats,
     });
   } catch (err: any) {
@@ -388,16 +532,27 @@ router.post('/upload-kundli', optionalAuth, uploadKundli.single('kundliFile'), a
       return res.status(400).json({ error: sigCheck.error });
     }
 
-    let extractedData = {
-      name: 'Aryaman Sisodhiya',
-      birthDate: '1998-11-24',
-      birthTime: '06:45',
-      birthPlace: 'Jaipur, Rajasthan, India',
-      gender: 'Male' as 'Male' | 'Female' | 'Other',
-      notes: 'Digitized from Vedic Janampatri document.',
-      source: 'Vision_OCR' as const,
-      baseConfidence: 0.95,
-    };
+    let extractedData: any = null;
+
+    // Check if buffer contains recognizable text (e.g. from plain text / PDF upload)
+    const textSnippet = fileBuffer.toString('utf-8', 0, Math.min(fileBuffer.length, 4096));
+    const dobMatch = textSnippet.match(/(?:DOB|Birth\s*Date|Date\s*of\s*Birth)[:=\s]+([0-9]{4}-[0-9]{2}-[0-9]{2})/i);
+    const tobMatch = textSnippet.match(/(?:TOB|Birth\s*Time|Time\s*of\s*Birth)[:=\s]+([0-9]{1,2}:[0-9]{2})/i);
+    const nameMatch = textSnippet.match(/(?:Name|Native)[:=\s]+([A-Za-z\s]{2,40})/i);
+    const placeMatch = textSnippet.match(/(?:Place|City|Location)[:=\s]+([A-Za-z\s,]{2,40})/i);
+
+    if (dobMatch && tobMatch) {
+      extractedData = {
+        name: nameMatch ? nameMatch[1].trim() : 'Document Native',
+        birthDate: dobMatch[1],
+        birthTime: tobMatch[1],
+        birthPlace: placeMatch ? placeMatch[1].trim() : 'New Delhi, India',
+        gender: 'Other' as 'Male' | 'Female' | 'Other',
+        notes: 'Extracted from document textual parameters.',
+        source: 'Vision_OCR' as const,
+        baseConfidence: 0.90,
+      };
+    }
 
     // If Vision AI is configured with OpenAI
     if (process.env.OPENAI_API_KEY && sigCheck.detectedFormat.startsWith('image/')) {
@@ -433,13 +588,13 @@ router.post('/upload-kundli', optionalAuth, uploadKundli.single('kundliFile'), a
         if (visionRes.ok) {
           const vData = (await visionRes.json()) as any;
           const content = JSON.parse(vData.choices[0].message.content);
-          if (content.birthDate) {
+          if (content.birthDate && content.birthTime) {
             extractedData = {
-              name: content.name || extractedData.name,
+              name: content.name || extractedData?.name || 'Extracted Native',
               birthDate: content.birthDate,
-              birthTime: content.birthTime || extractedData.birthTime,
-              birthPlace: content.birthPlace || extractedData.birthPlace,
-              gender: content.gender || extractedData.gender,
+              birthTime: content.birthTime,
+              birthPlace: content.birthPlace || extractedData?.birthPlace || 'New Delhi, India',
+              gender: content.gender || 'Other',
               notes: content.notes || 'Successfully analyzed Kundli diagram features using OpenAI Vision.',
               source: 'Vision_OCR',
               baseConfidence: typeof content.confidenceScore === 'number' ? content.confidenceScore : 0.94,
@@ -449,6 +604,13 @@ router.post('/upload-kundli', optionalAuth, uploadKundli.single('kundliFile'), a
       } catch (visionErr: any) {
         console.warn('[AstrologyRoutes] Vision AI extraction fell back to structured parser:', visionErr.message);
       }
+    }
+
+    if (!extractedData) {
+      return res.status(422).json({
+        error: 'OCR_EXTRACTION_UNAVAILABLE',
+        details: 'Automated OCR could not reliably extract birth parameters from this document. DeepAstro strictly avoids manufacturing synthetic birth parameters. Please enter your birth date, time, and location manually.',
+      });
     }
 
     // 3. Location Resolution & Canonical Coordinates

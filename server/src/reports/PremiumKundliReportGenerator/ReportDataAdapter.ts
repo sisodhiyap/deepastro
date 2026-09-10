@@ -30,10 +30,11 @@ export class ReportDataAdapter {
     profile: BirthProfileInput,
     chartStyle: 'north' | 'south' | 'east' = 'north',
     chartSvg: string = '',
-    userId?: string
+    userId?: string,
+    existingKundli?: FullKundliResult
   ): KundliReport {
     // 1. Consume existing calculated Kundli
-    const kundli: FullKundliResult = VedicAstroEngine.calculateKundli(profile);
+    const kundli: FullKundliResult = existingKundli || VedicAstroEngine.calculateKundli(profile);
     const factSet = VedicAstroEngine.createAstrologyFactSet(profile);
 
     // 2. Consume existing Numerology

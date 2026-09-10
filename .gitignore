@@ -15,6 +15,7 @@ server/dist/
 .vercel/
 uploads/
 scratch/
+data/artifacts/
 *.local
 
 # Logs

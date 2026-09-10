@@ -6,6 +6,7 @@
 
 import { Router, Response } from 'express';
 import { db } from '../database/db.js';
+import { dbClient } from '../database/postgres.js';
 import { requireAuth, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
 
 import { EnvLoader } from '../config/envLoader.js';
@@ -18,7 +19,17 @@ router.use(requireRole(['ADMIN', 'SUPER_ADMIN']));
 
 // GET /api/admin/metrics
 router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
-  const usersCount = db.users.size;
+  let usersCount = db.users.size;
+  if (dbClient.isLive()) {
+    try {
+      const uRes = await dbClient.query('SELECT COUNT(*) FROM users;');
+      if (uRes.rows.length > 0) {
+        usersCount = parseInt(uRes.rows[0].count, 10) || usersCount;
+      }
+    } catch {
+      // fallback to memory map count
+    }
+  }
   const astrologersCount = db.astrologers.size;
   const subscriptionsCount = db.subscriptions.size;
 
@@ -54,15 +65,15 @@ router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
 
   return res.json({
     overview: {
-      totalUsers: Math.max(usersCount, 128),
-      activeSubscriptions: Math.max(subscriptionsCount, 42),
-      monthlyRecurringRevenueCents: 42 * 49900,
+      totalUsers: usersCount,
+      activeSubscriptions: subscriptionsCount,
+      monthlyRecurringRevenueCents: subscriptionsCount * 49900,
       totalAstrologers: astrologersCount,
-      totalConsultations: 37,
-      totalAiRequests: Math.max(db.aiUsageLogs.length, 194),
-      totalAiTokensUsed: Math.max(totalTokens, 48200),
-      cloudApiCostUSD: Math.max(cloudCostCents / 100, 1.45),
-      localComputeTokens: Math.max(localTokens, 12400),
+      totalConsultations: db.consultations.size,
+      totalAiRequests: db.aiUsageLogs.length,
+      totalAiTokensUsed: totalTokens,
+      cloudApiCostUSD: parseFloat((cloudCostCents / 100).toFixed(2)),
+      localComputeTokens: localTokens,
       localComputeNote: 'Ollama uses on-device GPU/CPU compute ($0 Cloud API Cost)',
     },
     providerHealth: keyStatuses,

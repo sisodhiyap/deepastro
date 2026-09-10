@@ -18,6 +18,8 @@ import { AdminPage } from './pages/AdminPage.js';
 import { SystemVerificationPage } from './pages/SystemVerificationPage.js';
 import { ContactPage } from './pages/ContactPage.js';
 
+import { AuthModal } from './components/auth/AuthModal.js';
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTabId>(() => {
     if (typeof window !== 'undefined' && window.location.pathname.includes('/admin/system-verification')) {
@@ -25,17 +27,50 @@ export const App: React.FC = () => {
     }
     return 'home';
   });
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [userPlan, setUserPlan] = useState<'FREE' | 'PREMIUM' | 'PRO'>('FREE');
-  const [userName, setUserName] = useState('Arjun Sharma');
+  const [userName, setUserName] = useState('Cosmic Seeker');
   const [chartContext, setChartContext] = useState<any>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  // Sync initial chart context & subscription
+  // Verify and load authenticated user session on mount
   useEffect(() => {
+    const token = localStorage.getItem('deepastro_token');
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error('Unauthorized');
+        })
+        .then((data) => {
+          if (data.user) {
+            setCurrentUser(data.user);
+            setUserName(data.user.name || 'Cosmic Seeker');
+            setUserPlan((data.user.plan as any) || 'FREE');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('deepastro_token');
+          setCurrentUser(null);
+        });
+    }
+
+    // Check for saved or active chart
     fetch('/api/astrology/chart')
       .then((res) => res.json())
-      .then((data) => setChartContext(data))
+      .then((data) => {
+        if (data && data.chart) {
+          setChartContext(data.chart);
+        } else if (data && data.ascendant) {
+          setChartContext(data);
+        }
+      })
       .catch(() => {});
 
+    // Sync subscription tier
     fetch('/api/subscription/current')
       .then((res) => res.json())
       .then((data) => {
@@ -45,6 +80,25 @@ export const App: React.FC = () => {
       })
       .catch(() => {});
   }, []);
+
+  const handleOpenAuth = (mode: 'login' | 'register') => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('deepastro_token');
+    setCurrentUser(null);
+    setUserName('Cosmic Seeker');
+    setUserPlan('FREE');
+  };
+
+  const handleAuthSuccess = (user: any) => {
+    setCurrentUser(user);
+    setUserName(user.name || 'Cosmic Seeker');
+    setUserPlan(user.plan || 'FREE');
+    setAuthModalOpen(false);
+  };
 
   const renderActiveView = () => {
     switch (activeTab) {
@@ -80,7 +134,7 @@ export const App: React.FC = () => {
       case 'reports':
         return <ReportsPage />;
       case 'profile':
-        return <ProfilePage onNavigate={setActiveTab} userPlan={userPlan} />;
+        return <ProfilePage onNavigate={setActiveTab} userPlan={userPlan} currentUser={currentUser} onOpenAuth={handleOpenAuth} />;
       case 'admin':
         return <AdminPage />;
       case 'system-verification':
@@ -93,15 +147,27 @@ export const App: React.FC = () => {
   };
 
   return (
-    <AppShell
-      activeTab={activeTab}
-      onSelectTab={setActiveTab}
-      userPlan={userPlan}
-      userName={userName}
-      chartContext={chartContext}
-    >
-      {renderActiveView()}
-    </AppShell>
+    <>
+      <AppShell
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        userPlan={userPlan}
+        userName={userName}
+        currentUser={currentUser}
+        onOpenAuth={handleOpenAuth}
+        onLogout={handleLogout}
+        chartContext={chartContext}
+      >
+        {renderActiveView()}
+      </AppShell>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onAuthSuccess={handleAuthSuccess}
+      />
+    </>
   );
 };
 

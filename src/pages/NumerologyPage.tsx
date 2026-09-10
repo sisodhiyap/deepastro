@@ -1,34 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Hash, Sparkles, Sun, Palette, Calendar } from 'lucide-react';
+import { Hash, Sparkles, Sun, Palette, Calendar, AlertCircle } from 'lucide-react';
 
 export const NumerologyPage: React.FC = () => {
-  const [name, setName] = useState('Arjun Sharma');
-  const [birthDate, setBirthDate] = useState('1995-08-15');
+  const [name, setName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [report, setReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const calculate = async () => {
+  useEffect(() => {
+    // If user has an active chart saved, pre-populate their real credentials
+    fetch('/api/astrology/chart')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const bd = data?.birthData || data?.chart?.birthData;
+        if (bd?.name && bd?.birthDate) {
+          setName(bd.name);
+          setBirthDate(bd.birthDate);
+          calculateNumerology(bd.name, bd.birthDate);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const calculateNumerology = async (calcName = name, calcDob = birthDate) => {
+    if (!calcName.trim() || !calcDob.trim()) {
+      setErrorMessage('Please enter both your full name and date of birth.');
+      return;
+    }
+
+    setErrorMessage(null);
     setIsLoading(true);
     try {
       const res = await fetch('/api/numerology/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, birthDate }),
+        body: JSON.stringify({ name: calcName, birthDate: calcDob }),
       });
       if (res.ok) {
         const data = await res.json();
         setReport(data);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setErrorMessage(err.error || 'Failed to calculate numerology.');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error communicating with numerology engine.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    calculate();
-  }, []);
 
   return (
     <div className="space-y-10 animate-fadeIn">
@@ -38,19 +59,26 @@ export const NumerologyPage: React.FC = () => {
           <Hash className="w-3.5 h-3.5" /> Vibrational Science
         </div>
         <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-          Chaldean & Pythagorean Numerology
+          Chaldean &amp; Pythagorean Numerology
         </h1>
         <p className="text-xs text-cosmic-muted">
           Decode your Life Path, Destiny, Soul Urge, and vibrational harmonics.
         </p>
       </div>
 
+      {errorMessage && (
+        <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       {/* Input Bar */}
       <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 shadow-cosmic-card">
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            calculate();
+            calculateNumerology();
           }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs items-end"
         >
@@ -58,6 +86,7 @@ export const NumerologyPage: React.FC = () => {
             <label className="text-cosmic-muted block mb-1 font-semibold">Full Legal Name</label>
             <input
               type="text"
+              placeholder="e.g. Vikram Sharma"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
@@ -86,7 +115,7 @@ export const NumerologyPage: React.FC = () => {
         </form>
       </div>
 
-      {report && (
+      {report ? (
         <div className="space-y-8">
           {/* Key Vibrational Numbers Matrix */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -120,16 +149,16 @@ export const NumerologyPage: React.FC = () => {
                 Life Path Archetype #{report.lifePathNumber}
               </span>
               <p className="text-xs text-cosmic-text leading-relaxed">
-                {report.interpretations.lifePathOverview}
+                {report.interpretations?.lifePathOverview}
               </p>
             </div>
 
             <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-3">
               <span className="text-xs font-bold text-violet-400 uppercase tracking-wider block">
-                Destiny & Expression Resonance #{report.destinyNumber}
+                Destiny &amp; Expression Resonance #{report.destinyNumber}
               </span>
               <p className="text-xs text-cosmic-text leading-relaxed">
-                {report.interpretations.destinyOverview}
+                {report.interpretations?.destinyOverview}
               </p>
             </div>
           </div>
@@ -148,7 +177,7 @@ export const NumerologyPage: React.FC = () => {
               <Palette className="w-5 h-5 text-cyan-400" />
               <div>
                 <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Lucky Colors</span>
-                <span className="font-bold text-cosmic-text text-sm">{report.luckyColors.join(', ')}</span>
+                <span className="font-bold text-cosmic-text text-sm">{report.luckyColors?.join(', ')}</span>
               </div>
             </div>
 
@@ -156,11 +185,23 @@ export const NumerologyPage: React.FC = () => {
               <Calendar className="w-5 h-5 text-emerald-400" />
               <div>
                 <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Favorable Days</span>
-                <span className="font-bold text-cosmic-text text-sm">{report.luckyDays.join(', ')}</span>
+                <span className="font-bold text-cosmic-text text-sm">{report.luckyDays?.join(', ')}</span>
               </div>
             </div>
           </div>
         </div>
+      ) : (
+        !isLoading && (
+          <div className="rounded-3xl border border-dashed border-cosmic-border bg-cosmic-surface/40 p-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
+              <Hash className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-cosmic-text">Enter Your Name &amp; Birth Date</h3>
+            <p className="text-xs text-cosmic-muted max-w-md mx-auto leading-relaxed">
+              Enter your full legal name and date of birth above to calculate your Life Path (Bhagyank), Mulank, Destiny, and Chaldean vowel resonances.
+            </p>
+          </div>
+        )
       )}
     </div>
   );

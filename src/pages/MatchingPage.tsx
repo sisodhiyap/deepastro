@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 import { MatchingCard, MatchingDataUI } from '../components/astrology/MatchingCard.js';
 
 export const MatchingPage: React.FC = () => {
   const [partnerA, setPartnerA] = useState({
-    name: 'Aarav Sharma',
-    birthDate: '1992-04-12',
-    birthTime: '09:30',
-    birthPlace: 'New Delhi',
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    birthPlace: '',
     latitude: '28.6139',
     longitude: '77.2090',
     timezone: '5.5',
@@ -15,20 +15,27 @@ export const MatchingPage: React.FC = () => {
   });
 
   const [partnerB, setPartnerB] = useState({
-    name: 'Pooja Iyer',
-    birthDate: '1995-11-20',
-    birthTime: '14:15',
-    birthPlace: 'Chennai',
-    latitude: '13.0827',
-    longitude: '80.2707',
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    birthPlace: '',
+    latitude: '19.0760',
+    longitude: '72.8777',
     timezone: '5.5',
     gender: 'Female',
   });
 
   const [result, setResult] = useState<MatchingDataUI | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleMatch = async () => {
+    if (!partnerA.birthDate || !partnerA.birthTime || !partnerB.birthDate || !partnerB.birthTime) {
+      setErrorMessage('Please enter both birth date and birth time for Partner A and Partner B.');
+      return;
+    }
+
+    setErrorMessage(null);
     setIsLoading(true);
     try {
       const res = await fetch('/api/matching/analyze', {
@@ -39,17 +46,16 @@ export const MatchingPage: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setResult(data);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setErrorMessage(err.error || 'Failed to analyze matching. Please check birth inputs.');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error communicating with matching engine.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    handleMatch();
-  }, []);
 
   return (
     <div className="space-y-10 animate-fadeIn">
@@ -59,12 +65,19 @@ export const MatchingPage: React.FC = () => {
           <Heart className="w-3.5 h-3.5 fill-cyan-400" /> Sacred Astrological Union
         </div>
         <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-          Kundli Milan & Compatibility
+          Kundli Milan &amp; Compatibility
         </h1>
         <p className="text-xs text-cosmic-muted">
           Comprehensive 36-point Ashtakoota analysis and Kuja (Manglik) equilibrium.
         </p>
       </div>
+
+      {errorMessage && (
+        <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       {/* Dual Partner Input Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -83,6 +96,7 @@ export const MatchingPage: React.FC = () => {
               <label className="text-cosmic-muted block mb-1 font-semibold">Full Name</label>
               <input
                 type="text"
+                placeholder="e.g. Rahul Sharma"
                 value={partnerA.name}
                 onChange={(e) => setPartnerA({ ...partnerA, name: e.target.value })}
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
@@ -110,6 +124,7 @@ export const MatchingPage: React.FC = () => {
               <label className="text-cosmic-muted block mb-1 font-semibold">Birth Place (City)</label>
               <input
                 type="text"
+                placeholder="e.g. New Delhi"
                 value={partnerA.birthPlace}
                 onChange={(e) => setPartnerA({ ...partnerA, birthPlace: e.target.value })}
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
@@ -133,6 +148,7 @@ export const MatchingPage: React.FC = () => {
               <label className="text-cosmic-muted block mb-1 font-semibold">Full Name</label>
               <input
                 type="text"
+                placeholder="e.g. Ananya Patel"
                 value={partnerB.name}
                 onChange={(e) => setPartnerB({ ...partnerB, name: e.target.value })}
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
@@ -160,6 +176,7 @@ export const MatchingPage: React.FC = () => {
               <label className="text-cosmic-muted block mb-1 font-semibold">Birth Place (City)</label>
               <input
                 type="text"
+                placeholder="e.g. Mumbai"
                 value={partnerB.birthPlace}
                 onChange={(e) => setPartnerB({ ...partnerB, birthPlace: e.target.value })}
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
@@ -180,8 +197,22 @@ export const MatchingPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Result Display */}
-      {result && <MatchingCard data={result} />}
+      {/* Result Display or Authentic Empty State */}
+      {result ? (
+        <MatchingCard data={result} />
+      ) : (
+        !isLoading && (
+          <div className="rounded-3xl border border-dashed border-cosmic-border bg-cosmic-surface/40 p-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
+              <Heart className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-cosmic-text">Enter Both Partner Profiles</h3>
+            <p className="text-xs text-cosmic-muted max-w-md mx-auto leading-relaxed">
+              Fill in birth coordinates for both partners above and click &quot;Analyze Kundli Compatibility&quot; to calculate the 36 Guna Ashtakoota score, Nadi Dosha, Bhakoot, and Manglik equilibrium.
+            </p>
+          </div>
+        )
+      )}
     </div>
   );
 };

@@ -7,6 +7,8 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db, UserRecord, ProfileRecord } from '../database/db.js';
+import { userRepository } from '../database/repositories/UserRepository.js';
+import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -21,7 +23,7 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Please provide email, password, and full name.' });
     }
 
-    const existing = db.getUserByEmail(email);
+    const existing = (await userRepository.getUserByEmail(email)) || db.getUserByEmail(email);
     if (existing) {
       return res.status(409).json({ error: 'An account with this cosmic email already exists.' });
     }
@@ -34,10 +36,12 @@ router.post('/register', async (req: Request, res: Response) => {
       id: userId,
       email: email.toLowerCase().trim(),
       passwordHash,
-      role: role === 'ADMIN' ? 'ADMIN' : role === 'ASTROLOGER' ? 'ASTROLOGER' : 'USER',
+      role: role === 'ADMIN' ? 'ADMIN' : role === 'ASTROLOGER' ? 'ASTROLOGER' : 'CLIENT',
       isVerified: true,
       createdAt: new Date().toISOString(),
     };
+
+    await userRepository.createUser(newUser);
 
     const newProfile: ProfileRecord = {
       userId,
@@ -86,7 +90,7 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const user = db.getUserByEmail(email);
+    const user = (await userRepository.getUserByEmail(email)) || db.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: 'Invalid cosmic credentials.' });
     }
@@ -121,11 +125,11 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // GET /api/auth/me
-router.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
-  const user = db.getUserById(userId);
+  const user = (await userRepository.getUserById(userId)) || db.getUserById(userId);
   const profile = db.getProfile(userId);
-  const birthProfile = db.getBirthProfile(userId);
+  const birthProfile = (await birthProfileRepository.getProfileByUserId(userId)) || db.getBirthProfile(userId);
   const sub = db.getSubscription(userId);
 
   if (!user) {

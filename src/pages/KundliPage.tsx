@@ -24,7 +24,6 @@ import { SouthIndianChart } from '../components/charts/SouthIndianChart.js';
 import { EastIndianChart } from '../components/charts/EastIndianChart.js';
 import { PlanetaryTable } from '../components/astrology/PlanetaryTable.js';
 import { DashaTimeline } from '../components/astrology/DashaTimeline.js';
-import { DEMO_BIRTH_PROFILE } from '../constants/demoProfile.js';
 
 const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
   delhi: { lat: 28.6139, lng: 77.209, tz: 5.5 },
@@ -54,14 +53,14 @@ const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
 
 export const KundliPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: DEMO_BIRTH_PROFILE.name,
-    birthDate: DEMO_BIRTH_PROFILE.birthDate,
-    birthTime: DEMO_BIRTH_PROFILE.birthTime,
-    birthPlace: DEMO_BIRTH_PROFILE.birthPlace,
-    latitude: DEMO_BIRTH_PROFILE.latitude.toString(),
-    longitude: DEMO_BIRTH_PROFILE.longitude.toString(),
-    timezone: DEMO_BIRTH_PROFILE.timezone.toString(),
-    gender: DEMO_BIRTH_PROFILE.gender,
+    name: '',
+    birthDate: '',
+    birthTime: '',
+    birthPlace: '',
+    latitude: '',
+    longitude: '',
+    timezone: '5.5',
+    gender: 'male',
     isApproximateTime: false,
   });
 
@@ -276,7 +275,29 @@ export const KundliPage: React.FC = () => {
   };
 
   useEffect(() => {
-    calculateChart();
+    // Only fetch saved chart if user or session already has one calculated
+    fetch('/api/astrology/chart')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const activeChart = data?.chart || (data?.ascendant ? data : null);
+        if (activeChart && activeChart.ascendant) {
+          setKundli(activeChart);
+          if (activeChart.birthData) {
+            setFormData({
+              name: activeChart.birthData.name || '',
+              birthDate: activeChart.birthData.birthDate || '',
+              birthTime: activeChart.birthData.birthTime || '',
+              birthPlace: activeChart.birthData.birthPlace || '',
+              latitude: activeChart.birthData.latitude?.toString() || '',
+              longitude: activeChart.birthData.longitude?.toString() || '',
+              timezone: activeChart.birthData.timezone?.toString() || '5.5',
+              gender: activeChart.birthData.gender || 'male',
+              isApproximateTime: !!activeChart.birthData.isApproximateTime,
+            });
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const getActivePlanets = () => {
@@ -395,17 +416,6 @@ export const KundliPage: React.FC = () => {
                 <Upload className="w-3.5 h-3.5" />
                 <span>{isUploading ? 'Scanning Document...' : 'Browse Kundli File (Image / PDF)'}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const sampleBlob = new Blob(['Mock Vedic Kundli Document Content'], { type: 'application/pdf' });
-                  const sampleFile = new File([sampleBlob], 'Sample_Kundli_Jaipur.pdf', { type: 'application/pdf' });
-                  handleKundliUpload(sampleFile);
-                }}
-                className="px-4 py-2 rounded-xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-400/60 text-xs font-semibold text-cosmic-muted hover:text-cosmic-text transition-colors"
-              >
-                Load Sample Kundli File
-              </button>
             </div>
           </div>
         ) : (
@@ -472,7 +482,7 @@ export const KundliPage: React.FC = () => {
                 disabled={isLoading}
                 className="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-wider transition-all shadow-glow-cyan"
               >
-                {isLoading ? 'Recalculating...' : 'Recalculate Kundli'}
+                {isLoading ? 'Calculating...' : (kundli ? 'Recalculate Kundli' : 'Calculate Vedic Kundli')}
               </button>
             </div>
           </form>
@@ -646,6 +656,18 @@ export const KundliPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {!kundli && !isLoading && (
+        <div className="rounded-3xl border border-dashed border-cosmic-border bg-cosmic-surface/40 p-12 text-center space-y-3 animate-fadeIn">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-cosmic-text">Ready to Calculate Your Kundli</h3>
+          <p className="text-xs text-cosmic-muted max-w-md mx-auto leading-relaxed">
+            Enter your name, date, time, and birth city above and press &quot;Calculate Vedic Kundli&quot;, or upload an existing chart image/PDF to scan with Vision AI.
+          </p>
         </div>
       )}
 

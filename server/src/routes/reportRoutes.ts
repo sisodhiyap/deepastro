@@ -15,6 +15,7 @@ import { AstronomicalVerificationEngine } from '../astrology/AstronomicalVerific
 import { KnowledgeRAG } from '../ai/KnowledgeRAG.js';
 import { reportGenerationService } from '../services/ReportGenerationService.js';
 import { reportRepository } from '../database/repositories/ReportRepository.js';
+import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { artifactStorage } from '../storage/ArtifactStorage.js';
 
 // Initialize the persistent store on module load
@@ -51,7 +52,7 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
         isApproximateTime: Boolean(birthData.isApproximateTime),
       };
     } else if (req.user) {
-      const saved = db.getBirthProfile(req.user.userId);
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
       if (saved && saved.birthDate && saved.birthTime) {
         profile = {
           name: saved.fullName,
@@ -324,7 +325,7 @@ router.get('/:id/html', optionalAuth, (req: AuthenticatedRequest, res: Response)
 // =========================================================================
 
 // POST /api/reports/blueprint/generate & POST /api/reports/kundli/premium
-const handleBlueprintGeneration = (req: AuthenticatedRequest, res: Response) => {
+const handleBlueprintGeneration = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { birthData, chartStyle = 'north' } = req.body;
 
@@ -348,7 +349,7 @@ const handleBlueprintGeneration = (req: AuthenticatedRequest, res: Response) => 
         isApproximateTime: Boolean(birthData.isApproximateTime),
       };
     } else if (req.user) {
-      const saved = db.getBirthProfile(req.user.userId);
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
       if (saved && saved.birthDate && saved.birthTime) {
         profile = {
           name: saved.fullName,

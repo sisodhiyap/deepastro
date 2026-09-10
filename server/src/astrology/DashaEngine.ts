@@ -52,10 +52,13 @@ export function calculateVimshottariDasha(
   birthDate: Date,
   currentDate: Date = new Date()
 ): VimshottariAnalysis {
-  const SPAN = 360.0 / 27.0; // 13° 20' = 13.333333333°
-  const norm = ((moonLongitude % 360) + 360) % 360;
-  const nakIndex = Math.floor(norm / SPAN); // 0 to 26
-  const degInNak = norm - nakIndex * SPAN;
+  const SPAN = 40.0 / 3.0; // 13° 20' = 13.333333333333334°
+  const EPS = 1e-10;
+  let norm = ((moonLongitude % 360.0) + 360.0) % 360.0;
+  if (norm >= 360.0) norm = 0;
+
+  const nakIndex = Math.min(26, Math.floor((norm + EPS) / SPAN)); // 0 to 26
+  const degInNak = Math.max(0, norm - nakIndex * SPAN);
 
   // Each set of 9 nakshatras corresponds to the 9 dasha lords in order
   const lordIndex = nakIndex % 9;
@@ -65,14 +68,17 @@ export function calculateVimshottariDasha(
 
   // Fraction remaining in the nakshatra
   const fractionElapsed = degInNak / SPAN;
-  const fractionRemaining = 1.0 - fractionElapsed;
+  const fractionRemaining = Math.max(0, Math.min(1.0, 1.0 - fractionElapsed));
   const balanceYears = fractionRemaining * totalYears;
 
   const mahadashas: DashaPeriod[] = [];
   let currentStart = new Date(birthDate);
 
+  // Solar year in ms (365.2425 days average Gregorian year)
+  const MS_PER_YEAR = 365.2425 * 24 * 60 * 60 * 1000;
+
   // First Mahadasha with remaining balance
-  const firstEndMs = currentStart.getTime() + balanceYears * 365.25 * 24 * 60 * 60 * 1000;
+  const firstEndMs = currentStart.getTime() + balanceYears * MS_PER_YEAR;
   const firstEnd = new Date(firstEndMs);
 
   mahadashas.push({
@@ -84,11 +90,11 @@ export function calculateVimshottariDasha(
 
   currentStart = firstEnd;
 
-  // Subsequent Mahadashas up to 120 years
+  // Subsequent Mahadashas up to full cycle
   for (let step = 1; step < 9; step++) {
     const nextIdx = (lordIndex + step) % 9;
     const info = DASHA_SEQUENCE[nextIdx];
-    const endMs = currentStart.getTime() + info.years * 365.25 * 24 * 60 * 60 * 1000;
+    const endMs = currentStart.getTime() + info.years * MS_PER_YEAR;
     const end = new Date(endMs);
 
     mahadashas.push({
@@ -115,7 +121,7 @@ export function calculateVimshottariDasha(
     for (let a = 0; a < 9; a++) {
       const aIdx = (mLordIdx + a) % 9;
       const aInfo = DASHA_SEQUENCE[aIdx];
-      // Antardasha proportion = (M_years * A_years) / 120
+      // Antardasha proportion = (M_duration * A_years) / 120
       const aDurationMs = mTotalMs * (aInfo.years / 120.0);
       const aEndMs = aStartMs + aDurationMs;
 
@@ -139,7 +145,7 @@ export function calculateVimshottariDasha(
 
       antardashas.push({
         planet: aInfo.lord,
-        durationYears: (aInfo.years * mDasha.durationYears) / 120,
+        durationYears: (aInfo.years * mDasha.durationYears) / 120.0,
         startDate: new Date(aStartMs).toISOString(),
         endDate: new Date(aEndMs).toISOString(),
         pratyantardashas,

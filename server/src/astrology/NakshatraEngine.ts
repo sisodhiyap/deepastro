@@ -1,7 +1,8 @@
 /**
  * Nakshatra Engine
- * 27 Nakshatras (Ashwini to Revati) + Abhijit classification
- * Computes Nakshatra, Pada, Lord, Deity, Gana, Yoni, Nadi, and Varna
+ * 27 Nakshatras (Ashwini to Revati) + Abhijit classification.
+ * Computes exact Nakshatra, Pada, Lord, Deity, Gana, Yoni, Nadi, and Varna.
+ * Enforces strict 13°20' and 3°20' boundaries with floating-point safety.
  */
 
 export interface NakshatraInfo {
@@ -51,16 +52,24 @@ export const NAKSHATRA_DATA: Array<Omit<NakshatraInfo, 'pada' | 'degreesInNaksha
   { index: 27, name: 'Revati', sanskritName: 'रेवती', lord: 'Mercury', deity: 'Pushan', symbol: 'Fish / Pair of fish', gana: 'Deva', yoni: 'Elephant', yoniAnimal: 'Elephant', nadi: 'Antya', varna: 'Shudra', element: 'Water' },
 ];
 
+/**
+ * Derives Nakshatra and Pada from sidereal degrees (0° to 360°).
+ * Exact span: 360 / 27 = 40/3 = 13°20' (13.333333333333334°)
+ * Exact pada: (40/3) / 4 = 10/3 = 3°20' (3.3333333333333335°)
+ */
 export function getNakshatraInfo(siderealDegrees: number): NakshatraInfo {
-  // Each nakshatra spans 13° 20' = 13.333333 degrees
-  const SPAN = 360.0 / 27.0; // 13.333333333333334
-  const norm = ((siderealDegrees % 360) + 360) % 360;
-  const index0 = Math.floor(norm / SPAN);
-  const nakshatraIndex = (index0 % 27) + 1;
-  const degInNak = norm - index0 * SPAN;
+  const SPAN = 40.0 / 3.0;
+  const PADA_SPAN = 10.0 / 3.0;
+  const EPS = 1e-10;
 
-  // Each pada is 3° 20' = 3.333333 degrees
-  const pada = Math.min(4, Math.floor(degInNak / (SPAN / 4)) + 1);
+  let norm = ((siderealDegrees % 360.0) + 360.0) % 360.0;
+  if (norm >= 360.0) norm = 0;
+
+  const index0 = Math.min(26, Math.floor((norm + EPS) / SPAN));
+  const nakshatraIndex = index0 + 1;
+  const degInNak = Math.max(0, norm - index0 * SPAN);
+
+  const pada = Math.min(4, Math.max(1, Math.floor((degInNak + EPS) / PADA_SPAN) + 1));
 
   const base = NAKSHATRA_DATA[nakshatraIndex - 1];
   return {
