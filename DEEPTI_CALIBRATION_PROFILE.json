@@ -1,0 +1,2601 @@
+{
+  "calibrationProfileMetadata": {
+    "profileName": "Deepti",
+    "purpose": "Deterministic Astronomical & Astrological Calibration Regression Fixture",
+    "isCalibrationFixture": true,
+    "hardcodeProtectionNotice": "This fixture is exclusively for automated test validation and regression benchmarks. Never hardcode into production engines.",
+    "generatedAt": "2026-09-10T08:39:15.028Z",
+    "engineVersion": "2.0.0",
+    "schemaVersion": "2.0.0"
+  },
+  "astroCalculationProfile": {
+    "calculationMethod": "DRIK_SIDDHANTA",
+    "ephemeris": "NASA_JPL_DE405_EQUIVALENT",
+    "ephemerisVersion": "Meeus-DE405-Hybrid-v2.0",
+    "zodiac": "SIDEREAL",
+    "ayanamsha": "LAHIRI_CHITRAPAKSHA",
+    "ayanamshaVersion": "IAU2006_ChitraPaksha_v1",
+    "nodeType": "TRUE_NODE",
+    "houseSystem": "WHOLE_SIGN_AND_SRIPATI_CHALIT",
+    "latitude": 27.1767,
+    "longitude": 78.0081,
+    "timezone": 5.5,
+    "ianaTimeZone": "Asia/Kolkata",
+    "timezoneDatabaseVersion": "2026a",
+    "coordinatePrecision": 6,
+    "planetaryPrecision": 8,
+    "engineVersion": "2.0.0"
+  },
+  "birthInput": {
+    "name": "Deepti",
+    "birthDate": "1988-03-02",
+    "birthTime": "07:15",
+    "birthLocation": "Agra, Uttar Pradesh, India",
+    "latitude": 27.1767,
+    "longitude": 78.0081,
+    "timezoneOffsetHours": 5.5,
+    "utcIsoTimestamp": "1988-03-02T01:45:00.000Z"
+  },
+  "astronomicalCore": {
+    "julianDay": 2447222.5729166665,
+    "ayanamshaDegrees": 23.692541559278297,
+    "midheavenDegrees": 238.3720087630345
+  },
+  "ascendant": {
+    "longitudeDegrees": 328.37200876303444,
+    "signIndex": 10,
+    "signName": "Aquarius",
+    "degreesInSign": 28,
+    "minutes": 22,
+    "seconds": 19,
+    "nakshatra": {
+      "index": 25,
+      "name": "Purva Bhadrapada",
+      "sanskritName": "पूर्वभाद्रपदा",
+      "lord": "Jupiter",
+      "pada": 3,
+      "degreesInNakshatra": 8.3720087630345
+    }
+  },
+  "planets": [
+    {
+      "name": "Sun",
+      "sanskritName": "Surya (सूर्य)",
+      "symbol": "☉",
+      "siderealLongitude": 318.0079162309827,
+      "signIndex": 10,
+      "signName": "Aquarius",
+      "degreeInSign": 18,
+      "minutes": 0,
+      "seconds": 28,
+      "house": 1,
+      "speed": 1.0027831213051286,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Enemy",
+      "nakshatra": {
+        "index": 24,
+        "name": "Shatabhisha",
+        "sanskritName": "शतभिषा",
+        "lord": "Rahu",
+        "pada": 4,
+        "degreesInNakshatra": 11.341249564316001
+      },
+      "aspectsToHouses": [
+        8
+      ]
+    },
+    {
+      "name": "Moon",
+      "sanskritName": "Chandra (चन्द्र)",
+      "symbol": "☽",
+      "siderealLongitude": 120.71420030476351,
+      "signIndex": 4,
+      "signName": "Leo",
+      "degreeInSign": 0,
+      "minutes": 42,
+      "seconds": 51,
+      "house": 7,
+      "speed": 11.816196850179495,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Friend",
+      "nakshatra": {
+        "index": 10,
+        "name": "Magha",
+        "sanskritName": "मघा",
+        "lord": "Ketu",
+        "pada": 1,
+        "degreesInNakshatra": 0.7142003047634944
+      },
+      "aspectsToHouses": [
+        2
+      ]
+    },
+    {
+      "name": "Mars",
+      "sanskritName": "Mangala (मंगल)",
+      "symbol": "♂",
+      "siderealLongitude": 252.13494062048198,
+      "signIndex": 8,
+      "signName": "Sagittarius",
+      "degreeInSign": 12,
+      "minutes": 8,
+      "seconds": 5,
+      "house": 11,
+      "speed": 0.6744370633214203,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Friend",
+      "nakshatra": {
+        "index": 19,
+        "name": "Mula",
+        "sanskritName": "मूल",
+        "lord": "Ketu",
+        "pada": 4,
+        "degreesInNakshatra": 12.134940620481984
+      },
+      "aspectsToHouses": [
+        3,
+        6,
+        7
+      ]
+    },
+    {
+      "name": "Mercury",
+      "sanskritName": "Budha (बुध)",
+      "symbol": "☿",
+      "siderealLongitude": 291.61882162088483,
+      "signIndex": 9,
+      "signName": "Capricorn",
+      "degreeInSign": 21,
+      "minutes": 37,
+      "seconds": 7,
+      "house": 12,
+      "speed": 0.6615785018937004,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Neutral",
+      "nakshatra": {
+        "index": 22,
+        "name": "Shravana",
+        "sanskritName": "श्रवण",
+        "lord": "Moon",
+        "pada": 4,
+        "degreesInNakshatra": 11.618821620884773
+      },
+      "aspectsToHouses": [
+        7
+      ]
+    },
+    {
+      "name": "Jupiter",
+      "sanskritName": "Guru (बृहस्पति)",
+      "symbol": "♃",
+      "siderealLongitude": 4.964929251305467,
+      "signIndex": 0,
+      "signName": "Aries",
+      "degreeInSign": 4,
+      "minutes": 57,
+      "seconds": 53,
+      "house": 3,
+      "speed": 0.1996879136825669,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Friend",
+      "nakshatra": {
+        "index": 1,
+        "name": "Ashwini",
+        "sanskritName": "अश्विनी",
+        "lord": "Ketu",
+        "pada": 2,
+        "degreesInNakshatra": 4.9649292513054775
+      },
+      "aspectsToHouses": [
+        8,
+        10,
+        12
+      ]
+    },
+    {
+      "name": "Venus",
+      "sanskritName": "Shukra (शुक्र)",
+      "symbol": "♀",
+      "siderealLongitude": 1.3827139455481827,
+      "signIndex": 0,
+      "signName": "Aries",
+      "degreeInSign": 1,
+      "minutes": 22,
+      "seconds": 57,
+      "house": 3,
+      "speed": 1.1368769665100587,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Neutral",
+      "nakshatra": {
+        "index": 1,
+        "name": "Ashwini",
+        "sanskritName": "अश्विनी",
+        "lord": "Ketu",
+        "pada": 1,
+        "degreesInNakshatra": 1.3827139455481756
+      },
+      "aspectsToHouses": [
+        10
+      ]
+    },
+    {
+      "name": "Saturn",
+      "sanskritName": "Shani (शनि)",
+      "symbol": "♄",
+      "siderealLongitude": 247.56968968277056,
+      "signIndex": 8,
+      "signName": "Sagittarius",
+      "degreeInSign": 7,
+      "minutes": 34,
+      "seconds": 10,
+      "house": 11,
+      "speed": 0.06272752111726732,
+      "isRetrograde": false,
+      "isCombust": false,
+      "dignity": "Neutral",
+      "nakshatra": {
+        "index": 19,
+        "name": "Mula",
+        "sanskritName": "मूल",
+        "lord": "Ketu",
+        "pada": 3,
+        "degreesInNakshatra": 7.569689682770559
+      },
+      "aspectsToHouses": [
+        2,
+        6,
+        9
+      ]
+    },
+    {
+      "name": "Rahu",
+      "sanskritName": "Rahu (राहु)",
+      "symbol": "☊",
+      "siderealLongitude": 330.2407866201814,
+      "signIndex": 11,
+      "signName": "Pisces",
+      "degreeInSign": 0,
+      "minutes": 14,
+      "seconds": 26,
+      "house": 2,
+      "speed": -0.052953762762491446,
+      "isRetrograde": true,
+      "isCombust": false,
+      "dignity": "Neutral",
+      "nakshatra": {
+        "index": 25,
+        "name": "Purva Bhadrapada",
+        "sanskritName": "पूर्वभाद्रपदा",
+        "lord": "Jupiter",
+        "pada": 4,
+        "degreesInNakshatra": 10.240786620181325
+      },
+      "aspectsToHouses": [
+        7,
+        9,
+        11
+      ]
+    },
+    {
+      "name": "Ketu",
+      "sanskritName": "Ketu (केतु)",
+      "symbol": "☋",
+      "siderealLongitude": 150.24078662018144,
+      "signIndex": 5,
+      "signName": "Virgo",
+      "degreeInSign": 0,
+      "minutes": 14,
+      "seconds": 26,
+      "house": 8,
+      "speed": -0.052953762762491446,
+      "isRetrograde": true,
+      "isCombust": false,
+      "dignity": "Neutral",
+      "nakshatra": {
+        "index": 12,
+        "name": "Uttara Phalguni",
+        "sanskritName": "उत्तर फाल्गुनी",
+        "lord": "Sun",
+        "pada": 2,
+        "degreesInNakshatra": 3.574119953514753
+      },
+      "aspectsToHouses": [
+        1,
+        3,
+        5
+      ]
+    }
+  ],
+  "houses": {
+    "wholeSignRashi": [
+      {
+        "houseNumber": 1,
+        "sanskritName": "Tanu Bhava (Self / Physical Body)",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "lord": "Saturn",
+        "startDegree": 300,
+        "midCuspDegree": 315,
+        "endDegree": 330,
+        "planetsInHouse": [
+          "Sun"
+        ],
+        "signification": "Self / Physical Body",
+        "category": "Kendra",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 2,
+        "sanskritName": "Dhana Bhava (Wealth / Speech / Family)",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "lord": "Jupiter",
+        "startDegree": 330,
+        "midCuspDegree": 345,
+        "endDegree": 360,
+        "planetsInHouse": [
+          "Rahu"
+        ],
+        "signification": "Wealth / Speech / Family",
+        "category": "Maraka",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 3,
+        "sanskritName": "Sahaja Bhava (Siblings / Courage / Effort)",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "lord": "Mars",
+        "startDegree": 0,
+        "midCuspDegree": 15,
+        "endDegree": 30,
+        "planetsInHouse": [
+          "Jupiter",
+          "Venus"
+        ],
+        "signification": "Siblings / Courage / Effort",
+        "category": "Upachaya",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 4,
+        "sanskritName": "Sukha Bhava (Mother / Happiness / Land)",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "lord": "Venus",
+        "startDegree": 30,
+        "midCuspDegree": 45,
+        "endDegree": 60,
+        "planetsInHouse": [],
+        "signification": "Mother / Happiness / Land",
+        "category": "Kendra",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 5,
+        "sanskritName": "Putra Bhava (Children / Intellect / Past Merits)",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "lord": "Mercury",
+        "startDegree": 60,
+        "midCuspDegree": 75,
+        "endDegree": 90,
+        "planetsInHouse": [],
+        "signification": "Children / Intellect / Past Merits",
+        "category": "Trikona",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 6,
+        "sanskritName": "Ari Bhava (Enemies / Health / Obstacles / Service)",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "lord": "Moon",
+        "startDegree": 90,
+        "midCuspDegree": 105,
+        "endDegree": 120,
+        "planetsInHouse": [],
+        "signification": "Enemies / Health / Obstacles / Service",
+        "category": "Dusthana",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 7,
+        "sanskritName": "Yuvati Bhava (Spouse / Partnerships / Public)",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "lord": "Sun",
+        "startDegree": 120,
+        "midCuspDegree": 135,
+        "endDegree": 150,
+        "planetsInHouse": [
+          "Moon"
+        ],
+        "signification": "Spouse / Partnerships / Public",
+        "category": "Kendra",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 8,
+        "sanskritName": "Randhra Bhava (Longevity / Transformation / Occult)",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "lord": "Mercury",
+        "startDegree": 150,
+        "midCuspDegree": 165,
+        "endDegree": 180,
+        "planetsInHouse": [
+          "Ketu"
+        ],
+        "signification": "Longevity / Transformation / Occult",
+        "category": "Dusthana",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 9,
+        "sanskritName": "Dharma Bhava (Fortune / Higher Wisdom / Father)",
+        "signIndex": 6,
+        "signName": "Libra",
+        "vedicSignName": "Tula",
+        "lord": "Venus",
+        "startDegree": 180,
+        "midCuspDegree": 195,
+        "endDegree": 210,
+        "planetsInHouse": [],
+        "signification": "Fortune / Higher Wisdom / Father",
+        "category": "Trikona",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 10,
+        "sanskritName": "Karma Bhava (Career / Status / Public Reputation)",
+        "signIndex": 7,
+        "signName": "Scorpio",
+        "vedicSignName": "Vrishchika",
+        "lord": "Mars",
+        "startDegree": 210,
+        "midCuspDegree": 225,
+        "endDegree": 240,
+        "planetsInHouse": [],
+        "signification": "Career / Status / Public Reputation",
+        "category": "Kendra",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 11,
+        "sanskritName": "Labha Bhava (Gains / Ambition / Social Circle)",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "lord": "Jupiter",
+        "startDegree": 240,
+        "midCuspDegree": 255,
+        "endDegree": 270,
+        "planetsInHouse": [
+          "Mars",
+          "Saturn"
+        ],
+        "signification": "Gains / Ambition / Social Circle",
+        "category": "Upachaya",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      },
+      {
+        "houseNumber": 12,
+        "sanskritName": "Vyaya Bhava (Expenditure / Liberation / Solitude)",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "lord": "Saturn",
+        "startDegree": 270,
+        "midCuspDegree": 285,
+        "endDegree": 300,
+        "planetsInHouse": [
+          "Mercury"
+        ],
+        "signification": "Expenditure / Liberation / Solitude",
+        "category": "Dusthana",
+        "houseSystem": "Whole Sign (Parashari Rashi Bhava)"
+      }
+    ],
+    "bhavaChalitSripati": [
+      {
+        "houseNumber": 1,
+        "startDegree": null,
+        "midCuspDegree": 328.37200876303444,
+        "endDegree": 343.37200876303444,
+        "signIndex": 10,
+        "planetsInChalit": [
+          "Sun",
+          "Moon",
+          "Mars",
+          "Mercury",
+          "Jupiter",
+          "Venus",
+          "Saturn",
+          "Rahu",
+          "Ketu"
+        ]
+      },
+      {
+        "houseNumber": 2,
+        "startDegree": 343.37200876303444,
+        "midCuspDegree": 358.37200876303444,
+        "endDegree": 13.3720087630345,
+        "signIndex": 11,
+        "planetsInChalit": [
+          "Jupiter",
+          "Venus"
+        ]
+      },
+      {
+        "houseNumber": 3,
+        "startDegree": 13.372008763034472,
+        "midCuspDegree": 28.3720087630345,
+        "endDegree": 43.3720087630345,
+        "signIndex": 0,
+        "planetsInChalit": []
+      },
+      {
+        "houseNumber": 4,
+        "startDegree": 43.3720087630345,
+        "midCuspDegree": 58.3720087630345,
+        "endDegree": null,
+        "signIndex": 1,
+        "planetsInChalit": [
+          "Sun",
+          "Moon",
+          "Mars",
+          "Mercury",
+          "Saturn",
+          "Rahu",
+          "Ketu"
+        ]
+      },
+      {
+        "houseNumber": 5,
+        "startDegree": null,
+        "endDegree": null,
+        "signIndex": null,
+        "planetsInChalit": []
+      },
+      {
+        "houseNumber": 6,
+        "startDegree": null,
+        "endDegree": null,
+        "signIndex": null,
+        "planetsInChalit": []
+      },
+      {
+        "houseNumber": 7,
+        "startDegree": null,
+        "midCuspDegree": 148.37200876303444,
+        "endDegree": 163.37200876303447,
+        "signIndex": 4,
+        "planetsInChalit": [
+          "Moon",
+          "Jupiter",
+          "Venus",
+          "Ketu"
+        ]
+      },
+      {
+        "houseNumber": 8,
+        "startDegree": 163.37200876303447,
+        "midCuspDegree": 178.3720087630345,
+        "endDegree": 193.3720087630345,
+        "signIndex": 5,
+        "planetsInChalit": []
+      },
+      {
+        "houseNumber": 9,
+        "startDegree": 193.3720087630345,
+        "midCuspDegree": 208.3720087630345,
+        "endDegree": 223.3720087630345,
+        "signIndex": 6,
+        "planetsInChalit": []
+      },
+      {
+        "houseNumber": 10,
+        "startDegree": 223.3720087630345,
+        "midCuspDegree": 238.3720087630345,
+        "endDegree": null,
+        "signIndex": 7,
+        "planetsInChalit": [
+          "Sun",
+          "Mars",
+          "Mercury",
+          "Saturn",
+          "Rahu"
+        ]
+      },
+      {
+        "houseNumber": 11,
+        "startDegree": null,
+        "midCuspDegree": null,
+        "endDegree": null,
+        "signIndex": null,
+        "planetsInChalit": []
+      },
+      {
+        "houseNumber": 12,
+        "startDegree": null,
+        "midCuspDegree": null,
+        "endDegree": null,
+        "signIndex": null,
+        "planetsInChalit": []
+      }
+    ]
+  },
+  "shodashvarga": {
+    "d1_rashi": [
+      {
+        "planet": "Sun",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": true
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": true
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": true
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": true
+      }
+    ],
+    "d2_hora": [
+      {
+        "planet": "Sun",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      }
+    ],
+    "d3_drekkana": [
+      {
+        "planet": "Sun",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": true
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": true
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": true
+      }
+    ],
+    "d4_chaturthamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": true
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": true
+      }
+    ],
+    "d7_saptamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      }
+    ],
+    "d9_navamsa": [
+      {
+        "planet": "Sun",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": false
+      }
+    ],
+    "d10_dashamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 7,
+        "signName": "Scorpio",
+        "vedicSignName": "Vrishchika",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      }
+    ],
+    "d12_dwadashamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": true
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": true
+      }
+    ],
+    "d16_shodashamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      }
+    ],
+    "d20_vimshamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      }
+    ],
+    "d24_chaturvimshamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 6,
+        "signName": "Libra",
+        "vedicSignName": "Tula",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 7,
+        "signName": "Scorpio",
+        "vedicSignName": "Vrishchika",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      }
+    ],
+    "d27_saptavimshamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 6,
+        "signName": "Libra",
+        "vedicSignName": "Tula",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 3,
+        "signName": "Cancer",
+        "vedicSignName": "Karka",
+        "isVargottama": false
+      }
+    ],
+    "d30_trimshamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": true
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      }
+    ],
+    "d40_khavedamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 0,
+        "signName": "Aries",
+        "vedicSignName": "Mesha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 4,
+        "signName": "Leo",
+        "vedicSignName": "Simha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 6,
+        "signName": "Libra",
+        "vedicSignName": "Tula",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 1,
+        "signName": "Taurus",
+        "vedicSignName": "Vrishabha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 6,
+        "signName": "Libra",
+        "vedicSignName": "Tula",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 6,
+        "signName": "Libra",
+        "vedicSignName": "Tula",
+        "isVargottama": false
+      }
+    ],
+    "d45_akshavedamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 7,
+        "signName": "Scorpio",
+        "vedicSignName": "Vrishchika",
+        "isVargottama": false
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 7,
+        "signName": "Scorpio",
+        "vedicSignName": "Vrishchika",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 7,
+        "signName": "Scorpio",
+        "vedicSignName": "Vrishchika",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": false
+      }
+    ],
+    "d60_shashtiamsha": [
+      {
+        "planet": "Sun",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": true
+      },
+      {
+        "planet": "Moon",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Mars",
+        "signIndex": 8,
+        "signName": "Sagittarius",
+        "vedicSignName": "Dhanu",
+        "isVargottama": true
+      },
+      {
+        "planet": "Mercury",
+        "signIndex": 10,
+        "signName": "Aquarius",
+        "vedicSignName": "Kumbha",
+        "isVargottama": false
+      },
+      {
+        "planet": "Jupiter",
+        "signIndex": 9,
+        "signName": "Capricorn",
+        "vedicSignName": "Makara",
+        "isVargottama": false
+      },
+      {
+        "planet": "Venus",
+        "signIndex": 2,
+        "signName": "Gemini",
+        "vedicSignName": "Mithuna",
+        "isVargottama": false
+      },
+      {
+        "planet": "Saturn",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      },
+      {
+        "planet": "Rahu",
+        "signIndex": 5,
+        "signName": "Virgo",
+        "vedicSignName": "Kanya",
+        "isVargottama": false
+      },
+      {
+        "planet": "Ketu",
+        "signIndex": 11,
+        "signName": "Pisces",
+        "vedicSignName": "Meena",
+        "isVargottama": false
+      }
+    ]
+  },
+  "vimshottariDasha": {
+    "birthSeedLord": "Ketu",
+    "balanceYearsAtBirth": 6.625044839999165,
+    "balanceDetailed": "6 Years 7 Months 15 Days",
+    "currentMahadasha": {
+      "planet": "Moon",
+      "durationYears": 10,
+      "startDate": "2020-10-16T03:01:14.013Z",
+      "endDate": "2030-10-16T13:13:14.013Z",
+      "antardashas": [
+        {
+          "planet": "Moon",
+          "durationYears": 0.8333333333333334,
+          "startDate": "2020-10-16T03:01:14.013Z",
+          "endDate": "2021-08-16T11:52:14.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Moon",
+              "durationDays": 25,
+              "startDate": "2020-10-16T03:01:14.013Z",
+              "endDate": "2020-11-10T11:45:29.013Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 18,
+              "startDate": "2020-11-10T11:45:29.013Z",
+              "endDate": "2020-11-28T05:52:27.513Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 46,
+              "startDate": "2020-11-28T05:52:27.513Z",
+              "endDate": "2021-01-12T21:36:06.513Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 41,
+              "startDate": "2021-01-12T21:36:06.513Z",
+              "endDate": "2021-02-22T11:34:54.513Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 48,
+              "startDate": "2021-02-22T11:34:54.513Z",
+              "endDate": "2021-04-11T16:10:59.013Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 43,
+              "startDate": "2021-04-11T16:10:59.013Z",
+              "endDate": "2021-05-24T19:02:12.513Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 18,
+              "startDate": "2021-05-24T19:02:12.513Z",
+              "endDate": "2021-06-11T13:09:11.013Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 51,
+              "startDate": "2021-06-11T13:09:11.013Z",
+              "endDate": "2021-08-01T06:37:41.013Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 15,
+              "startDate": "2021-08-01T06:37:41.013Z",
+              "endDate": "2021-08-16T11:52:14.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Mars",
+          "durationYears": 0.5833333333333334,
+          "startDate": "2021-08-16T11:52:14.013Z",
+          "endDate": "2022-03-17T13:15:56.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Mars",
+              "durationDays": 12,
+              "startDate": "2021-08-16T11:52:14.013Z",
+              "endDate": "2021-08-28T22:09:06.963Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 32,
+              "startDate": "2021-08-28T22:09:06.963Z",
+              "endDate": "2021-09-29T21:09:40.263Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 28,
+              "startDate": "2021-09-29T21:09:40.263Z",
+              "endDate": "2021-10-28T06:56:49.863Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 34,
+              "startDate": "2021-10-28T06:56:49.863Z",
+              "endDate": "2021-12-01T00:34:05.013Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 30,
+              "startDate": "2021-12-01T00:34:05.013Z",
+              "endDate": "2021-12-31T04:57:56.463Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 12,
+              "startDate": "2021-12-31T04:57:56.463Z",
+              "endDate": "2022-01-12T15:14:49.413Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 36,
+              "startDate": "2022-01-12T15:14:49.413Z",
+              "endDate": "2022-02-17T03:28:46.413Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 11,
+              "startDate": "2022-02-17T03:28:46.413Z",
+              "endDate": "2022-02-27T19:08:57.513Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 18,
+              "startDate": "2022-02-27T19:08:57.513Z",
+              "endDate": "2022-03-17T13:15:56.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Rahu",
+          "durationYears": 1.5,
+          "startDate": "2022-03-17T13:15:56.013Z",
+          "endDate": "2023-09-16T09:59:44.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Rahu",
+              "durationDays": 82,
+              "startDate": "2022-03-17T13:15:56.013Z",
+              "endDate": "2022-06-07T17:34:30.213Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 73,
+              "startDate": "2022-06-07T17:34:30.213Z",
+              "endDate": "2022-08-19T18:44:20.613Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 87,
+              "startDate": "2022-08-19T18:44:20.613Z",
+              "endDate": "2022-11-14T12:37:16.713Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 78,
+              "startDate": "2022-11-14T12:37:16.713Z",
+              "endDate": "2023-01-31T03:21:29.013Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 32,
+              "startDate": "2023-01-31T03:21:29.013Z",
+              "endDate": "2023-03-04T02:22:02.313Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 91,
+              "startDate": "2023-03-04T02:22:02.313Z",
+              "endDate": "2023-06-03T09:49:20.313Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 27,
+              "startDate": "2023-06-03T09:49:20.313Z",
+              "endDate": "2023-06-30T19:15:31.713Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 46,
+              "startDate": "2023-06-30T19:15:31.713Z",
+              "endDate": "2023-08-15T10:59:10.713Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 32,
+              "startDate": "2023-08-15T10:59:10.713Z",
+              "endDate": "2023-09-16T09:59:44.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Jupiter",
+          "durationYears": 1.3333333333333333,
+          "startDate": "2023-09-16T09:59:44.013Z",
+          "endDate": "2025-01-15T09:45:20.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Jupiter",
+              "durationDays": 65,
+              "startDate": "2023-09-16T09:59:44.013Z",
+              "endDate": "2023-11-20T08:21:48.813Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 77,
+              "startDate": "2023-11-20T08:21:48.813Z",
+              "endDate": "2024-02-05T10:55:32.013Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 69,
+              "startDate": "2024-02-05T10:55:32.013Z",
+              "endDate": "2024-04-14T10:41:29.613Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 28,
+              "startDate": "2024-04-14T10:41:29.613Z",
+              "endDate": "2024-05-12T20:28:39.213Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 81,
+              "startDate": "2024-05-12T20:28:39.213Z",
+              "endDate": "2024-08-02T00:26:15.213Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 24,
+              "startDate": "2024-08-02T00:26:15.213Z",
+              "endDate": "2024-08-26T08:49:32.013Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 41,
+              "startDate": "2024-08-26T08:49:32.013Z",
+              "endDate": "2024-10-05T22:48:20.013Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 28,
+              "startDate": "2024-10-05T22:48:20.013Z",
+              "endDate": "2024-11-03T08:35:29.613Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 73,
+              "startDate": "2024-11-03T08:35:29.613Z",
+              "endDate": "2025-01-15T09:45:20.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Saturn",
+          "durationYears": 1.5833333333333333,
+          "startDate": "2025-01-15T09:45:20.013Z",
+          "endDate": "2026-08-16T16:58:14.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Saturn",
+              "durationDays": 92,
+              "startDate": "2025-01-15T09:45:20.013Z",
+              "endDate": "2025-04-16T23:17:52.563Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 82,
+              "startDate": "2025-04-16T23:17:52.563Z",
+              "endDate": "2025-07-07T21:31:12.213Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 34,
+              "startDate": "2025-07-07T21:31:12.213Z",
+              "endDate": "2025-08-10T15:08:27.363Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 96,
+              "startDate": "2025-08-10T15:08:27.363Z",
+              "endDate": "2025-11-15T00:20:36.363Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 29,
+              "startDate": "2025-11-15T00:20:36.363Z",
+              "endDate": "2025-12-13T22:18:15.063Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 48,
+              "startDate": "2025-12-13T22:18:15.063Z",
+              "endDate": "2026-01-31T02:54:19.563Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 34,
+              "startDate": "2026-01-31T02:54:19.563Z",
+              "endDate": "2026-03-05T20:31:34.713Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 87,
+              "startDate": "2026-03-05T20:31:34.713Z",
+              "endDate": "2026-05-31T14:24:30.813Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 77,
+              "startDate": "2026-05-31T14:24:30.813Z",
+              "endDate": "2026-08-16T16:58:14.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Mercury",
+          "durationYears": 1.4166666666666667,
+          "startDate": "2026-08-16T16:58:14.013Z",
+          "endDate": "2028-01-16T03:12:56.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Mercury",
+              "durationDays": 73,
+              "startDate": "2026-08-16T16:58:14.013Z",
+              "endDate": "2026-10-29T00:13:18.963Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 30,
+              "startDate": "2026-10-29T00:13:18.963Z",
+              "endDate": "2026-11-28T04:37:10.413Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 86,
+              "startDate": "2026-11-28T04:37:10.413Z",
+              "endDate": "2027-02-22T10:19:37.413Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 26,
+              "startDate": "2027-02-22T10:19:37.413Z",
+              "endDate": "2027-03-20T07:14:21.513Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 43,
+              "startDate": "2027-03-20T07:14:21.513Z",
+              "endDate": "2027-05-02T10:05:35.013Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 30,
+              "startDate": "2027-05-02T10:05:35.013Z",
+              "endDate": "2027-06-01T14:29:26.463Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 78,
+              "startDate": "2027-06-01T14:29:26.463Z",
+              "endDate": "2027-08-18T05:13:38.763Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 69,
+              "startDate": "2027-08-18T05:13:38.763Z",
+              "endDate": "2027-10-26T04:59:36.363Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 82,
+              "startDate": "2027-10-26T04:59:36.363Z",
+              "endDate": "2028-01-16T03:12:56.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Ketu",
+          "durationYears": 0.5833333333333334,
+          "startDate": "2028-01-16T03:12:56.013Z",
+          "endDate": "2028-08-16T04:36:38.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Ketu",
+              "durationDays": 12,
+              "startDate": "2028-01-16T03:12:56.013Z",
+              "endDate": "2028-01-28T13:29:48.963Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 36,
+              "startDate": "2028-01-28T13:29:48.963Z",
+              "endDate": "2028-03-04T01:43:45.963Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 11,
+              "startDate": "2028-03-04T01:43:45.963Z",
+              "endDate": "2028-03-14T17:23:57.063Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 18,
+              "startDate": "2028-03-14T17:23:57.063Z",
+              "endDate": "2028-04-01T11:30:55.563Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 12,
+              "startDate": "2028-04-01T11:30:55.563Z",
+              "endDate": "2028-04-13T21:47:48.513Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 32,
+              "startDate": "2028-04-13T21:47:48.513Z",
+              "endDate": "2028-05-15T20:48:21.813Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 28,
+              "startDate": "2028-05-15T20:48:21.813Z",
+              "endDate": "2028-06-13T06:35:31.413Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 34,
+              "startDate": "2028-06-13T06:35:31.413Z",
+              "endDate": "2028-07-17T00:12:46.563Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 30,
+              "startDate": "2028-07-17T00:12:46.563Z",
+              "endDate": "2028-08-16T04:36:38.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Venus",
+          "durationYears": 1.6666666666666667,
+          "startDate": "2028-08-16T04:36:38.013Z",
+          "endDate": "2030-04-16T22:18:38.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Venus",
+              "durationDays": 101,
+              "startDate": "2028-08-16T04:36:38.013Z",
+              "endDate": "2028-11-25T15:33:38.013Z"
+            },
+            {
+              "planet": "Sun",
+              "durationDays": 30,
+              "startDate": "2028-11-25T15:33:38.013Z",
+              "endDate": "2028-12-26T02:02:44.013Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 51,
+              "startDate": "2028-12-26T02:02:44.013Z",
+              "endDate": "2029-02-14T19:31:14.013Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 36,
+              "startDate": "2029-02-14T19:31:14.013Z",
+              "endDate": "2029-03-22T07:45:11.013Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 91,
+              "startDate": "2029-03-22T07:45:11.013Z",
+              "endDate": "2029-06-21T15:12:29.013Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 81,
+              "startDate": "2029-06-21T15:12:29.013Z",
+              "endDate": "2029-09-10T19:10:05.013Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 96,
+              "startDate": "2029-09-10T19:10:05.013Z",
+              "endDate": "2029-12-16T04:22:14.013Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 86,
+              "startDate": "2029-12-16T04:22:14.013Z",
+              "endDate": "2030-03-12T10:04:41.013Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 36,
+              "startDate": "2030-03-12T10:04:41.013Z",
+              "endDate": "2030-04-16T22:18:38.013Z"
+            }
+          ]
+        },
+        {
+          "planet": "Sun",
+          "durationYears": 0.5,
+          "startDate": "2030-04-16T22:18:38.013Z",
+          "endDate": "2030-10-16T13:13:14.013Z",
+          "pratyantardashas": [
+            {
+              "planet": "Sun",
+              "durationDays": 9,
+              "startDate": "2030-04-16T22:18:38.013Z",
+              "endDate": "2030-04-26T01:27:21.813Z"
+            },
+            {
+              "planet": "Moon",
+              "durationDays": 15,
+              "startDate": "2030-04-26T01:27:21.813Z",
+              "endDate": "2030-05-11T06:41:54.813Z"
+            },
+            {
+              "planet": "Mars",
+              "durationDays": 11,
+              "startDate": "2030-05-11T06:41:54.813Z",
+              "endDate": "2030-05-21T22:22:05.913Z"
+            },
+            {
+              "planet": "Rahu",
+              "durationDays": 27,
+              "startDate": "2030-05-21T22:22:05.913Z",
+              "endDate": "2030-06-18T07:48:17.313Z"
+            },
+            {
+              "planet": "Jupiter",
+              "durationDays": 24,
+              "startDate": "2030-06-18T07:48:17.313Z",
+              "endDate": "2030-07-12T16:11:34.113Z"
+            },
+            {
+              "planet": "Saturn",
+              "durationDays": 29,
+              "startDate": "2030-07-12T16:11:34.113Z",
+              "endDate": "2030-08-10T14:09:12.813Z"
+            },
+            {
+              "planet": "Mercury",
+              "durationDays": 26,
+              "startDate": "2030-08-10T14:09:12.813Z",
+              "endDate": "2030-09-05T11:03:56.913Z"
+            },
+            {
+              "planet": "Ketu",
+              "durationDays": 11,
+              "startDate": "2030-09-05T11:03:56.913Z",
+              "endDate": "2030-09-16T02:44:08.013Z"
+            },
+            {
+              "planet": "Venus",
+              "durationDays": 30,
+              "startDate": "2030-09-16T02:44:08.013Z",
+              "endDate": "2030-10-16T13:13:14.013Z"
+            }
+          ]
+        }
+      ]
+    },
+    "currentAntardasha": {
+      "planet": "Mercury",
+      "durationYears": 1.4166666666666667,
+      "startDate": "2026-08-16T16:58:14.013Z",
+      "endDate": "2028-01-16T03:12:56.013Z",
+      "pratyantardashas": [
+        {
+          "planet": "Mercury",
+          "durationDays": 73,
+          "startDate": "2026-08-16T16:58:14.013Z",
+          "endDate": "2026-10-29T00:13:18.963Z"
+        },
+        {
+          "planet": "Ketu",
+          "durationDays": 30,
+          "startDate": "2026-10-29T00:13:18.963Z",
+          "endDate": "2026-11-28T04:37:10.413Z"
+        },
+        {
+          "planet": "Venus",
+          "durationDays": 86,
+          "startDate": "2026-11-28T04:37:10.413Z",
+          "endDate": "2027-02-22T10:19:37.413Z"
+        },
+        {
+          "planet": "Sun",
+          "durationDays": 26,
+          "startDate": "2027-02-22T10:19:37.413Z",
+          "endDate": "2027-03-20T07:14:21.513Z"
+        },
+        {
+          "planet": "Moon",
+          "durationDays": 43,
+          "startDate": "2027-03-20T07:14:21.513Z",
+          "endDate": "2027-05-02T10:05:35.013Z"
+        },
+        {
+          "planet": "Mars",
+          "durationDays": 30,
+          "startDate": "2027-05-02T10:05:35.013Z",
+          "endDate": "2027-06-01T14:29:26.463Z"
+        },
+        {
+          "planet": "Rahu",
+          "durationDays": 78,
+          "startDate": "2027-06-01T14:29:26.463Z",
+          "endDate": "2027-08-18T05:13:38.763Z"
+        },
+        {
+          "planet": "Jupiter",
+          "durationDays": 69,
+          "startDate": "2027-08-18T05:13:38.763Z",
+          "endDate": "2027-10-26T04:59:36.363Z"
+        },
+        {
+          "planet": "Saturn",
+          "durationDays": 82,
+          "startDate": "2027-10-26T04:59:36.363Z",
+          "endDate": "2028-01-16T03:12:56.013Z"
+        }
+      ]
+    },
+    "currentPratyantardasha": {
+      "planet": "Mercury",
+      "durationDays": 73,
+      "startDate": "2026-08-16T16:58:14.013Z",
+      "endDate": "2026-10-29T00:13:18.963Z"
+    },
+    "mahadashasSummary": [
+      {
+        "lord": "Ketu",
+        "years": 6.625044839999165,
+        "startDate": "1988-03-02T01:45:00.000Z",
+        "endDate": "1994-10-16T19:42:02.013Z"
+      },
+      {
+        "lord": "Venus",
+        "years": 20,
+        "startDate": "1994-10-16T19:42:02.013Z",
+        "endDate": "2014-10-16T16:06:02.013Z"
+      },
+      {
+        "lord": "Sun",
+        "years": 6,
+        "startDate": "2014-10-16T16:06:02.013Z",
+        "endDate": "2020-10-16T03:01:14.013Z"
+      },
+      {
+        "lord": "Moon",
+        "years": 10,
+        "startDate": "2020-10-16T03:01:14.013Z",
+        "endDate": "2030-10-16T13:13:14.013Z"
+      },
+      {
+        "lord": "Mars",
+        "years": 7,
+        "startDate": "2030-10-16T13:13:14.013Z",
+        "endDate": "2037-10-16T05:57:38.013Z"
+      },
+      {
+        "lord": "Rahu",
+        "years": 18,
+        "startDate": "2037-10-16T05:57:38.013Z",
+        "endDate": "2055-10-16T14:43:14.013Z"
+      },
+      {
+        "lord": "Jupiter",
+        "years": 16,
+        "startDate": "2055-10-16T14:43:14.013Z",
+        "endDate": "2071-10-16T11:50:26.013Z"
+      },
+      {
+        "lord": "Saturn",
+        "years": 19,
+        "startDate": "2071-10-16T11:50:26.013Z",
+        "endDate": "2090-10-16T02:25:14.013Z"
+      },
+      {
+        "lord": "Mercury",
+        "years": 17,
+        "startDate": "2090-10-16T02:25:14.013Z",
+        "endDate": "2107-10-17T05:21:38.013Z"
+      }
+    ]
+  },
+  "yogas": [
+    {
+      "name": "Sarala Vipreet Raja Yoga",
+      "sanskritName": "सरल विपरीत राजयोग",
+      "category": "Raja",
+      "isFormed": true,
+      "involvedPlanets": [
+        "Mercury"
+      ],
+      "housesInvolved": [
+        12
+      ],
+      "effects": "Longevity, fearlessness, sudden unexpected inheritances or gains, and indomitable courage.",
+      "strengthScore": 80
+    }
+  ],
+  "doshas": {
+    "manglik": {
+      "isManglik": false,
+      "intensity": "None",
+      "marsHouseFromLagna": 11,
+      "marsHouseFromMoon": 5,
+      "cancellations": [],
+      "remedySummary": "No adverse Manglik influences present in natal chart."
+    },
+    "kaalSarp": {
+      "hasKaalSarp": false,
+      "type": "None",
+      "sanskritName": "दोष रहित",
+      "isPartial": false,
+      "rahuHouse": 2,
+      "ketuHouse": 8,
+      "description": "Planets are freely distributed around the nodal axis; no Kaal Sarp configuration.",
+      "remedySummary": "All planetary currents flow unimpeded."
+    },
+    "sadeSati": {
+      "isActive": false,
+      "currentPhase": "Not Active",
+      "natalMoonSign": "Leo",
+      "saturnTransitSign": "Pisces",
+      "description": "Saturn currently transiting Pisces; no active Sade Sati phase on Moon in Leo.",
+      "guidance": "Favorable cosmic atmosphere for continuous personal and professional development."
+    },
+    "pitraDosha": {
+      "hasPitraDosha": false,
+      "reason": "9th house and Surya are free from malefic nodal afflictions.",
+      "remedies": [
+        "Offer gratitude to family lineage and parents"
+      ]
+    }
+  },
+  "panchang": {
+    "date": "1988-03-02",
+    "tithi": {
+      "number": 14,
+      "name": "Chaturdashi",
+      "paksha": "Shukla (Bright)",
+      "deity": "Agni / Chandra",
+      "percentageLeft": 44
+    },
+    "vara": {
+      "name": "Wednesday",
+      "sanskritName": "Budhavara",
+      "rulingPlanet": "Mercury"
+    },
+    "nakshatra": {
+      "name": "Magha",
+      "pada": 1,
+      "lord": "Ketu"
+    },
+    "yoga": {
+      "number": 6,
+      "name": "Atiganda",
+      "meaning": "Celestial confluence of solar and lunar currents.",
+      "isAuspicious": false
+    },
+    "karana": {
+      "name": "Vanija",
+      "type": "Chara (Movable)",
+      "isVishtiBhadra": false
+    },
+    "timings": {
+      "sunrise": "06:41 AM",
+      "sunset": "06:19 PM",
+      "rahuKalam": {
+        "start": "12:30",
+        "end": "13:57"
+      },
+      "yamaganda": {
+        "start": "08:08",
+        "end": "09:35"
+      },
+      "gulika": {
+        "start": "11:03",
+        "end": "12:30"
+      },
+      "abhijitMuhurat": {
+        "start": "12:06 PM",
+        "end": "12:54 PM"
+      }
+    }
+  },
+  "astronomicalAuditReport": {
+    "status": "VERIFIED",
+    "integrityScore": 100,
+    "totalChecks": 11,
+    "conflicts": [],
+    "warnings": [],
+    "verifiedChecks": [
+      {
+        "checkId": "CHK_JD_01",
+        "name": "Julian Day",
+        "status": "PASS",
+        "expected": "2447222.572917",
+        "actual": "2447222.572917",
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Julian Day verified: 2447222.572917"
+      },
+      {
+        "checkId": "CHK_AYAN_02",
+        "name": "Lahiri Ayanamsha",
+        "status": "PASS",
+        "expected": "23.6918",
+        "actual": "23.6925",
+        "difference": 0.0007590020325238811,
+        "severity": "HIGH",
+        "message": "Lahiri Ayanamsha verified: 23.6925°"
+      },
+      {
+        "checkId": "CHK_LAGNA_03",
+        "name": "Ascendant Sign Boundary",
+        "status": "PASS",
+        "expected": "Aquarius",
+        "actual": "Aquarius",
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Ascendant sign Aquarius verified at 328.37°"
+      },
+      {
+        "checkId": "CHK_MOON_04",
+        "name": "Moon Sign Boundary",
+        "status": "PASS",
+        "expected": "Leo",
+        "actual": "Leo",
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Moon sign verified: Leo (120.71°)"
+      },
+      {
+        "checkId": "CHK_MOON_NAK_05",
+        "name": "Moon Nakshatra & Pada",
+        "status": "PASS",
+        "expected": "10 Pada 1",
+        "actual": "10 Pada 1",
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Moon Nakshatra verified: Magha Pada 1 (120.714°)"
+      },
+      {
+        "checkId": "CHK_RETRO_06",
+        "name": "Sun/Moon Retrograde Sanity",
+        "status": "PASS",
+        "expected": "Direct motion only",
+        "actual": "Direct motion",
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Sun and Moon are confirmed direct (non-retrograde)"
+      },
+      {
+        "checkId": "CHK_COUNT_07",
+        "name": "Planet Count (9 Grahas)",
+        "status": "PASS",
+        "expected": 9,
+        "actual": 9,
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Exactly 9 Navagrahas present"
+      },
+      {
+        "checkId": "CHK_HOUSES_08",
+        "name": "House Count",
+        "status": "PASS",
+        "expected": 12,
+        "actual": 12,
+        "difference": 0,
+        "severity": "CRITICAL",
+        "message": "Exactly 12 Bhavas present"
+      },
+      {
+        "checkId": "CHK_NODES_09",
+        "name": "Rahu-Ketu Exact Opposition",
+        "status": "PASS",
+        "expected": "150.2408",
+        "actual": "150.2408",
+        "difference": 5.684341886080802e-14,
+        "severity": "CRITICAL",
+        "message": "Rahu and Ketu are in exact 180° opposition"
+      },
+      {
+        "checkId": "CHK_DASHA_10",
+        "name": "Vimshottari Timeline Integrity",
+        "status": "PASS",
+        "expected": "119.63",
+        "actual": "119.63",
+        "difference": 0,
+        "severity": "HIGH",
+        "message": "Vimshottari Dasha timeline verified (119.63 years)"
+      },
+      {
+        "checkId": "CHK_EDGE_11",
+        "name": "Edge Case Detection",
+        "status": "PASS",
+        "expected": "Verified edge case handling",
+        "actual": "Standard astronomical conditions",
+        "difference": 0,
+        "severity": "LOW",
+        "message": "Standard astronomical conditions"
+      }
+    ]
+  }
+}

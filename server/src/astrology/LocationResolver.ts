@@ -50,6 +50,7 @@ export class LocationResolver {
     'haridwar': { city: 'Haridwar', displayName: 'Haridwar, Uttarakhand, India', latitude: 29.9457, longitude: 78.1642, country: 'India', ianaTimeZone: 'Asia/Kolkata' },
     'rishikesh': { city: 'Rishikesh', displayName: 'Rishikesh, Uttarakhand, India', latitude: 30.0869, longitude: 78.2676, country: 'India', ianaTimeZone: 'Asia/Kolkata' },
     'ujjain': { city: 'Ujjain', displayName: 'Ujjain, Madhya Pradesh, India', latitude: 23.1765, longitude: 75.7885, country: 'India', ianaTimeZone: 'Asia/Kolkata' },
+    'agra': { city: 'Agra', displayName: 'Agra, Uttar Pradesh, India', latitude: 27.1767, longitude: 78.0081, country: 'India', ianaTimeZone: 'Asia/Kolkata' },
 
     // ── South Asia & Middle East ──────────────────────────────────────────
     'kathmandu': { city: 'Kathmandu', displayName: 'Kathmandu, Bagmati, Nepal', latitude: 27.7172, longitude: 85.3240, country: 'Nepal', ianaTimeZone: 'Asia/Kathmandu' },

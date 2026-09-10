@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Users, Bot, Zap, DollarSign, ToggleLeft, ToggleRight, Sparkles } from 'lucide-react';
+import { SelfLearningLabPanel } from '../components/admin/SelfLearningLabPanel.js';
 
 export const AdminPage: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
@@ -9,7 +10,10 @@ export const AdminPage: React.FC = () => {
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/admin/metrics');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('deepastro_token') : null;
+      const res = await fetch('/api/admin/metrics', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         setMetrics(data);
@@ -140,6 +144,9 @@ export const AdminPage: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Governed Self-Learning Jyotish Lab */}
+          <SelfLearningLabPanel />
         </div>
       )}
     </div>

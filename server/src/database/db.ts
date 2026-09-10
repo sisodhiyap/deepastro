@@ -171,6 +171,189 @@ export interface ConsultationRecord {
   createdAt: string;
 }
 
+export interface CalculationSnapshotRecord {
+  id: string;
+  userId: string;
+  birthProfileId?: string;
+  engineVersion: string;
+  fingerprint: string;
+  julianDay: number;
+  ayanamshaDegrees: number;
+  ayanamshaName: string;
+  nodeMode: 'True' | 'Mean';
+  houseSystem: 'Sripati' | 'Placidus' | 'WholeSign';
+  payload: any;
+  createdAt: string;
+}
+
+export interface PersonalizationProfileRecord {
+  userId: string;
+  language: string;
+  readingDepth: 'summary' | 'standard' | 'in_depth' | 'research';
+  tone: 'compassionate' | 'direct' | 'philosophical' | 'uplifting';
+  preferredTopics: string[];
+  careerFocus: boolean;
+  relationshipFocus: boolean;
+  financeFocus: boolean;
+  spiritualFocus: boolean;
+  technicalDetail: 'low' | 'medium' | 'high';
+  classicalSourceVisibility: boolean;
+  practicalAdvicePreference: boolean;
+  fearFreeLanguage: boolean;
+  personalizationEnabled: boolean;
+  outcomeLearningEnabled: boolean;
+  updatedAt: string;
+}
+
+export interface UserMemoryRecord {
+  id: string;
+  userId: string;
+  category:
+    | 'profile'
+    | 'preferences'
+    | 'goals'
+    | 'interests'
+    | 'previous_questions'
+    | 'previous_readings'
+    | 'confirmed_life_events'
+    | 'rejected_interpretations'
+    | 'feedback'
+    | 'communication_preferences';
+  content: string;
+  source: 'USER_EXPLICIT' | 'USER_SURVEY' | 'CHAT_INTERACTION' | 'FEEDBACK_FORM';
+  confidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW';
+  userConfirmed: boolean;
+  memoryType: 'FACT' | 'PREFERENCE' | 'HISTORICAL' | 'GOAL';
+  provenance?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LifeEventRecord {
+  id: string;
+  userId: string;
+  eventDate: string; // YYYY-MM-DD
+  eventType:
+    | 'education'
+    | 'career'
+    | 'promotion'
+    | 'business'
+    | 'relationship'
+    | 'marriage'
+    | 'relocation'
+    | 'financial_milestone'
+    | 'achievement'
+    | 'setback'
+    | 'spiritual_milestone'
+    | 'custom';
+  title: string;
+  description?: string;
+  userConfirmation: 'CONFIRMED' | 'TENTATIVE' | 'UNVERIFIED';
+  source: string;
+  privacyState: 'PRIVATE' | 'PERSONALIZATION_ONLY';
+  astrologicalCorrelations?: Record<string, any>;
+  createdAt: string;
+}
+
+export interface PredictionRecord {
+  id: string;
+  userId: string;
+  snapshotId?: string;
+  predictionType: 'DAILY' | 'CURATED_DOMAIN' | 'MUHURTA' | 'TRANSIT_ALERT';
+  domain?: string;
+  headline: string;
+  predictionText: string;
+  supportingFactors: any[];
+  rulesApplied: any[];
+  sourcesCited: any[];
+  confidenceModel: {
+    astronomicalConfidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW' | 'INSUFFICIENT';
+    ruleConfidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW' | 'INSUFFICIENT';
+    timingConfidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW' | 'INSUFFICIENT';
+    interpretationConfidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW' | 'INSUFFICIENT';
+    personalizationConfidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW' | 'INSUFFICIENT';
+    outcomeEvidenceConfidence: 'VERIFIED' | 'HIGH' | 'MODERATE' | 'LOW' | 'INSUFFICIENT';
+  };
+  uncertainties?: string[];
+  recommendedActions?: string[];
+  evidenceGraph?: any;
+  versions: {
+    calculationVersion: string;
+    ruleVersion: string;
+    interpretationVersion: string;
+    personalizationVersion: string;
+    ragVersion: string;
+    aiModelVersion: string;
+  };
+  createdAt: string;
+}
+
+export interface PredictionFeedbackRecord {
+  id: string;
+  predictionId: string;
+  userId: string;
+  feedbackRating:
+    | 'accurate'
+    | 'partially_accurate'
+    | 'inaccurate'
+    | 'too_generic'
+    | 'wrong_timing'
+    | 'wrong_life_area'
+    | 'not_applicable';
+  userNotes?: string;
+  createdAt: string;
+}
+
+export interface PredictionErrorRecord {
+  id: string;
+  predictionId: string;
+  userId: string;
+  feedbackId?: string;
+  errorClass:
+    | 'CALCULATION_ERROR'
+    | 'TIMEZONE_ERROR'
+    | 'LOCATION_ERROR'
+    | 'EPHEMERIS_ERROR'
+    | 'AYANAMSHA_ERROR'
+    | 'DASHA_ERROR'
+    | 'RULE_SELECTION_ERROR'
+    | 'TIMING_ERROR'
+    | 'INTERPRETATION_ERROR'
+    | 'PERSONALIZATION_ERROR'
+    | 'INSUFFICIENT_CONTEXT'
+    | 'USER_OUTCOME_UNCERTAIN';
+  investigationPipeline: Record<string, any>;
+  rootCauseAnalysis: string;
+  createdAt: string;
+}
+
+export interface ImprovementProposalRecord {
+  id: string;
+  title: string;
+  description: string;
+  targetEngine: 'JYOTISH_RULE' | 'INTERPRETATION' | 'PERSONALIZATION' | 'TIMING';
+  status: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'STAGED' | 'DEPLOYED';
+  proposedChanges: Record<string, any>;
+  regressionTestResults?: Record<string, any>;
+  createdBy: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+}
+
+export interface EngineVersionRecord {
+  id: string;
+  calculationVersion: string;
+  ruleVersion: string;
+  interpretationVersion: string;
+  personalizationVersion: string;
+  ragVersion: string;
+  aiModelVersion: string;
+  changelog?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 // In-Memory Database Store initialized with Seed Data
 class DatabaseStore {
   public users: Map<string, UserRecord> = new Map();
@@ -185,6 +368,15 @@ class DatabaseStore {
   public aiUsageLogs: AIUsageRecord[] = [];
   public notifications: NotificationRecord[] = [];
   public contactMessages: ContactMessageRecord[] = [];
+  public calculationSnapshots: Map<string, CalculationSnapshotRecord> = new Map();
+  public personalizationProfiles: Map<string, PersonalizationProfileRecord> = new Map();
+  public userMemories: Map<string, UserMemoryRecord> = new Map();
+  public lifeEvents: Map<string, LifeEventRecord> = new Map();
+  public predictionRecords: Map<string, PredictionRecord> = new Map();
+  public predictionFeedback: Map<string, PredictionFeedbackRecord> = new Map();
+  public predictionErrors: Map<string, PredictionErrorRecord> = new Map();
+  public improvementProposals: Map<string, ImprovementProposalRecord> = new Map();
+  public engineVersions: Map<string, EngineVersionRecord> = new Map();
   public featureFlags: Record<string, boolean> = {
     kundli: true,
     matching: true,
@@ -349,12 +541,22 @@ class DatabaseStore {
     const uploads = Array.from(this.uploadedFiles.values()).filter((u) => u.userId === userId);
     const consultations = Array.from(this.consultations.values()).filter((c) => c.userId === userId);
     const aiLogs = this.aiUsageLogs.filter((log) => log.userId === userId);
+    const memories = Array.from(this.userMemories.values()).filter((m) => m.userId === userId);
+    const events = Array.from(this.lifeEvents.values()).filter((e) => e.userId === userId);
+    const personalization = this.personalizationProfiles.get(userId) || null;
+    const predictions = Array.from(this.predictionRecords.values()).filter((p) => p.userId === userId);
+    const snapshots = Array.from(this.calculationSnapshots.values()).filter((s) => s.userId === userId);
 
     return {
       user: user ? { id: user.id, email: user.email, role: user.role, createdAt: user.createdAt } : null,
       profile: profile || null,
+      personalization,
       birthProfile: birthProfile || null,
+      memories,
+      lifeEvents: events,
       savedCharts: charts,
+      snapshots,
+      predictions,
       uploadedFiles: uploads,
       consultations,
       aiLogs,
@@ -365,6 +567,8 @@ class DatabaseStore {
   public deleteUserData(userId: string) {
     let deletedCharts = 0;
     let deletedUploads = 0;
+    let deletedMemories = 0;
+    let deletedEvents = 0;
 
     for (const [key, val] of this.birthProfiles.entries()) {
       if (val.userId === userId) this.birthProfiles.delete(key);
@@ -384,6 +588,31 @@ class DatabaseStore {
     for (const [key, val] of this.consultations.entries()) {
       if (val.userId === userId) this.consultations.delete(key);
     }
+    for (const [key, val] of this.userMemories.entries()) {
+      if (val.userId === userId) {
+        this.userMemories.delete(key);
+        deletedMemories++;
+      }
+    }
+    for (const [key, val] of this.lifeEvents.entries()) {
+      if (val.userId === userId) {
+        this.lifeEvents.delete(key);
+        deletedEvents++;
+      }
+    }
+    for (const [key, val] of this.calculationSnapshots.entries()) {
+      if (val.userId === userId) this.calculationSnapshots.delete(key);
+    }
+    for (const [key, val] of this.predictionRecords.entries()) {
+      if (val.userId === userId) this.predictionRecords.delete(key);
+    }
+    for (const [key, val] of this.predictionFeedback.entries()) {
+      if (val.userId === userId) this.predictionFeedback.delete(key);
+    }
+    for (const [key, val] of this.predictionErrors.entries()) {
+      if (val.userId === userId) this.predictionErrors.delete(key);
+    }
+    this.personalizationProfiles.delete(userId);
     this.profiles.delete(userId);
     this.aiUsageLogs = this.aiUsageLogs.filter((log) => log.userId !== userId);
 
@@ -391,6 +620,8 @@ class DatabaseStore {
       success: true,
       deletedCharts,
       deletedUploads,
+      deletedMemories,
+      deletedEvents,
       deletedAt: new Date().toISOString(),
     };
   }

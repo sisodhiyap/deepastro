@@ -29,6 +29,8 @@ import { AstrologyFactSet } from './AstrologyFactSet.js';
 import { TransitEngine } from './TransitEngine.js';
 import { calculatePanchang, PanchangData } from './PanchangEngine.js';
 import { AstronomicalVerificationEngine, VerificationResult } from './AstronomicalVerificationEngine.js';
+import { CalculationPassportEngine, CalculationPassport } from './CalculationPassport.js';
+import { BirthTimeSensitivityEngine, BirthTimeSensitivityReport } from './BirthTimeSensitivityEngine.js';
 
 export interface BirthProfileInput {
   name: string;
@@ -40,6 +42,7 @@ export interface BirthProfileInput {
   timezone: number; // e.g. 5.5 for India (UTC+5:30)
   gender?: 'Male' | 'Female' | 'Other';
   isApproximateTime?: boolean;
+  _skipSensitivity?: boolean;
 }
 
 export interface CosmicWeatherPrediction {
@@ -90,6 +93,8 @@ export interface FullKundliResult {
   };
   verification?: VerificationResult;
   fingerprint?: string;
+  passport?: CalculationPassport;
+  sensitivity?: BirthTimeSensitivityReport;
 }
 
 export interface CalculationSnapshot {
@@ -125,6 +130,8 @@ export interface CalculationSnapshot {
   doshas: DoshaReport;
   panchang: PanchangData;
   verification: VerificationResult;
+  passport?: CalculationPassport;
+  sensitivity?: BirthTimeSensitivityReport;
   fingerprint: string;
   timestamp: string;
 }
@@ -230,6 +237,25 @@ export class VedicAstroEngine {
     // 12. Run Independent Verification
     result.verification = AstronomicalVerificationEngine.verify(input, result);
 
+    // 13. Generate Calculation Passport
+    result.passport = CalculationPassportEngine.generatePassport({
+      birthDate: input.birthDate,
+      birthTime: input.birthTime,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      timezone: input.timezone,
+      julianDay: result.astronomy.julianDay,
+      ayanamshaDegrees: result.astronomy.ayanamshaDegrees,
+      ascendantDegrees: result.ascendant.degrees,
+      nodeModel: 'TRUE_NODE',
+      calculationMethod: 'DRIK_SIDDHANTA',
+    });
+
+    // 14. Analyze Birth-Time Sensitivity
+    if (!input._skipSensitivity) {
+      result.sensitivity = BirthTimeSensitivityEngine.analyzeSensitivity(input, result);
+    }
+
     return result;
   }
 
@@ -296,6 +322,8 @@ export class VedicAstroEngine {
       doshas: kundli.doshas,
       panchang,
       verification: kundli.verification!,
+      passport: kundli.passport,
+      sensitivity: kundli.sensitivity,
       fingerprint: kundli.fingerprint!,
       timestamp: new Date().toISOString(),
     };
@@ -389,6 +417,8 @@ export class VedicAstroEngine {
         highlightedActivations: transits.highlightedActivations,
       },
       panchang,
+      passport: kundli.passport,
+      sensitivity: kundli.sensitivity,
       metadata: {
         engineVersion: '2.0.0-DeepAstro',
         calculationTimestamp: new Date().toISOString(),

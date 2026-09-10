@@ -244,3 +244,135 @@ CREATE TABLE IF NOT EXISTS contact_messages (
     status VARCHAR(32) DEFAULT 'pending',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==========================================================
+-- SELF-LEARNING JYOTISH INTELLIGENCE & PERSONALIZATION ENGINE
+-- ==========================================================
+
+CREATE TABLE IF NOT EXISTS calculation_snapshots (
+    id VARCHAR(64) PRIMARY KEY,
+    user_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+    birth_profile_id VARCHAR(64) REFERENCES birth_profiles(id) ON DELETE CASCADE,
+    engine_version VARCHAR(32) NOT NULL,
+    fingerprint VARCHAR(64) NOT NULL,
+    julian_day DECIMAL(15, 6) NOT NULL,
+    ayanamsha_degrees DECIMAL(8, 4) NOT NULL,
+    ayanamsha_name VARCHAR(64) NOT NULL,
+    node_mode VARCHAR(16) NOT NULL, -- True, Mean
+    house_system VARCHAR(32) NOT NULL, -- Sripati, Placidus, WholeSign
+    snapshot_payload JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS personalization_profiles (
+    user_id VARCHAR(64) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    language VARCHAR(16) DEFAULT 'en',
+    reading_depth VARCHAR(32) DEFAULT 'standard', -- summary, standard, in_depth, research
+    tone VARCHAR(32) DEFAULT 'philosophical', -- compassionate, direct, philosophical, uplifting
+    preferred_topics TEXT[] DEFAULT ARRAY['career', 'personal_growth']::text[],
+    career_focus BOOLEAN DEFAULT TRUE,
+    relationship_focus BOOLEAN DEFAULT TRUE,
+    finance_focus BOOLEAN DEFAULT TRUE,
+    spiritual_focus BOOLEAN DEFAULT TRUE,
+    technical_detail VARCHAR(16) DEFAULT 'medium', -- low, medium, high
+    classical_source_visibility BOOLEAN DEFAULT TRUE,
+    practical_advice_preference BOOLEAN DEFAULT TRUE,
+    fear_free_language BOOLEAN DEFAULT TRUE,
+    personalization_enabled BOOLEAN DEFAULT TRUE,
+    outcome_learning_enabled BOOLEAN DEFAULT TRUE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_memories (
+    id VARCHAR(64) PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category VARCHAR(64) NOT NULL, -- profile, preferences, goals, interests, previous_questions, previous_readings, confirmed_life_events, rejected_interpretations, feedback, communication_preferences
+    content TEXT NOT NULL,
+    source VARCHAR(64) NOT NULL, -- USER_EXPLICIT, USER_SURVEY, CHAT_INTERACTION, FEEDBACK_FORM
+    confidence VARCHAR(16) DEFAULT 'HIGH', -- VERIFIED, HIGH, MODERATE, LOW
+    user_confirmed BOOLEAN DEFAULT FALSE,
+    memory_type VARCHAR(32) DEFAULT 'DYNAMIC', -- FACT, PREFERENCE, HISTORICAL, GOAL
+    provenance JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS life_events (
+    id VARCHAR(64) PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event_date DATE NOT NULL,
+    event_type VARCHAR(64) NOT NULL, -- education, career, promotion, business, relationship, marriage, relocation, financial_milestone, achievement, setback, spiritual_milestone, custom
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    user_confirmation VARCHAR(16) DEFAULT 'CONFIRMED', -- CONFIRMED, TENTATIVE, UNVERIFIED
+    source VARCHAR(64) DEFAULT 'USER_INPUT',
+    privacy_state VARCHAR(32) DEFAULT 'PERSONALIZATION_ONLY', -- PRIVATE, PERSONALIZATION_ONLY
+    astrological_correlations JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS prediction_records (
+    id VARCHAR(64) PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    snapshot_id VARCHAR(64) REFERENCES calculation_snapshots(id) ON DELETE SET NULL,
+    prediction_type VARCHAR(64) NOT NULL, -- DAILY, CURATED_DOMAIN, MUHURTA, TRANSIT_ALERT
+    domain VARCHAR(64),
+    headline VARCHAR(255) NOT NULL,
+    prediction_text TEXT NOT NULL,
+    supporting_factors JSONB NOT NULL,
+    rules_applied JSONB NOT NULL,
+    sources_cited JSONB NOT NULL,
+    confidence_model JSONB NOT NULL,
+    uncertainties JSONB,
+    recommended_actions JSONB,
+    evidence_graph JSONB,
+    versions JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS prediction_feedback (
+    id VARCHAR(64) PRIMARY KEY,
+    prediction_id VARCHAR(64) NOT NULL REFERENCES prediction_records(id) ON DELETE CASCADE,
+    user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    feedback_rating VARCHAR(32) NOT NULL, -- accurate, partially_accurate, inaccurate, too_generic, wrong_timing, wrong_life_area, not_applicable
+    user_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS prediction_errors (
+    id VARCHAR(64) PRIMARY KEY,
+    prediction_id VARCHAR(64) NOT NULL REFERENCES prediction_records(id) ON DELETE CASCADE,
+    user_id VARCHAR(64) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    feedback_id VARCHAR(64) REFERENCES prediction_feedback(id) ON DELETE SET NULL,
+    error_class VARCHAR(64) NOT NULL, -- CALCULATION_ERROR, TIMEZONE_ERROR, LOCATION_ERROR, EPHEMERIS_ERROR, AYANAMSHA_ERROR, DASHA_ERROR, RULE_SELECTION_ERROR, TIMING_ERROR, INTERPRETATION_ERROR, PERSONALIZATION_ERROR, INSUFFICIENT_CONTEXT, USER_OUTCOME_UNCERTAIN
+    investigation_pipeline JSONB NOT NULL,
+    root_cause_analysis TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS improvement_proposals (
+    id VARCHAR(64) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    target_engine VARCHAR(64) NOT NULL, -- JYOTISH_RULE, INTERPRETATION, PERSONALIZATION, TIMING
+    status VARCHAR(32) DEFAULT 'PENDING_REVIEW', -- PENDING_REVIEW, APPROVED, REJECTED, STAGED, DEPLOYED
+    proposed_changes JSONB NOT NULL,
+    regression_test_results JSONB,
+    created_by VARCHAR(64) DEFAULT 'SELF_LEARNING_SYSTEM',
+    reviewed_by VARCHAR(64),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS engine_versions (
+    id VARCHAR(64) PRIMARY KEY,
+    calculation_version VARCHAR(32) NOT NULL,
+    rule_version VARCHAR(32) NOT NULL,
+    interpretation_version VARCHAR(32) NOT NULL,
+    personalization_version VARCHAR(32) NOT NULL,
+    rag_version VARCHAR(32) NOT NULL,
+    ai_model_version VARCHAR(32) NOT NULL,
+    changelog TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

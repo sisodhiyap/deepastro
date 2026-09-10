@@ -21,6 +21,9 @@ import adminRoutes from './routes/adminRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import privacyRoutes from './routes/privacyRoutes.js';
 import verificationRoutes from './routes/verificationRoutes.js';
+import personalizationRoutes from './routes/personalizationRoutes.js';
+import learningRoutes from './routes/learningRoutes.js';
+import adminLearningRoutes from './routes/adminLearningRoutes.js';
 
 dotenv.config();
 EnvLoader.load();
@@ -58,6 +61,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/privacy', privacyRoutes);
 app.use('/api/system-verification', verificationRoutes);
+app.use('/api/personalization', personalizationRoutes);
+app.use('/api/learning', learningRoutes);
+app.use('/api/admin/self-learning-lab', adminLearningRoutes);
 
 // Friendly 404 handler
 app.use((_req: Request, res: Response) => {

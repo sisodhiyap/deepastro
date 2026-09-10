@@ -9,10 +9,14 @@ export const DailyPredictionsPage: React.FC = () => {
   const [domainPredictions, setDomainPredictions] = useState<any>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('Career');
   const [isLoading, setIsLoading] = useState(true);
+  const [dailyForecast, setDailyForecast] = useState<any>(null);
+  const [feedbackSent, setFeedbackSent] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch base chart, domain predictions, and live Panchang
-    Promise.all([
+    const token = typeof window !== 'undefined' ? localStorage.getItem('deepastro_token') : null;
+
+    // Fetch base chart, domain predictions, live Panchang, and personalized daily intelligence
+    const promises: Promise<any>[] = [
       fetch('/api/astrology/chart').then((res) => (res.ok ? res.json() : null)),
       fetch('/api/astrology/predictions/domains', {
         method: 'POST',
@@ -20,8 +24,22 @@ export const DailyPredictionsPage: React.FC = () => {
         body: JSON.stringify({}),
       }).then((res) => (res.ok ? res.json() : null)),
       fetch('/api/astrology/panchang').then((res) => (res.ok ? res.json() : null)),
-    ])
-      .then(([chartRes, domainRes, panchangRes]) => {
+    ];
+
+    if (token) {
+      promises.push(
+        fetch('/api/learning/daily', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({}),
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .catch(() => null)
+      );
+    }
+
+    Promise.all(promises)
+      .then(([chartRes, domainRes, panchangRes, learningDailyRes]) => {
         if (chartRes && (chartRes.ascendant || chartRes.chart?.ascendant)) {
           setKundliData(chartRes.chart || chartRes);
         } else {
@@ -37,10 +55,37 @@ export const DailyPredictionsPage: React.FC = () => {
           setPanchangData(panchangRes);
         }
 
+        if (learningDailyRes?.dailyForecast) {
+          setDailyForecast(learningDailyRes.dailyForecast);
+        }
+
         setIsLoading(false);
       })
       .catch(() => setIsLoading(false));
   }, []);
+
+  const handleFeedback = async (rating: string) => {
+    if (!dailyForecast?.id) return;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('deepastro_token') : null;
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/learning/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          predictionId: dailyForecast.id,
+          rating,
+          notes: `User rated forecast as ${rating}`,
+        }),
+      });
+      if (res.ok) {
+        setFeedbackSent(rating);
+      }
+    } catch (err) {
+      console.error('Failed to submit prediction feedback', err);
+    }
+  };
 
   const chart = kundliData;
   const hasBirthProfile = Boolean(chart && chart.ascendant);
@@ -223,6 +268,64 @@ export const DailyPredictionsPage: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {/* AI Evidence-Grounded Daily Forecast & Outcome Feedback */}
+      {dailyForecast && (
+        <div className="rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-950/20 via-cosmic-surface to-cyan-950/20 p-6 sm:p-7 space-y-4 shadow-glow-violet/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-cosmic-border/60 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider block">
+                  Personalized Jyotish Synthesis &bull; Evidence Grounded
+                </span>
+                <h3 className="text-base font-bold text-cosmic-text">{dailyForecast.headline}</h3>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                Confidence: {dailyForecast.confidence?.astronomicalConfidence || 'VERIFIED'}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-xs text-cosmic-text leading-relaxed">{dailyForecast.guidance}</p>
+
+          {/* Empirical Feedback Loop */}
+          <div className="pt-3 border-t border-cosmic-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <span className="text-cosmic-muted text-[11px] font-medium">
+              {feedbackSent
+                ? `✓ Feedback recorded: ${feedbackSent}. Classical calculations stay unmutated.`
+                : 'Did this forecast reflect your lived experience today?'}
+            </span>
+
+            {!feedbackSent && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleFeedback('accurate')}
+                  className="px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold hover:bg-emerald-500/20 transition-colors"
+                >
+                  Resonated
+                </button>
+                <button
+                  onClick={() => handleFeedback('neutral')}
+                  className="px-3 py-1 rounded-xl bg-cosmic-card border border-cosmic-border text-cosmic-muted text-xs font-bold hover:text-cosmic-text transition-colors"
+                >
+                  Neutral
+                </button>
+                <button
+                  onClick={() => handleFeedback('inaccurate')}
+                  className="px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold hover:bg-rose-500/20 transition-colors"
+                >
+                  Diverged
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {current && (
         <div className="space-y-8">

@@ -16,6 +16,8 @@ import { DoshaReport } from './DoshaEngine.js';
 import { PanchangDetails } from './PanchangEngine.js';
 
 import { CompleteVargaSet } from './VargaEngine.js';
+import { CalculationPassport } from './CalculationPassport.js';
+import { BirthTimeSensitivityReport } from './BirthTimeSensitivityEngine.js';
 
 export type { PratyantardashaPeriod };
 export type DetailedDashaPeriod = DashaPeriod;
@@ -85,6 +87,8 @@ export interface AstrologyFactSet {
     readonly highlightedActivations: readonly string[];
   };
   readonly panchang: PanchangDetails;
+  readonly passport?: CalculationPassport;
+  readonly sensitivity?: BirthTimeSensitivityReport;
   readonly metadata: {
     readonly engineVersion: string;
     readonly calculationTimestamp: string;

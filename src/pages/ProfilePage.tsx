@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, ShieldCheck, Download, Trash2, Key, Bell, Palette, CheckCircle2, LogIn, AlertCircle } from 'lucide-react';
+import { User, ShieldCheck, Download, Trash2, Key, Bell, Palette, CheckCircle2, LogIn, AlertCircle, Brain, Sliders } from 'lucide-react';
 import { NavTabId } from '../components/layout/Sidebar.js';
+import { CosmicMemoryPanel } from '../components/personalization/CosmicMemoryPanel.js';
 
 interface ProfilePageProps {
   onNavigate: (tab: NavTabId) => void;
@@ -15,6 +16,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   currentUser,
   onOpenAuth,
 }) => {
+  const [activeSubTab, setActiveSubTab] = useState<'credentials' | 'memory'>('credentials');
   const [profile, setProfile] = useState({
     fullName: currentUser?.name || currentUser?.fullName || '',
     email: currentUser?.email || '',
@@ -171,8 +173,38 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         </div>
       )}
 
-      {/* Main Settings Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Subtab Switcher */}
+      <div className="flex items-center gap-2 border-b border-cosmic-border/60 pb-3">
+        <button
+          onClick={() => setActiveSubTab('credentials')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            activeSubTab === 'credentials'
+              ? 'bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 shadow-glow-cyan/10'
+              : 'text-cosmic-muted hover:text-cosmic-text hover:bg-cosmic-card/40'
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          <span>Identity &amp; Privacy Shield</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('memory')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            activeSubTab === 'memory'
+              ? 'bg-violet-500/15 border border-violet-500/40 text-violet-300 shadow-glow-violet/10'
+              : 'text-cosmic-muted hover:text-cosmic-text hover:bg-cosmic-card/40'
+          }`}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          <span>My Cosmic Memory &amp; Timeline</span>
+        </button>
+      </div>
+
+      {activeSubTab === 'memory' ? (
+        <CosmicMemoryPanel currentUser={currentUser} onOpenAuth={onOpenAuth} />
+      ) : (
+        /* Main Settings Sections */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Personal Information & Preferences */}
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 sm:p-7 space-y-5">
@@ -378,6 +410,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };
