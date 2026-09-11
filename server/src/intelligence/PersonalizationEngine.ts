@@ -5,6 +5,10 @@
 
 export {
   PersonalizationEngine,
+} from '../learning/PersonalizationEngine.js';
+
+export type {
   CommunicationPreferences,
   PersonalizedContext,
 } from '../learning/PersonalizationEngine.js';
+
