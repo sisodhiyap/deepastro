@@ -40,7 +40,9 @@ router.get('/choghadiya-hora', (req: Request, res: Response) => {
   try {
     const lat = req.query.lat ? parseFloat(req.query.lat as string) : 28.6139;
     const lon = req.query.lon ? parseFloat(req.query.lon as string) : 77.2090;
-    const data = CosmicFeaturesEngine.calculateChoghadiyaAndHora(new Date(), lat, lon);
+    const dateStr = (req.query.date as string) || undefined;
+    const evalDate = dateStr ? new Date(`${dateStr}T12:00:00.000Z`) : new Date();
+    const data = CosmicFeaturesEngine.calculateChoghadiyaAndHora(evalDate, lat, lon);
     return res.json(data);
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to calculate auspicious Choghadiya and Hora.', details: err.message });

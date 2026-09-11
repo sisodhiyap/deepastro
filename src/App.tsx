@@ -10,6 +10,7 @@ import { NumerologyPage } from './pages/NumerologyPage.js';
 import { PalmistryPage } from './pages/PalmistryPage.js';
 import { LalKitabPage } from './pages/LalKitabPage.js';
 import { PanchangPage } from './pages/PanchangPage.js';
+import { MuhuratPage } from './pages/MuhuratPage.js';
 import { AstrologersPage } from './pages/AstrologersPage.js';
 import { SubscriptionPage } from './pages/SubscriptionPage.js';
 import { ReportsPage } from './pages/ReportsPage.js';
@@ -143,8 +144,9 @@ export const App: React.FC = () => {
       case 'lalkitab':
         return <LalKitabPage />;
       case 'panchang':
-      case 'muhurat':
         return <PanchangPage />;
+      case 'muhurat':
+        return <MuhuratPage />;
       case 'astrologers':
         return <AstrologersPage onNavigate={setActiveTab} userPlan={userPlan} />;
       case 'subscription':
