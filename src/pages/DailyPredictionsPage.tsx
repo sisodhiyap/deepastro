@@ -25,6 +25,7 @@ import {
   StoredBirthProfile,
 } from '../utils/birthStorage.js';
 import { KundliBrainQuestionOracle } from '../components/astrology/KundliBrainQuestionOracle.js';
+import { UniversalDailyPredictionCard } from '../components/astrology/UniversalDailyPredictionCard.js';
 import { useAstrologicalCalculation } from '../hooks/useAstrologicalCalculation.js';
 import { CalculationProgressModal } from '../components/astrology/CalculationProgressModal.js';
 
@@ -363,14 +364,17 @@ export const DailyPredictionsPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Header */}
-      <div className="space-y-1">
+      {/* Universal Daily Prediction Card Engine (Design Reference Spec) */}
+      <UniversalDailyPredictionCard onSwitchProfile={() => setKundliData(null)} />
+
+      {/* Real-Time Transit Intelligence Sub-Header */}
+      <div className="space-y-1 pt-4 border-t border-slate-800/80">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
           <Sun className="w-3.5 h-3.5" /> Real-Time Transit Intelligence (Gochara)
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-          Today in Your Cosmos
-        </h1>
+        <h2 className="text-2xl sm:text-3xl font-display font-black text-cosmic-text">
+          Deep Transit Weather & House Activations
+        </h2>
         <p className="text-xs text-cosmic-muted">
           Dynamic astronomical transits cross-referenced against your natal Lagna ({chart.ascendant?.details?.signName || chart.lagna?.signName}), Moon in {moonSign}, and active Vimshottari Dasha.
         </p>

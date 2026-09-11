@@ -13,6 +13,8 @@ import { PredictionEngine } from '../astrology/PredictionEngine.js';
 import { calculatePanchang } from '../astrology/PanchangEngine.js';
 import { evaluateMuhurats } from '../astrology/MuhuratEngine.js';
 import { calculateNumerology } from '../astrology/NumerologyEngine.js';
+import { DailyPredictionEngine } from '../astrology/DailyPredictionEngine.js';
+import { PredictionGuard } from '../astrology/PredictionGuard.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { db, BirthProfileRecord } from '../database/db.js';
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
@@ -363,6 +365,77 @@ router.post('/predictions/domains', optionalAuth, async (req: AuthenticatedReque
     return res.json({ factSet, predictions: domainPredictions });
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to generate domain predictions.', details: err.message });
+  }
+});
+
+// POST /api/astrology/predictions/daily-card (Universal Daily Prediction Card Engine)
+router.post('/predictions/daily-card', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    let input: BirthProfileInput | null = null;
+    const rawDob = req.body.birthDate || req.body.dateOfBirth;
+    const rawTob = req.body.birthTime || req.body.timeOfBirth;
+
+    if (rawDob && rawTob) {
+      const loc = NormalizationEngine.normalizeLocation(
+        req.body.birthPlace,
+        req.body.latitude ? parseFloat(req.body.latitude) : undefined,
+        req.body.longitude ? parseFloat(req.body.longitude) : undefined,
+        req.body.timezone ? parseFloat(req.body.timezone) : undefined
+      );
+      input = {
+        name: (req.body.name || '').trim() || 'Cosmic Seeker',
+        birthDate: rawDob,
+        birthTime: rawTob,
+        birthPlace: loc.placeName,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        timezone: loc.timezone,
+        gender: req.body.gender || 'Other',
+        isApproximateTime: Boolean(req.body.isApproximateTime),
+      };
+    } else if (req.user) {
+      const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
+      if (saved && saved.birthDate && saved.birthTime) {
+        input = {
+          name: saved.fullName,
+          birthDate: saved.birthDate,
+          birthTime: saved.birthTime,
+          birthPlace: saved.birthPlace,
+          latitude: saved.latitude,
+          longitude: saved.longitude,
+          timezone: saved.timezone,
+          gender: saved.gender,
+          isApproximateTime: saved.isApproximateTime,
+        };
+      }
+    }
+
+    if (!input) {
+      return res.status(400).json({
+        error: 'NO_BIRTH_PROFILE',
+        details: 'Please provide or configure a birth profile to generate the daily prediction card.',
+      });
+    }
+
+    const targetDate = req.body.targetDate ? new Date(req.body.targetDate) : new Date();
+    const cardData = DailyPredictionEngine.generateCard(input, targetDate);
+
+    // Run strict Anti-Hallucination Prediction Guard
+    const validation = PredictionGuard.validate(cardData);
+    if (!validation.isValid) {
+      return res.status(422).json({
+        error: 'PREDICTION_GUARD_VALIDATION_FAILED',
+        details: validation.errors,
+      });
+    }
+
+    return res.json({
+      success: true,
+      card: cardData,
+      validation,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to generate daily prediction card.', details: err.message });
   }
 });
 
