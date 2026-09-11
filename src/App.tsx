@@ -22,6 +22,7 @@ import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
 
 import { AuthModal } from './components/auth/AuthModal.js';
 import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
+import { ErrorBoundary } from './components/common/ErrorBoundary.js';
 import { getBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
 
 export const App: React.FC = () => {
@@ -181,7 +182,9 @@ export const App: React.FC = () => {
         onLogout={handleLogout}
         chartContext={chartContext}
       >
-        {renderActiveView()}
+        <ErrorBoundary fallbackTitle="Cosmic Matrix Synchronizing">
+          {renderActiveView()}
+        </ErrorBoundary>
       </AppShell>
 
       <AuthModal

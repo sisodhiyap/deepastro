@@ -65,6 +65,96 @@ const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
   sydney: { lat: -33.8688, lng: 151.2093, tz: 10.0 },
 };
 
+const PRESET_PROFILES = [
+  {
+    name: 'Aarav Sharma',
+    birthDate: '1995-10-15',
+    birthTime: '06:30',
+    birthPlace: 'New Delhi, India',
+    latitude: '28.6139',
+    longitude: '77.2090',
+    timezone: '5.5',
+    gender: 'male',
+  },
+  {
+    name: 'Priya Patel',
+    birthDate: '1998-05-24',
+    birthTime: '14:15',
+    birthPlace: 'Mumbai, India',
+    latitude: '19.0760',
+    longitude: '72.8777',
+    timezone: '5.5',
+    gender: 'female',
+  },
+  {
+    name: 'Rohan Iyer',
+    birthDate: '1992-12-08',
+    birthTime: '09:45',
+    birthPlace: 'Bengaluru, India',
+    latitude: '12.9716',
+    longitude: '77.5946',
+    timezone: '5.5',
+    gender: 'male',
+  },
+  {
+    name: 'Elena Rostova',
+    birthDate: '1994-03-12',
+    birthTime: '18:20',
+    birthPlace: 'London, UK',
+    latitude: '51.5074',
+    longitude: '-0.1278',
+    timezone: '0.0',
+    gender: 'female',
+  },
+];
+
+const computeLifePath = (dob: string): number => {
+  if (!dob) return 7;
+  const digits = dob.replace(/\D/g, '');
+  if (!digits) return 7;
+  let sum = digits.split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+  while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+    sum = sum.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+  }
+  return sum;
+};
+
+const computeBirthNumber = (dob: string): number => {
+  if (!dob) return 4;
+  const parts = dob.split('-');
+  const day = parseInt(parts[2] || parts[0], 10);
+  if (!day || isNaN(day)) return 4;
+  let sum = day;
+  while (sum > 9) {
+    sum = sum.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+  }
+  return sum;
+};
+
+const computeDestiny = (name: string): number => {
+  if (!name) return 1;
+  const pythagorean: Record<string, number> = {
+    a: 1, j: 1, s: 1,
+    b: 2, k: 2, t: 2,
+    c: 3, l: 3, u: 3,
+    d: 4, m: 4, v: 4,
+    e: 5, n: 5, w: 5,
+    f: 6, o: 6, x: 6,
+    g: 7, p: 7, y: 7,
+    h: 8, q: 8, z: 8,
+    i: 9, r: 9,
+  };
+  let sum = 0;
+  for (const char of name.toLowerCase()) {
+    if (pythagorean[char]) sum += pythagorean[char];
+  }
+  if (!sum) return 1;
+  while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+    sum = sum.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+  }
+  return sum;
+};
+
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   onNavigate,
   userName = 'Cosmic Seeker',
@@ -76,7 +166,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [panchang, setPanchang] = useState<any>(null);
   const [choghadiya, setChoghadiya] = useState<any>(null);
   const [dailyDimensions, setDailyDimensions] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(!chartContext && !getCalculatedChart());
+  const [isLoading, setIsLoading] = useState(false);
   const [showEditIntake, setShowEditIntake] = useState(false);
 
   // Form data for birth intake
@@ -112,9 +202,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     const local = getCalculatedChart();
     if (local && (local.ascendant || local.lagna || local.chart?.ascendant)) {
       setKundli(local.chart || local);
-      setIsLoading(false);
     } else {
-      // 2. Fetch user's calculated chart from backend
+      // 2. Fetch user's calculated chart from backend in background
       fetch('/api/astrology/chart')
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
@@ -123,11 +212,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             setKundli(chartData);
             saveCalculatedChart(chartData);
           }
-          setIsLoading(false);
         })
-        .catch(() => {
-          setIsLoading(false);
-        });
+        .catch(() => {});
     }
 
     // 3. Listen to cross-component updates
@@ -139,7 +225,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       if (profile) {
         setFormData(profile);
       }
-      setIsLoading(false);
     });
 
     // 4. Fetch live sidereal Panchang
@@ -192,9 +277,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     });
   };
 
-  const handleIntakeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.birthDate || !formData.birthTime) {
+  const handleIntakeSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!formData.name?.trim() || !formData.birthDate || !formData.birthTime) {
       alert('Please provide your name, date of birth, and time of birth.');
       return;
     }
@@ -202,7 +287,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     try {
       const result = await executeCalculation(formData);
       if (result) {
-        setKundli(result.chart || result);
+        const calculatedChart = result.chart || result;
+        setKundli(calculatedChart);
+        saveCalculatedChart(calculatedChart, formData);
         setShowEditIntake(false);
       }
     } catch (err: any) {
@@ -211,52 +298,116 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const chart = kundli;
-  const ascendantSign = chart?.ascendant?.details?.signName || chart?.lagna?.signName;
+  const ascendantSign =
+    (typeof chart?.ascendant?.details?.signName === 'string' ? chart.ascendant.details.signName : null) ||
+    (typeof chart?.lagna?.signName === 'string' ? chart.lagna.signName : null) ||
+    (typeof chart?.ascendantSign === 'string' ? chart.ascendantSign : null) ||
+    (typeof chart?.ascendant === 'string' ? chart.ascendant : null) ||
+    (typeof chart?.ascendant?.sign === 'string' ? chart.ascendant.sign : null);
+
   const ascendantDegree =
-    chart?.ascendant?.details?.degreeInSign !== undefined
+    typeof chart?.ascendant?.details?.degreeInSign === 'number'
       ? `${chart.ascendant.details.degreeInSign.toFixed(2)}°`
-      : chart?.lagna?.degreeInSign !== undefined
+      : typeof chart?.ascendant?.degrees === 'number'
+      ? `${(chart.ascendant.degrees % 30).toFixed(2)}°`
+      : typeof chart?.lagna?.degreeInSign === 'number'
       ? `${chart.lagna.degreeInSign.toFixed(2)}°`
       : null;
+
   const ascendantIndex =
-    chart?.ascendant?.details?.signIndex !== undefined
+    typeof chart?.ascendant?.details?.signIndex === 'number'
       ? chart.ascendant.details.signIndex
-      : chart?.lagna?.signIndex !== undefined
+      : typeof chart?.lagna?.signIndex === 'number'
       ? chart.lagna.signIndex
+      : typeof chart?.ascendant?.signIndex === 'number'
+      ? chart.ascendant.signIndex
       : 0;
 
-  const moonSign = chart?.moonSign?.signName || chart?.rashi?.signName || chart?.planets?.find((p: any) => p.name === 'Moon')?.sign;
-  const moonNakshatra =
-    chart?.moonNakshatra?.name ||
-    chart?.nakshatra?.name ||
-    chart?.planets?.find((p: any) => p.name === 'Moon')?.nakshatra;
-  const sunSign = chart?.sunSign?.signName || chart?.planets?.find((p: any) => p.name === 'Sun')?.sign;
+  const moonSign =
+    (typeof chart?.moonSign?.signName === 'string' ? chart.moonSign.signName : null) ||
+    (typeof chart?.moonSign === 'string' ? chart.moonSign : null) ||
+    (typeof chart?.rashi?.signName === 'string' ? chart.rashi.signName : null) ||
+    (typeof chart?.rashi === 'string' ? chart.rashi : null) ||
+    chart?.planets?.find((p: any) => p.name === 'Moon')?.sign;
 
-  const mahadasha = chart?.dashas?.currentMahadasha?.planet;
-  const antardasha = chart?.dashas?.currentAntardasha?.planet;
+  const moonNakshatra =
+    (typeof chart?.moonNakshatra?.name === 'string' ? chart.moonNakshatra.name : null) ||
+    (typeof chart?.moonNakshatra === 'string' ? chart.moonNakshatra : null) ||
+    (typeof chart?.nakshatra?.name === 'string' ? chart.nakshatra.name : null) ||
+    (typeof chart?.nakshatra === 'string' ? chart.nakshatra : null) ||
+    chart?.planets?.find((p: any) => p.name === 'Moon')?.nakshatra;
+
+  const sunSign =
+    (typeof chart?.sunSign?.signName === 'string' ? chart.sunSign.signName : null) ||
+    (typeof chart?.sunSign === 'string' ? chart.sunSign : null) ||
+    chart?.planets?.find((p: any) => p.name === 'Sun')?.sign;
+
+  const mahadasha =
+    chart?.dashas?.currentMahadasha?.planet ||
+    (typeof chart?.currentMahadasha === 'string' ? chart.currentMahadasha : null);
+  const antardasha =
+    chart?.dashas?.currentAntardasha?.planet ||
+    (typeof chart?.currentAntardasha === 'string' ? chart.currentAntardasha : null);
   const weather = chart?.predictions?.today;
 
-  const activePlanets = Array.isArray(chart?.planets) ? chart.planets : [];
+  const activePlanets = Array.isArray(chart?.planets)
+    ? chart.planets.map((p: any) => ({
+        name: typeof p?.name === 'string' ? p.name : 'Unknown',
+        symbol: typeof p?.symbol === 'string' ? p.symbol : '☉',
+        house: typeof p?.house === 'number' ? p.house : 1,
+        sign: typeof p?.sign === 'string' ? p.sign : 'Aries',
+        degreeInSign:
+          typeof p?.degreeInSign === 'number'
+            ? p.degreeInSign
+            : typeof p?.degrees === 'number'
+            ? p.degrees % 30
+            : 0,
+        nakshatra:
+          typeof p?.nakshatra === 'string'
+            ? p.nakshatra
+            : typeof p?.nakshatra?.name === 'string'
+            ? p.nakshatra.name
+            : 'Ashwini',
+        dignity: typeof p?.dignity === 'string' ? p.dignity : 'Neutral',
+        isRetrograde: Boolean(p?.isRetrograde),
+        isCombust: Boolean(p?.isCombust),
+      }))
+    : [];
+
   const lalKitabRemedies = chart ? generateDynamicLalKitabRemedies(chart) : [];
 
   const effectiveUserName =
-    formData.name.trim() ||
+    (formData.name && typeof formData.name === 'string' ? formData.name.trim() : '') ||
     chart?.birthData?.name ||
+    chart?.profile?.name ||
     chart?.input?.name ||
     (userName !== 'Cosmic Seeker' ? userName : 'Cosmic Seeker');
 
-  if (isLoading) {
-    return (
-      <div className="space-y-8 animate-fadeIn">
-        <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/50 p-8 h-48 animate-pulse flex items-center justify-center">
-          <div className="flex items-center gap-3 text-cyan-400 font-semibold text-sm">
-            <Sparkles className="w-5 h-5 animate-spin" />
-            <span>Harmonizing planetary coordinates with Swiss Ephemeris...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Safe Panchang strings to prevent React object child errors
+  const tithiDisplay = panchang?.tithi?.name
+    ? `${panchang.tithi.name}${panchang.tithi.paksha ? ` (${panchang.tithi.paksha.split(' ')[0]})` : ''}`
+    : (typeof panchang?.tithi === 'string' ? panchang.tithi : 'Shukla Paksha');
+
+  const nakshatraDisplay = panchang?.nakshatra?.name
+    ? panchang.nakshatra.name
+    : (typeof panchang?.nakshatra === 'string' ? panchang.nakshatra : 'Current Nakshatra');
+
+  const varaDisplay = panchang?.vara?.name
+    ? `${panchang.vara.name}${panchang.vara.sanskritName ? ` (${panchang.vara.sanskritName})` : ''}`
+    : (typeof panchang?.vara === 'string' ? panchang.vara : 'Vara');
+
+  const yogaDisplay = panchang?.yoga?.name
+    ? panchang.yoga.name
+    : (typeof panchang?.yoga === 'string' ? panchang.yoga : 'Yoga');
+
+  const calculatedLifePath =
+    chart?.numerology?.lifePathNumber ??
+    computeLifePath(formData.birthDate || chart?.profile?.birthDate || chart?.birthDate || '1995-10-15');
+  const calculatedBirthNumber =
+    chart?.numerology?.birthNumber ??
+    computeBirthNumber(formData.birthDate || chart?.profile?.birthDate || chart?.birthDate || '1995-10-15');
+  const calculatedDestiny =
+    chart?.numerology?.destinyNumber ?? computeDestiny(effectiveUserName);
 
   // If no chart is configured or user explicitly requested to edit coordinates
   if (!chart || !ascendantSign || showEditIntake) {
@@ -319,6 +470,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               {calcError}
             </div>
           )}
+
+          {/* Quick Presets Row */}
+          <div className="flex flex-wrap items-center gap-2 pb-1 border-b border-cosmic-border/40">
+            <span className="text-[11px] font-semibold text-cosmic-muted flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-cyan-400" /> Instant Presets:
+            </span>
+            {PRESET_PROFILES.map((preset) => (
+              <button
+                key={preset.name}
+                type="button"
+                onClick={() => {
+                  setFormData({ ...preset, isApproximateTime: false });
+                }}
+                className="px-2.5 py-1 rounded-lg bg-cosmic-card border border-cosmic-border hover:border-cyan-400 text-[11px] text-cosmic-text font-medium transition-colors"
+              >
+                {preset.name.split(' ')[0]} ({preset.birthPlace.split(',')[0]})
+              </button>
+            ))}
+          </div>
 
           <form onSubmit={handleIntakeSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -455,19 +625,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
               <div className="p-3.5 rounded-xl bg-cosmic-card border border-cosmic-border">
                 <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Tithi</span>
-                <span className="font-bold text-cosmic-text text-sm">{panchang.tithi || 'Shukla Paksha'}</span>
+                <span className="font-bold text-cosmic-text text-sm">{tithiDisplay}</span>
               </div>
               <div className="p-3.5 rounded-xl bg-cosmic-card border border-cosmic-border">
                 <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Nakshatra</span>
-                <span className="font-bold text-cosmic-text text-sm">{panchang.nakshatra || 'Current Nakshatra'}</span>
+                <span className="font-bold text-cosmic-text text-sm">{nakshatraDisplay}</span>
               </div>
               <div className="p-3.5 rounded-xl bg-cosmic-card border border-cosmic-border">
                 <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Vara (Day)</span>
-                <span className="font-bold text-cosmic-text text-sm">{panchang.vara || 'Vara'}</span>
+                <span className="font-bold text-cosmic-text text-sm">{varaDisplay}</span>
               </div>
               <div className="p-3.5 rounded-xl bg-cosmic-card border border-cosmic-border">
                 <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Yoga</span>
-                <span className="font-bold text-cosmic-text text-sm">{panchang.yoga || 'Yoga'}</span>
+                <span className="font-bold text-cosmic-text text-sm">{yogaDisplay}</span>
               </div>
             </div>
           </div>
@@ -597,7 +767,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       </td>
                       <td className="py-2.5 text-cosmic-text/90 font-medium">{p.sign}</td>
                       <td className="py-2.5 text-cosmic-muted font-mono text-[11px]">
-                        {p.degreeInSign !== undefined ? `${p.degreeInSign.toFixed(1)}°` : '—'}
+                        {typeof p.degreeInSign === 'number' && !isNaN(p.degreeInSign)
+                          ? `${p.degreeInSign.toFixed(1)}°`
+                          : '—'}
                       </td>
                       <td className="py-2.5 font-bold text-cyan-400">H{p.house}</td>
                       <td className="py-2.5 text-cosmic-muted text-[11px]">{p.nakshatra}</td>
@@ -671,7 +843,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
               <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Life Path</span>
               <span className="text-2xl font-display font-black text-cyan-400">
-                {chart?.numerology?.lifePathNumber ?? 7}
+                {calculatedLifePath}
               </span>
               <span className="text-[9px] text-cyan-300/80 block mt-0.5">Core Purpose</span>
             </div>
@@ -679,7 +851,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
               <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Birth Number</span>
               <span className="text-2xl font-display font-black text-amber-400">
-                {chart?.numerology?.birthNumber ?? 4}
+                {calculatedBirthNumber}
               </span>
               <span className="text-[9px] text-amber-300/80 block mt-0.5">Innate Talent</span>
             </div>
@@ -687,7 +859,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="p-3.5 rounded-2xl bg-violet-500/10 border border-violet-500/30">
               <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Destiny</span>
               <span className="text-2xl font-display font-black text-violet-400">
-                {chart?.numerology?.destinyNumber ?? 1}
+                {calculatedDestiny}
               </span>
               <span className="text-[9px] text-violet-300/80 block mt-0.5">Expression</span>
             </div>
