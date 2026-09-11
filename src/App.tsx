@@ -20,6 +20,7 @@ import { SystemVerificationPage } from './pages/SystemVerificationPage.js';
 import { ContactPage } from './pages/ContactPage.js';
 import { CosmicHubPage } from './pages/CosmicHubPage.js';
 import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
+import { TarotPage } from './pages/TarotPage.js';
 
 import { AuthModal } from './components/auth/AuthModal.js';
 import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
@@ -137,6 +138,8 @@ export const App: React.FC = () => {
         return <DailyPredictionsPage />;
       case 'matching':
         return <MatchingPage />;
+      case 'tarot':
+        return <TarotPage />;
       case 'numerology':
         return <NumerologyPage />;
       case 'palmistry':

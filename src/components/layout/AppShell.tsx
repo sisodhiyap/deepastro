@@ -31,11 +31,11 @@ export const AppShell: React.FC<AppShellProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-cosmic-bg text-cosmic-text relative overflow-x-hidden">
+    <div className="h-screen w-screen flex bg-cosmic-bg text-cosmic-text relative overflow-hidden">
       {/* Background Celestial Star Particles */}
       <Starfield />
 
-      {/* Desktop Left Sidebar */}
+      {/* Desktop Left Sidebar (Permanently Fixed/Sticky on Left) */}
       <Sidebar
         activeTab={activeTab}
         onSelectTab={(tab) => {
@@ -43,7 +43,7 @@ export const AppShell: React.FC<AppShellProps> = ({
           setMobileMenuOpen(false);
         }}
         userPlan={userPlan}
-        className="hidden lg:flex sticky top-0 h-screen z-30"
+        className="hidden lg:flex h-screen shrink-0 z-30"
       />
 
       {/* Mobile Slide-out Drawer */}
@@ -60,13 +60,14 @@ export const AppShell: React.FC<AppShellProps> = ({
               setMobileMenuOpen(false);
             }}
             userPlan={userPlan}
-            className="relative z-10 w-72"
+            className="relative z-10 w-72 h-full"
           />
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10 pb-20 lg:pb-8 w-full">
+      {/* Right Side Column (Header Sticky + Only Main Content Scrolls) */}
+      <div className="flex-1 h-screen flex flex-col min-w-0 relative z-10 overflow-hidden">
+        {/* Sticky Header */}
         <TopNav
           onToggleMobileMenu={() => setMobileMenuOpen(true)}
           onNavigate={onSelectTab}
@@ -77,7 +78,8 @@ export const AppShell: React.FC<AppShellProps> = ({
           onLogout={onLogout}
         />
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full min-w-0">
+        {/* Scrollable Content Container (Only Content Moves) */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full min-w-0 pb-24 lg:pb-12">
           {children}
         </main>
       </div>

@@ -35,6 +35,7 @@ export type NavTabId =
   | 'kundli'
   | 'predictions'
   | 'matching'
+  | 'tarot'
   | 'numerology'
   | 'palmistry'
   | 'lalkitab'
@@ -77,6 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: 'ANCIENT DIVINATION',
       items: [
+        { id: 'tarot' as NavTabId, label: 'DeepAstro Tarot Engine', icon: Sparkles, badge: 'NEW' },
         { id: 'numerology' as NavTabId, label: 'Numerology Vibrations', icon: Hash },
         { id: 'palmistry' as NavTabId, label: 'Palmistry Vision AI', icon: Hand },
         { id: 'lalkitab' as NavTabId, label: 'Lal Kitab & Remedies', icon: Flame },
