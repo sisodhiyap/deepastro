@@ -28,7 +28,7 @@ router.post(
   '/analyze',
   optionalAuth,
   upload.single('palmImage'),
-  (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response) => {
     try {
       const handType = (req.body.handType as 'Left' | 'Right') || 'Right';
       const isDominant = req.body.isDominant !== 'false';
@@ -43,23 +43,34 @@ router.post(
 
       let fileName = 'uploaded_palm.jpg';
       let mimeType = 'image/jpeg';
+      let imageBuffer: Buffer | null = null;
 
       if (req.file) {
         fileName = req.file.originalname;
         mimeType = req.file.mimetype;
+        imageBuffer = req.file.buffer;
       } else if (req.body.imageData) {
-        fileName = 'uploaded_palm.webp';
-        mimeType = 'image/webp';
+        fileName = 'camera_capture.jpg';
+        const raw = req.body.imageData as string;
+        if (raw.includes(';base64,')) {
+          const parts = raw.split(';base64,');
+          mimeType = parts[0].replace('data:', '') || 'image/jpeg';
+          imageBuffer = Buffer.from(parts[1], 'base64');
+        } else {
+          imageBuffer = Buffer.from(raw, 'base64');
+        }
       }
 
-      const fileSize = req.file ? req.file.size : Buffer.byteLength(req.body.imageData, 'utf8');
+      const fileSize = imageBuffer ? imageBuffer.length : (req.file ? req.file.size : 250000);
 
-      const analysis = PalmistryVisionService.analyzePalmImage(
+      const analysis = await PalmistryVisionService.analyzePalmImageVision(
+        imageBuffer,
         fileName,
         mimeType,
         fileSize,
         handType,
-        isDominant
+        isDominant,
+        ageRange
       );
 
       return res.json({
@@ -68,6 +79,7 @@ router.post(
           isDominant,
           ageRange,
           analyzedAt: new Date().toISOString(),
+          visionProvider: analysis.visionProvider || 'DeepAstro Multimodal Vision',
         },
         analysis,
       });

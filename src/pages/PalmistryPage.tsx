@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Hand, Upload, CheckCircle2, ShieldAlert, Sparkles, Image, ArrowRight, Camera, RefreshCw } from 'lucide-react';
+import { Hand, Upload, CheckCircle2, ShieldAlert, Sparkles, Image, ArrowRight, Camera, RefreshCw, Smartphone } from 'lucide-react';
 import { PalmCameraModal } from '../components/palmistry/PalmCameraModal.js';
 
 export const PalmistryPage: React.FC = () => {
@@ -21,17 +21,24 @@ export const PalmistryPage: React.FC = () => {
     }
   };
 
-  const handleCameraCapture = (file: File, preview: string) => {
+  const handleCameraCapture = (file: File, preview: string, autoSubmit?: boolean) => {
     setSelectedFile(file);
     setPreviewUrl(preview);
     setErrorMessage(null);
+
+    if (autoSubmit) {
+      setTimeout(() => {
+        handleAnalyze(file);
+      }, 100);
+    }
   };
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleAnalyze = async () => {
-    if (!selectedFile) {
-      setErrorMessage('Please upload a palm photo before analyzing.');
+  const handleAnalyze = async (fileToAnalyze?: File) => {
+    const file = fileToAnalyze || selectedFile;
+    if (!file) {
+      setErrorMessage('Please capture or upload a palm photo before analyzing.');
       return;
     }
 
@@ -39,7 +46,7 @@ export const PalmistryPage: React.FC = () => {
     setIsLoading(true);
     try {
       const formData = new FormData();
-      formData.append('palmImage', selectedFile);
+      formData.append('palmImage', file);
       formData.append('handType', handType);
       formData.append('isDominant', isDominant.toString());
       formData.append('ageRange', ageRange);
@@ -51,7 +58,10 @@ export const PalmistryPage: React.FC = () => {
 
       if (res.ok) {
         const data = await res.json();
-        setAnalysis(data.analysis);
+        setAnalysis({
+          ...data.analysis,
+          visionProvider: data.metadata?.visionProvider || data.analysis?.visionProvider || 'DeepAstro Vision AI',
+        });
       } else {
         const err = await res.json().catch(() => ({}));
         setErrorMessage(err.details || err.error || 'Failed to analyze palm photo.');
@@ -102,87 +112,128 @@ export const PalmistryPage: React.FC = () => {
           </div>
 
           {previewUrl ? (
-            <div className="rounded-3xl border border-cyan-500/30 bg-cosmic-card/50 p-6 flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative group">
+            <div className="rounded-3xl border border-cyan-500/30 bg-cosmic-card/50 p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 shadow-xl">
+              <div className="relative group shrink-0">
                 <img
                   src={previewUrl}
                   alt="Palm preview"
-                  className="w-40 h-48 object-cover rounded-2xl border-2 border-cyan-400/40 shadow-xl"
+                  className="w-44 h-56 object-cover rounded-2xl border-2 border-cyan-400/50 shadow-2xl"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                  <span className="text-[11px] font-bold text-cyan-300">Ready to Analyze</span>
+                  <span className="text-[11px] font-bold text-cyan-300">Image Ready</span>
                 </div>
               </div>
 
-              <div className="flex-1 space-y-3 text-center sm:text-left">
+              <div className="flex-1 space-y-4 text-center md:text-left w-full">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold mb-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Palm Photo Ready
+                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-2 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Photo Captured & Ready
                   </div>
-                  <h4 className="text-sm font-bold text-cosmic-text">
+                  <h4 className="text-base font-bold text-cosmic-text">
                     {selectedFile?.name || 'Live Camera Capture'}
                   </h4>
-                  <p className="text-xs text-cosmic-muted">
-                    {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : 'High-resolution snapshot'}
+                  <p className="text-xs text-cosmic-muted mt-0.5">
+                    {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : 'High-resolution snapshot'} &bull; Ready for Gemini & OpenAI Vision
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                {/* Primary Submit Button */}
+                <button
+                  type="button"
+                  onClick={() => handleAnalyze()}
+                  disabled={isLoading}
+                  className={`w-full py-3.5 rounded-2xl font-display font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-glow-cyan ${
+                    isLoading
+                      ? 'bg-cyan-600/50 text-black cursor-wait'
+                      : 'bg-cyan-500 hover:bg-cyan-400 text-black hover:scale-[1.01]'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{isLoading ? 'Scanning Palm with Vision AI...' : 'Submit & Analyze Palm Features'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start pt-1">
                   <button
                     type="button"
                     onClick={() => setIsCameraOpen(true)}
-                    className="px-3.5 py-1.5 rounded-xl border border-cosmic-border bg-cosmic-card text-xs font-semibold text-cosmic-text hover:border-cyan-400/40 transition-colors flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-xl border border-cosmic-border bg-cosmic-card text-xs font-semibold text-cosmic-text hover:border-cyan-400/40 transition-colors flex items-center gap-1.5"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-cyan-400" /> Retake with Camera
                   </button>
 
-                  <label className="px-3.5 py-1.5 rounded-xl border border-cosmic-border bg-cosmic-card text-xs font-semibold text-cosmic-text hover:border-cyan-400/40 transition-colors flex items-center gap-1.5 cursor-pointer">
+                  <label className="px-3 py-1.5 rounded-xl border border-cosmic-border bg-cosmic-card text-xs font-semibold text-cosmic-text hover:border-cyan-400/40 transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <Smartphone className="w-3.5 h-3.5 text-cosmic-muted" />
+                    <span>Device Camera</span>
+                    <input type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
+                  </label>
+
+                  <label className="px-3 py-1.5 rounded-xl border border-cosmic-border bg-cosmic-card text-xs font-semibold text-cosmic-text hover:border-cyan-400/40 transition-colors flex items-center gap-1.5 cursor-pointer">
                     <Upload className="w-3.5 h-3.5 text-cosmic-muted" />
-                    <span>Upload Different</span>
+                    <span>Browse Files</span>
                     <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   </label>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {/* Option 1: Live Camera Card */}
               <button
                 type="button"
                 onClick={() => setIsCameraOpen(true)}
-                className="group border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 rounded-3xl p-6 flex flex-col items-center justify-center text-center transition-all bg-cyan-500/5 hover:bg-cyan-500/10 space-y-3"
+                className="group border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 rounded-3xl p-5 flex flex-col items-center justify-center text-center transition-all bg-cyan-500/5 hover:bg-cyan-500/10 space-y-2.5"
               >
-                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-                  <Camera className="w-7 h-7" />
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+                  <Camera className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-cosmic-text block group-hover:text-cyan-300 transition-colors">
-                    Use Live Camera
+                  <span className="text-xs font-bold text-cosmic-text block group-hover:text-cyan-300 transition-colors">
+                    Live Viewfinder
                   </span>
-                  <span className="text-[11px] text-cosmic-muted mt-1 block">
-                    Instant scan with palm alignment guide
+                  <span className="text-[10px] text-cosmic-muted mt-0.5 block">
+                    Palm alignment guide
                   </span>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[9px] font-bold uppercase tracking-wider">
                   Recommended
                 </span>
               </button>
 
-              {/* Option 2: Upload File Card */}
-              <label className="border-2 border-dashed border-cosmic-border hover:border-cosmic-muted rounded-3xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-cosmic-card/30 hover:bg-cosmic-card/50 space-y-3 group">
-                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                <div className="w-14 h-14 rounded-2xl bg-cosmic-card border border-cosmic-border flex items-center justify-center text-cosmic-muted group-hover:text-cosmic-text group-hover:scale-110 transition-transform">
-                  <Upload className="w-7 h-7" />
+              {/* Option 2: Native Device Camera */}
+              <label className="group border-2 border-dashed border-cosmic-border hover:border-cyan-500/40 rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-cosmic-card/30 hover:bg-cosmic-card/50 space-y-2.5">
+                <input type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
+                <div className="w-12 h-12 rounded-2xl bg-cosmic-card border border-cosmic-border flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                  <Smartphone className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-cosmic-text block">
-                    Upload from Device
+                  <span className="text-xs font-bold text-cosmic-text block">
+                    Device Camera
                   </span>
-                  <span className="text-[11px] text-cosmic-muted mt-1 block">
-                    JPG, PNG, or WEBP up to 10MB
+                  <span className="text-[10px] text-cosmic-muted mt-0.5 block">
+                    Direct phone camera
                   </span>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-cosmic-card text-cosmic-muted text-[10px] font-semibold">
+                <span className="px-2.5 py-0.5 rounded-full bg-cosmic-card text-cosmic-muted text-[9px] font-semibold">
+                  Instant Snap
+                </span>
+              </label>
+
+              {/* Option 3: Upload File Card */}
+              <label className="border-2 border-dashed border-cosmic-border hover:border-cosmic-muted rounded-3xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-cosmic-card/30 hover:bg-cosmic-card/50 space-y-2.5 group">
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                <div className="w-12 h-12 rounded-2xl bg-cosmic-card border border-cosmic-border flex items-center justify-center text-cosmic-muted group-hover:text-cosmic-text group-hover:scale-110 transition-transform">
+                  <Upload className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-cosmic-text block">
+                    Upload Photo
+                  </span>
+                  <span className="text-[10px] text-cosmic-muted mt-0.5 block">
+                    JPG, PNG, or WEBP
+                  </span>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-cosmic-card text-cosmic-muted text-[9px] font-semibold">
                   Browse Files
                 </span>
               </label>
@@ -283,9 +334,16 @@ export const PalmistryPage: React.FC = () => {
       {analysis && (
         <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-8 space-y-8 shadow-cosmic-card">
           <div className="space-y-2">
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider block">
-              Vision Synthesis &bull; {analysis.handElement}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                Vision Synthesis &bull; {analysis.handElement}
+              </span>
+              {analysis.visionProvider && (
+                <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-[10px] font-bold text-cyan-300">
+                  {analysis.visionProvider}
+                </span>
+              )}
+            </div>
             <h3 className="text-2xl font-display font-extrabold text-cosmic-text">
               Comprehensive Chiromancy Report
             </h3>

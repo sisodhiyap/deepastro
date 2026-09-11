@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, X, RefreshCw, Check, AlertCircle, Sparkles, SwitchCamera, Eye } from 'lucide-react';
+import { Camera, X, RefreshCw, Check, AlertCircle, Sparkles, SwitchCamera, ArrowRight, Smartphone } from 'lucide-react';
 
 interface PalmCameraModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCapture: (file: File, previewUrl: string) => void;
+  onCapture: (file: File, previewUrl: string, autoSubmit?: boolean) => void;
 }
 
 export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
@@ -56,7 +56,7 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
     stopStream();
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError('Camera access is not supported by your browser or operating system.');
+      setCameraError('Camera access is not supported by your browser or environment. Please use device camera upload below.');
       setIsInitializing(false);
       return;
     }
@@ -87,9 +87,9 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
         if (!isMounted) return;
         setIsInitializing(false);
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          setCameraError('Camera access was denied. Please allow camera permissions in your browser address bar to scan your palm.');
+          setCameraError('Camera access was denied. Please allow camera permissions in your browser bar, or use the Native Device Camera button below.');
         } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-          setCameraError('No camera found on this device. Please connect a webcam or upload a photo instead.');
+          setCameraError('No camera found on this device. Please connect a webcam or use device photo upload.');
         } else {
           // Fallback to user facing camera if environment mode failed
           if (facingMode === 'environment') {
@@ -150,8 +150,11 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
 
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
+    // Use actual dimensions from video or sensible default
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 720;
+    canvas.width = width;
+    canvas.height = height;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -182,6 +185,16 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
     );
   };
 
+  // Direct native mobile camera file capture handler
+  const handleNativeDeviceCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const preview = URL.createObjectURL(file);
+      setCapturedBlob(file);
+      setCapturedUrl(preview);
+    }
+  };
+
   // Start 3-second countdown
   const startCountdown = () => {
     setCountdown(3);
@@ -207,8 +220,8 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
     setCountdown(null);
   };
 
-  // Confirm photo and send to parent
-  const handleConfirm = () => {
+  // Confirm photo and send to parent (optionally auto-submitting)
+  const handleConfirm = (autoSubmit: boolean = false) => {
     if (!capturedBlob || !capturedUrl) return;
 
     const file = new File([capturedBlob], `palm-capture-${Date.now()}.jpg`, {
@@ -216,7 +229,7 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
       lastModified: Date.now(),
     });
 
-    onCapture(file, capturedUrl);
+    onCapture(file, capturedUrl, autoSubmit);
     handleClose();
   };
 
@@ -261,35 +274,50 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
                 <h4 className="text-sm font-bold text-red-300">Camera Access Issue</h4>
                 <p className="text-xs text-cosmic-muted leading-relaxed">{cameraError}</p>
               </div>
-              <button
-                onClick={() => {
-                  setCameraError(null);
-                  setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
-                }}
-                className="px-4 py-2 rounded-xl bg-cosmic-card border border-cosmic-border text-xs font-semibold text-cosmic-text hover:bg-cosmic-card/80 transition-colors"
-              >
-                Retry Camera
-              </button>
+
+              <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+                <button
+                  onClick={() => {
+                    setCameraError(null);
+                    setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
+                  }}
+                  className="px-4 py-2 rounded-xl bg-cosmic-card border border-cosmic-border text-xs font-semibold text-cosmic-text hover:bg-cosmic-card/80 transition-colors"
+                >
+                  Retry Camera
+                </button>
+
+                <label className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-glow-cyan transition-all">
+                  <Smartphone className="w-4 h-4" />
+                  <span>Use Device Camera</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleNativeDeviceCapture}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           ) : capturedUrl ? (
             /* Snapshot Review State */
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center p-4">
               <img
                 src={capturedUrl}
                 alt="Captured palm"
-                className="max-h-[460px] w-full object-contain rounded-xl"
+                className="max-h-[440px] w-full object-contain rounded-2xl border-2 border-cyan-400/40 shadow-2xl"
               />
-              <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-                <Check className="w-3.5 h-3.5" /> Photo Captured
+              <div className="absolute top-6 left-6 bg-black/70 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-500/40 flex items-center gap-1.5 text-xs text-emerald-400 font-bold shadow-lg">
+                <Check className="w-3.5 h-3.5" /> Photo Captured — Ready to Submit
               </div>
             </div>
           ) : (
             /* Live Camera Stream */
             <div className="relative w-full h-full flex items-center justify-center">
               {isInitializing && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60 z-20">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 z-20">
                   <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
-                  <span className="text-xs text-cosmic-muted">Initializing camera sensor...</span>
+                  <span className="text-xs text-cosmic-text font-semibold">Opening camera stream...</span>
                 </div>
               )}
 
@@ -303,25 +331,23 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
 
               {/* Palm Alignment Overlay Guide */}
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                {/* Visual Palm Frame Guide */}
-                <div className="relative w-64 h-80 sm:w-72 sm:h-96 border-2 border-dashed border-cyan-400/50 rounded-[48px] flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.15)] animate-pulse">
+                <div className="relative w-64 h-80 sm:w-72 sm:h-96 border-2 border-dashed border-cyan-400/60 rounded-[48px] flex items-center justify-center shadow-[0_0_30px_rgba(6,182,212,0.2)] animate-pulse">
                   {/* Subtle Corner Guides */}
-                  <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
-                  <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
-                  <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
-                  <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+                  <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-cyan-400" />
+                  <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-cyan-400" />
+                  <div className="absolute bottom-2 left-2 w-5 h-5 border-b-2 border-l-2 border-cyan-400" />
+                  <div className="absolute bottom-2 right-2 w-5 h-5 border-b-2 border-r-2 border-cyan-400" />
 
-                  {/* Palm Silhouette Icon / SVG Graphic */}
+                  {/* Palm Silhouette Icon */}
                   <svg
                     viewBox="0 0 100 120"
                     fill="none"
                     stroke="currentColor"
-                    className="w-36 h-36 text-cyan-400/25"
+                    className="w-36 h-36 text-cyan-400/30"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    {/* Palm outline hint */}
                     <path d="M30 40 C30 25, 35 25, 35 40 L35 60" />
                     <path d="M40 30 C40 15, 45 15, 45 30 L45 60" />
                     <path d="M50 25 C50 10, 55 10, 55 25 L55 60" />
@@ -330,7 +356,7 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
                     <path d="M25 80 C25 105, 75 105, 75 80 L70 60 C70 50, 25 50, 25 80 Z" />
                   </svg>
 
-                  <span className="absolute bottom-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-semibold text-cyan-300 border border-cyan-500/20">
+                  <span className="absolute bottom-4 bg-black/70 backdrop-blur-md px-3.5 py-1 rounded-full text-[10px] font-bold text-cyan-300 border border-cyan-500/30 shadow-md">
                     Fit Palm Inside Box
                   </span>
                 </div>
@@ -338,23 +364,25 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
 
               {/* Countdown Display */}
               {countdown !== null && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-30">
-                  <div className="w-24 h-24 rounded-full bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center text-4xl font-display font-black text-cyan-300 animate-ping">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-30">
+                  <div className="w-24 h-24 rounded-full bg-cyan-500/30 border-2 border-cyan-400 flex items-center justify-center text-4xl font-display font-black text-cyan-300 animate-ping">
                     {countdown}
                   </div>
                 </div>
               )}
 
-              {/* Camera Switcher (Front/Back) */}
-              {hasMultipleCameras && (
-                <button
-                  onClick={toggleCamera}
-                  className="absolute top-4 right-4 p-2.5 rounded-2xl bg-black/60 backdrop-blur-md border border-cosmic-border text-cosmic-text hover:text-cyan-400 hover:border-cyan-500/40 transition-colors z-20"
-                  title="Switch Front/Back Camera"
-                >
-                  <SwitchCamera className="w-5 h-5" />
-                </button>
-              )}
+              {/* Controls overlaid on video */}
+              <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+                {hasMultipleCameras && (
+                  <button
+                    onClick={toggleCamera}
+                    className="p-2.5 rounded-2xl bg-black/60 backdrop-blur-md border border-cosmic-border text-cosmic-text hover:text-cyan-400 hover:border-cyan-500/40 transition-colors"
+                    title="Switch Front/Back Camera"
+                  >
+                    <SwitchCamera className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -363,36 +391,65 @@ export const PalmCameraModal: React.FC<PalmCameraModalProps> = ({
         <div className="p-6 border-t border-cosmic-border bg-cosmic-card/40 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-cosmic-muted">
             <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>Ensure palm is well-lit with fingers spread naturally</span>
+            <span>Ensure palm is under even lighting with fingers open</span>
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {capturedUrl ? (
               <>
                 <button
+                  type="button"
                   onClick={handleRetake}
-                  className="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl border border-cosmic-border bg-cosmic-card text-xs font-bold text-cosmic-text hover:bg-cosmic-border transition-colors flex items-center justify-center gap-2"
+                  className="px-4 py-2.5 rounded-2xl border border-cosmic-border bg-cosmic-card text-xs font-bold text-cosmic-text hover:bg-cosmic-border transition-colors flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Retake
                 </button>
+
                 <button
-                  onClick={handleConfirm}
-                  className="flex-1 sm:flex-initial px-6 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-display font-extrabold uppercase tracking-wider transition-all shadow-glow-cyan flex items-center justify-center gap-2"
+                  type="button"
+                  onClick={() => handleConfirm(false)}
+                  className="px-4 py-2.5 rounded-2xl border border-cosmic-border bg-cosmic-card text-xs font-bold text-cosmic-muted hover:text-cosmic-text transition-colors"
                 >
-                  <Check className="w-4 h-4" /> Use Photo
+                  Review Form
+                </button>
+
+                {/* Primary Submit Button: Instant Submit & Analyze */}
+                <button
+                  type="button"
+                  onClick={() => handleConfirm(true)}
+                  className="flex-1 sm:flex-initial px-6 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-display font-extrabold uppercase tracking-wider transition-all shadow-glow-cyan flex items-center justify-center gap-2 animate-pulse"
+                >
+                  <span>Submit & Analyze</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </>
             ) : (
               <>
+                {/* Fallback Native Camera trigger */}
+                <label className="px-3.5 py-2 rounded-2xl border border-cosmic-border bg-cosmic-card text-xs font-semibold text-cosmic-muted hover:text-cosmic-text transition-colors flex items-center gap-1.5 cursor-pointer">
+                  <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Device Camera</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleNativeDeviceCapture}
+                    className="hidden"
+                  />
+                </label>
+
                 <button
+                  type="button"
                   onClick={startCountdown}
                   disabled={Boolean(cameraError) || isInitializing || countdown !== null}
-                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl border border-cosmic-border bg-cosmic-card text-xs font-bold text-cosmic-text hover:border-cyan-400/40 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 rounded-2xl border border-cosmic-border bg-cosmic-card text-xs font-bold text-cosmic-text hover:border-cyan-400/40 transition-colors disabled:opacity-50"
                   title="Capture with 3-second timer"
                 >
                   3s Timer
                 </button>
+
                 <button
+                  type="button"
                   onClick={captureFrame}
                   disabled={Boolean(cameraError) || isInitializing || countdown !== null}
                   className="flex-1 sm:flex-initial px-6 py-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-display font-extrabold uppercase tracking-wider transition-all shadow-glow-cyan flex items-center justify-center gap-2 disabled:opacity-50"
