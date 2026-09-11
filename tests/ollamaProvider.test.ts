@@ -1,12 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import { OllamaProvider } from '../server/src/ai/OllamaProvider.js';
 import { AIOrchestrator } from '../server/src/ai/AIOrchestrator.js';
-import { VedicAstroEngine } from '../server/src/astrology/VedicAstroEngine.js';
-import { DEMO_BIRTH_PROFILE } from '../server/src/routes/astrologyRoutes.js';
+import { VedicAstroEngine, BirthProfileInput } from '../server/src/astrology/VedicAstroEngine.js';
 import { db } from '../server/src/database/db.js';
 
 describe('Ollama Local Provider & Reasoning Engine', () => {
-  const sampleKundli = VedicAstroEngine.calculateKundli(DEMO_BIRTH_PROFILE);
+  const testBirthProfile: BirthProfileInput = {
+    name: 'Test Native',
+    birthDate: '1995-08-15',
+    birthTime: '10:30',
+    birthPlace: 'New Delhi, India',
+    latitude: 28.6139,
+    longitude: 77.2090,
+    timezone: 5.5,
+    gender: 'Male',
+    isApproximateTime: false,
+  };
+  const sampleKundli = VedicAstroEngine.calculateKundli(testBirthProfile);
 
   it('initializes with default model deepseek-r1:7b and configurable host', () => {
     const provider = new OllamaProvider('http://127.0.0.1:11434', 'deepseek-r1:7b');

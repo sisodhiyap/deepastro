@@ -30,8 +30,13 @@ export class AIAuditor {
     /replace medical (advice|diagnosis)/i,
     /100% certainty/i,
     /death (date|guarantee|prediction)/i,
-    /ignore previous instructions/i,
-    /reveal (api key|system prompt|credentials)/i,
+    /ignore (your|all|previous) (system|instructions|rules)/i,
+    /reveal (api key|system prompt|credentials|hidden prompt)/i,
+    /change (my|the) birth (chart|data|coordinates)/i,
+    /use (this|a) fake (planetary|planet|position)/i,
+    /ignore (the)? calculation passport/i,
+    /modify (the)? prediction ledger/i,
+    /return another user'?s (chart|data|profile)/i,
   ];
 
   public static audit(

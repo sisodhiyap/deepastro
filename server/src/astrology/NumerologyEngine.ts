@@ -19,6 +19,8 @@ export interface NumerologyReport {
   soulUrgeNumber: number;   // Vowels
   personalityNumber: number;// Consonants
   personalYear: number;
+  personalMonth: number;
+  personalDay: number;
   luckyNumbers: number[];
   luckyDays: string[];
   luckyColors: string[];
@@ -28,6 +30,7 @@ export interface NumerologyReport {
     destinyOverview: string;
     soulUrgeOverview: string;
     personalYearTheme: string;
+    personalMonthTheme: string;
   };
 }
 
@@ -97,9 +100,15 @@ export function calculateNumerology(name: string, day: number, month: number, ye
   const soulUrgeNumber = reduceToSingleDigit(vowelSum);
   const personalityNumber = reduceToSingleDigit(consonantSum);
 
-  // 4. Personal Year
-  const currentYear = new Date().getFullYear();
+  // 4. Personal Cycles (Year, Month, Day)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentDay = now.getDate();
+
   const personalYear = reduceToSingleDigit(birthNumber + reduceToSingleDigit(month) + reduceToSingleDigit(currentYear));
+  const personalMonth = reduceToSingleDigit(personalYear + reduceToSingleDigit(currentMonth));
+  const personalDay = reduceToSingleDigit(personalMonth + reduceToSingleDigit(currentDay));
 
   const planetInfo = PLANET_NUMBER_MAP[birthNumber] || PLANET_NUMBER_MAP[1];
 
@@ -127,6 +136,8 @@ export function calculateNumerology(name: string, day: number, month: number, ye
     soulUrgeNumber,
     personalityNumber,
     personalYear,
+    personalMonth,
+    personalDay,
     luckyNumbers: planetInfo.lucky,
     luckyDays: planetInfo.days,
     luckyColors: planetInfo.colors,
@@ -136,6 +147,7 @@ export function calculateNumerology(name: string, day: number, month: number, ye
       destinyOverview: `Destiny vibration ${destinyNumber} reveals your core evolutionary vocation and outward talent expression in society.`,
       soulUrgeOverview: `Heart's desire vibration ${soulUrgeNumber} exposes your subconscious emotional longing and spiritual yearnings.`,
       personalYearTheme: `Personal Year ${personalYear} emphasizes a concentrated vibrational cycle of growth, renewal, and focused actions.`,
+      personalMonthTheme: `Personal Month ${personalMonth} governs immediate monthly vibrational alignment and developmental pace.`,
     },
   };
 }

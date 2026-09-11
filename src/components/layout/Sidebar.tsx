@@ -23,12 +23,15 @@ import {
   Clock,
   ShieldCheck,
   ChevronRight,
+  Brain,
 } from 'lucide-react';
 import { Logo } from '../brand/Logo.js';
 
 export type NavTabId =
   | 'home'
   | 'dashboard'
+  | 'intelligence'
+  | 'cosmic-hub'
   | 'kundli'
   | 'predictions'
   | 'matching'
@@ -64,6 +67,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         { id: 'home' as NavTabId, label: 'Cosmic Portal (Home)', icon: Compass },
         { id: 'dashboard' as NavTabId, label: 'My Dashboard', icon: LayoutDashboard },
+        { id: 'intelligence' as NavTabId, label: 'Cosmic Intelligence', icon: Brain, badge: 'v3.0' },
+        { id: 'cosmic-hub' as NavTabId, label: 'Cosmic Hub & Sky', icon: Sparkles, badge: 'LIVE' },
         { id: 'kundli' as NavTabId, label: 'Vedic Kundli & Vargas', icon: Sparkles },
         { id: 'predictions' as NavTabId, label: 'Daily Predictions', icon: Sun },
         { id: 'matching' as NavTabId, label: 'Kundli Milan (36 Pts)', icon: Heart },

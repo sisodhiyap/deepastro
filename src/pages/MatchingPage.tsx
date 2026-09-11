@@ -26,6 +26,7 @@ export const MatchingPage: React.FC = () => {
   });
 
   const [result, setResult] = useState<MatchingDataUI | null>(null);
+  const [deepSynastry, setDeepSynastry] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -38,16 +39,20 @@ export const MatchingPage: React.FC = () => {
     setErrorMessage(null);
     setIsLoading(true);
     try {
-      const res = await fetch('/api/matching/analyze', {
+      const matchRes = await fetch('/api/matching/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ personA: partnerA, personB: partnerB }),
       });
-      if (res.ok) {
-        const data = await res.json();
+
+      if (matchRes.ok) {
+        const data = await matchRes.json();
         setResult(data);
+        if (data.deepSynastry) {
+          setDeepSynastry(data.deepSynastry);
+        }
       } else {
-        const err = await res.json().catch(() => ({}));
+        const err = await matchRes.json().catch(() => ({}));
         setErrorMessage(err.error || 'Failed to analyze matching. Please check birth inputs.');
       }
     } catch (err: any) {
@@ -199,7 +204,117 @@ export const MatchingPage: React.FC = () => {
 
       {/* Result Display or Authentic Empty State */}
       {result ? (
-        <MatchingCard data={result} />
+        <div className="space-y-8">
+          <MatchingCard data={result} />
+
+          {/* The Pattern-Style Deep Psychological Dynamics Breakdown */}
+          {deepSynastry && (
+            <div className="rounded-3xl border border-violet-500/40 bg-gradient-to-b from-cosmic-surface via-cosmic-card to-cosmic-surface p-6 sm:p-8 space-y-6 shadow-glow-cyan/10 animate-fadeIn">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cosmic-border/60 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                      The Pattern Synergy
+                    </span>
+                    <span className="text-xs font-mono text-cyan-300">4-Quadrant Relational Matrix</span>
+                  </div>
+                  <h3 className="text-xl font-display font-extrabold text-white">
+                    Bond Archetype: {deepSynastry.archetype}
+                  </h3>
+                  <p className="text-xs text-cosmic-muted">
+                    Beyond mathematical Guna Milan: deep psychological bonding, friction catalysts, and evolutionary growth.
+                  </p>
+                </div>
+
+                <div className="px-4 py-3 rounded-2xl bg-cosmic-card border border-cosmic-border text-center sm:text-right min-w-[140px]">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-cosmic-muted block">
+                    Total Synergy Bond
+                  </span>
+                  <span className="text-3xl font-display font-black text-violet-400">
+                    {deepSynastry.overallBondScore}%
+                  </span>
+                </div>
+              </div>
+
+              {/* 4 Quadrants Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-cosmic-card/70 border border-cosmic-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-cyan-300 uppercase">Soul Resonance</span>
+                    <span className="text-xs font-mono font-bold text-white">
+                      {deepSynastry.quadrants.soulResonance.score}% ({deepSynastry.quadrants.soulResonance.verdict})
+                    </span>
+                  </div>
+                  <p className="text-xs text-cosmic-muted leading-relaxed">
+                    {deepSynastry.quadrants.soulResonance.summary}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-cosmic-card/70 border border-cosmic-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-300 uppercase">Communication Chemistry</span>
+                    <span className="text-xs font-mono font-bold text-white">
+                      {deepSynastry.quadrants.communicationFlow.score}% ({deepSynastry.quadrants.communicationFlow.verdict})
+                    </span>
+                  </div>
+                  <p className="text-xs text-cosmic-muted leading-relaxed">
+                    {deepSynastry.quadrants.communicationFlow.summary}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-cosmic-card/70 border border-cosmic-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-red-300 uppercase">Passion & Friction</span>
+                    <span className="text-xs font-mono font-bold text-white">
+                      {deepSynastry.quadrants.passionAndFriction.score}% ({deepSynastry.quadrants.passionAndFriction.verdict})
+                    </span>
+                  </div>
+                  <p className="text-xs text-cosmic-muted leading-relaxed">
+                    {deepSynastry.quadrants.passionAndFriction.summary}
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-cosmic-card/70 border border-cosmic-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-300 uppercase">Long-Term Growth</span>
+                    <span className="text-xs font-mono font-bold text-white">
+                      {deepSynastry.quadrants.longTermGrowth.score}% ({deepSynastry.quadrants.longTermGrowth.verdict})
+                    </span>
+                  </div>
+                  <p className="text-xs text-cosmic-muted leading-relaxed">
+                    {deepSynastry.quadrants.longTermGrowth.summary}
+                  </p>
+                </div>
+              </div>
+
+              {/* Keys to Thrive & Sacred Contract */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-2">
+                  <strong className="text-emerald-300 block font-bold text-sm">
+                    How to Nurture This Connection:
+                  </strong>
+                  <ul className="space-y-1 text-cosmic-muted">
+                    {deepSynastry.keysToThrive.map((key: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="text-emerald-400 font-bold">•</span>
+                        <span>{key}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-violet-950/20 border border-violet-500/30 space-y-2">
+                  <strong className="text-violet-300 block font-bold text-sm">
+                    Sacred Soul Contract:
+                  </strong>
+                  <p className="text-violet-100/80 leading-relaxed italic">
+                    "{deepSynastry.sacredContract}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         !isLoading && (
           <div className="rounded-3xl border border-dashed border-cosmic-border bg-cosmic-surface/40 p-12 text-center space-y-3">

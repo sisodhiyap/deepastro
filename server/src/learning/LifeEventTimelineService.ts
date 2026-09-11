@@ -9,6 +9,7 @@
  */
 
 import { db, LifeEventRecord } from '../database/db.js';
+export type { LifeEventRecord };
 import { AstrologyFactSet } from '../astrology/AstrologyFactSet.js';
 
 export type LifeEventType =

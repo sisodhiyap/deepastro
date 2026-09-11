@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, X, Sparkles, MessageSquare, Trash2, ShieldCheck, ChevronRight, Cpu, Check, ChevronDown } from 'lucide-react';
+import { Bot, Send, X, Sparkles, MessageSquare, Trash2, ShieldCheck, ChevronRight, Cpu, Check, ChevronDown, ChevronUp, AlertTriangle, Compass, HelpCircle, Bookmark } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -10,6 +10,21 @@ interface ChatMessage {
   remedies?: string[];
   disclaimer?: string;
   timestamp: string;
+  whyThisReading?: {
+    primaryFactors: string[];
+    supportingFactors?: string[];
+    contradictions?: any[];
+    confidence?: string;
+    timingBasis?: string;
+    limitations?: string;
+  };
+  confidence?: string;
+  followUpQuestions?: string[];
+  observedPatterns?: string[];
+  // DeepAstro 3.1 Additions
+  answerabilityStatus?: string;
+  memoryProposal?: { content: string; type: string };
+  memorySaved?: boolean;
 }
 
 interface AstroBotWidgetProps {
@@ -25,6 +40,33 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
   const [installedOllamaModels, setInstalledOllamaModels] = useState<string[]>([]);
   const [isOllamaConnected, setIsOllamaConnected] = useState<boolean>(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
+  const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
+
+  const handleConfirmMemory = async (msgId: string, proposal: { content: string; type: string }) => {
+    try {
+      await fetch('/api/intelligence/confirm-memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'SAVE',
+          type: proposal.type,
+          content: proposal.content,
+          userId: 'user_default',
+        }),
+      });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, memorySaved: true } : m))
+      );
+    } catch (err) {
+      console.error('Failed to confirm memory', err);
+    }
+  };
+
+  const handleDismissMemory = (msgId: string) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msgId ? { ...m, memoryProposal: undefined } : m))
+    );
+  };
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -97,6 +139,53 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
     setIsLoading(true);
 
     try {
+      // First attempt DeepAstro Intelligence 3.0 Analyze endpoint
+      const intelRes = await fetch('/api/intelligence/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: messageText,
+          userId: 'user_default',
+        }),
+      });
+
+      if (intelRes.ok) {
+        const intelJson = await intelRes.json();
+        if (intelJson.success && intelJson.data) {
+          const ans = intelJson.data;
+          const botMsg: ChatMessage = {
+            id: `bot_${Date.now()}`,
+            sender: 'bot',
+            text: ans.answer,
+            evidence: ans.evidence ? ans.evidence.map((e: any) => `${e.system}: ${e.finding}`) : [],
+            recommendations: ans.recommendations?.practicalActionSteps || [],
+            remedies: ans.recommendations?.traditionalSpiritualRemedies || [],
+            confidence: ans.confidence,
+            whyThisReading: ans.why ? {
+              primaryFactors: ans.why.primaryFactors || [],
+              supportingFactors: ans.why.supportingFactors || [],
+              contradictions: ans.contradictions || [],
+              confidence: ans.confidence,
+              timingBasis: ans.timingWindow?.basis,
+              limitations: ans.limitations,
+            } : undefined,
+            followUpQuestions: (ans.suggestedFollowUps && ans.suggestedFollowUps.length > 0)
+              ? ans.suggestedFollowUps
+              : ans.clarificationsNeeded,
+            observedPatterns: ans.lifePatternsObserved ? ans.lifePatternsObserved.map((p: any) => p.description) : undefined,
+            disclaimer: ans.limitations,
+            answerabilityStatus: ans.answerabilityStatus,
+            memoryProposal: ans.userContextApplied && ans.userContextApplied.length > 0
+              ? { content: ans.userContextApplied[0], type: 'USER_GOAL' }
+              : undefined,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+          setMessages((prev) => [...prev, botMsg]);
+          return;
+        }
+      }
+
+      // Fallback to general AI chat endpoint
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -349,7 +438,165 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
                         <strong>Remedy:</strong> {m.remedies.join(', ')}
                       </div>
                     )}
+
+                    {/* Confidence & Why This Reading Drawer Trigger */}
+                    {!isUser && (m.whyThisReading || m.confidence || m.answerabilityStatus) && (
+                      <div className="mt-2.5 pt-2 border-t border-cosmic-border/60 flex flex-wrap items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {m.confidence && (
+                            <span
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                                m.confidence === 'HIGH'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                  : m.confidence === 'MODERATE'
+                                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                              }`}
+                            >
+                              Confidence: {m.confidence}
+                            </span>
+                          )}
+
+                          {m.answerabilityStatus && (
+                            <span className="text-[9px] font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+                              {m.answerabilityStatus === 'NEEDS_CLARIFICATION'
+                                ? 'Clarification Needed'
+                                : m.answerabilityStatus}
+                            </span>
+                          )}
+                        </div>
+
+                        {m.whyThisReading && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedWhyId(expandedWhyId === m.id ? null : m.id)}
+                            className="text-[10px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition-colors ml-auto"
+                          >
+                            <Sparkles className="w-3 h-3 text-cyan-400" />
+                            <span>Why this reading?</span>
+                            {expandedWhyId === m.id ? (
+                              <ChevronUp className="w-3 h-3" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Expanded Why This Reading Explanation Panel */}
+                    {!isUser && expandedWhyId === m.id && m.whyThisReading && (
+                      <div className="mt-2.5 p-3 rounded-xl bg-cosmic-surface/90 border border-cyan-500/30 text-[10px] space-y-2 animate-fadeIn">
+                        {/* Primary Factors */}
+                        {m.whyThisReading.primaryFactors && m.whyThisReading.primaryFactors.length > 0 && (
+                          <div>
+                            <span className="font-bold text-cyan-300 block mb-1">Primary Astrological Factors:</span>
+                            <ul className="space-y-1 list-disc list-inside text-cosmic-text">
+                              {m.whyThisReading.primaryFactors.map((f, fIdx) => (
+                                <li key={`pf-${fIdx}`}>{f}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Supporting Factors */}
+                        {m.whyThisReading.supportingFactors && m.whyThisReading.supportingFactors.length > 0 && (
+                          <div>
+                            <span className="font-bold text-violet-300 block mb-1">Supporting Convergences:</span>
+                            <ul className="space-y-0.5 list-disc list-inside text-cosmic-muted">
+                              {m.whyThisReading.supportingFactors.map((sf, sfIdx) => (
+                                <li key={`sf-${sfIdx}`}>{sf}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Contradictions / System Divergence */}
+                        {m.whyThisReading.contradictions && m.whyThisReading.contradictions.length > 0 && (
+                          <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
+                            <span className="font-bold flex items-center gap-1 mb-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              System Divergences (No False Consensus):
+                            </span>
+                            <div className="space-y-1 text-[9px] text-amber-200">
+                              {m.whyThisReading.contradictions.map((c: any, cIdx: number) => (
+                                <p key={`c-${cIdx}`}>
+                                  {typeof c === 'string'
+                                    ? c
+                                    : `${c.systemA} vs ${c.systemB}: ${c.topic} (${c.resolutionApproach})`}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Observed Life Patterns */}
+                        {m.observedPatterns && m.observedPatterns.length > 0 && (
+                          <div className="p-2 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
+                            <span className="font-bold flex items-center gap-1 mb-1">
+                              <Compass className="w-3 h-3" />
+                              Observed Life Pattern:
+                            </span>
+                            {m.observedPatterns.map((pat, pIdx) => (
+                              <p key={`pat-${pIdx}`} className="text-[9px] text-cyan-100">
+                                {pat}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Limitations Note */}
+                        {m.disclaimer && (
+                          <p className="text-[9px] text-cosmic-muted italic pt-1 border-t border-cosmic-border/40">
+                            {m.disclaimer}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Clarifying / Suggested Follow-up Chips */}
+                  {!isUser && m.followUpQuestions && m.followUpQuestions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5 max-w-[85%]">
+                      {m.followUpQuestions.slice(0, 3).map((fq, fqIdx) => (
+                        <button
+                          key={`fq-${fqIdx}`}
+                          type="button"
+                          onClick={() => handleSend(fq)}
+                          className="text-[10px] text-left px-2.5 py-1 rounded-lg border border-cyan-500/40 bg-cyan-500/5 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 transition-all flex items-center gap-1"
+                        >
+                          <HelpCircle className="w-2.5 h-2.5 text-cyan-400 shrink-0" />
+                          <span>{fq}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Sovereign Memory Confirmation UX ("Remember this?") */}
+                  {!isUser && m.memoryProposal && !m.memorySaved && (
+                    <div className="mt-2 p-2 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-between gap-2 text-[10px] max-w-[85%] animate-fadeIn">
+                      <div className="flex items-center gap-1.5 text-violet-300 min-w-0">
+                        <Bookmark className="w-3 h-3 text-violet-400 shrink-0" />
+                        <span className="truncate">Remember: "{m.memoryProposal.content.substring(0, 35)}..."?</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleConfirmMemory(m.id, m.memoryProposal!)}
+                          className="px-2 py-0.5 rounded bg-violet-500 hover:bg-violet-400 text-white font-bold text-[9px] transition-colors"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDismissMemory(m.id)}
+                          className="px-2 py-0.5 rounded bg-cosmic-surface hover:bg-cosmic-card text-cosmic-muted text-[9px] transition-colors"
+                        >
+                          Not now
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <span className="text-[9px] text-cosmic-muted mt-1 px-1">{m.timestamp}</span>
                 </div>
               );

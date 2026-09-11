@@ -5,6 +5,7 @@
  */
 
 import { db, PersonalizationProfileRecord } from '../database/db.js';
+export type { PersonalizationProfileRecord };
 
 export interface PersonalizationProfileDTO {
   userId: string;

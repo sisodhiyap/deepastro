@@ -17,8 +17,11 @@ import { ProfilePage } from './pages/ProfilePage.js';
 import { AdminPage } from './pages/AdminPage.js';
 import { SystemVerificationPage } from './pages/SystemVerificationPage.js';
 import { ContactPage } from './pages/ContactPage.js';
+import { CosmicHubPage } from './pages/CosmicHubPage.js';
+import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
 
 import { AuthModal } from './components/auth/AuthModal.js';
+import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTabId>(() => {
@@ -33,6 +36,7 @@ export const App: React.FC = () => {
   const [chartContext, setChartContext] = useState<any>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [cosmicSosOpen, setCosmicSosOpen] = useState(false);
 
   // Verify and load authenticated user session on mount
   useEffect(() => {
@@ -106,6 +110,10 @@ export const App: React.FC = () => {
         return <LandingPage onNavigate={setActiveTab} />;
       case 'dashboard':
         return <DashboardPage onNavigate={setActiveTab} userName={userName} />;
+      case 'intelligence':
+        return <CosmicIntelligencePage onNavigate={setActiveTab} chartContext={chartContext} />;
+      case 'cosmic-hub':
+        return <CosmicHubPage onNavigate={setActiveTab} userName={userName} />;
       case 'kundli':
         return <KundliPage />;
       case 'predictions':
@@ -166,6 +174,12 @@ export const App: React.FC = () => {
         onClose={() => setAuthModalOpen(false)}
         initialMode={authModalMode}
         onAuthSuccess={handleAuthSuccess}
+      />
+
+      <CosmicSOSModal
+        isOpen={cosmicSosOpen}
+        onClose={() => setCosmicSosOpen(false)}
+        chartContext={chartContext}
       />
     </>
   );

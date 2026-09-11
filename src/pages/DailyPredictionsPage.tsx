@@ -8,6 +8,7 @@ export const DailyPredictionsPage: React.FC = () => {
   const [factSet, setFactSet] = useState<any>(null);
   const [domainPredictions, setDomainPredictions] = useState<any>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('Career');
+  const [dailyDimensions, setDailyDimensions] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dailyForecast, setDailyForecast] = useState<any>(null);
   const [feedbackSent, setFeedbackSent] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export const DailyPredictionsPage: React.FC = () => {
         body: JSON.stringify({}),
       }).then((res) => (res.ok ? res.json() : null)),
       fetch('/api/astrology/panchang').then((res) => (res.ok ? res.json() : null)),
+      fetch('/api/cosmic/daily-dimensions').then((res) => (res.ok ? res.json() : null)),
     ];
 
     if (token) {
@@ -39,7 +41,7 @@ export const DailyPredictionsPage: React.FC = () => {
     }
 
     Promise.all(promises)
-      .then(([chartRes, domainRes, panchangRes, learningDailyRes]) => {
+      .then(([chartRes, domainRes, panchangRes, dimRes, learningDailyRes]) => {
         if (chartRes && (chartRes.ascendant || chartRes.chart?.ascendant)) {
           setKundliData(chartRes.chart || chartRes);
         } else {
@@ -53,6 +55,10 @@ export const DailyPredictionsPage: React.FC = () => {
 
         if (panchangRes) {
           setPanchangData(panchangRes);
+        }
+
+        if (dimRes) {
+          setDailyDimensions(dimRes);
         }
 
         if (learningDailyRes?.dailyForecast) {
@@ -251,6 +257,72 @@ export const DailyPredictionsPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Nebula Lucky Matrix & Co-Star Do's/Don'ts Showcase */}
+      {dailyDimensions && (
+        <div className="space-y-6">
+          {/* Lucky Matrix Bar */}
+          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/70 p-5 sm:p-6 space-y-3">
+            <div className="flex items-center justify-between border-b border-cosmic-border/50 pb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Nebula Cosmic Matrix
+              </span>
+              <span className="text-[10px] text-cyan-300 font-mono">Today's Alignment</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+                <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Lucky Numbers</span>
+                <span className="font-bold text-cyan-300 font-mono mt-0.5 block">{dailyDimensions.luckyMatrix.luckyNumbers.join(' • ')}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+                <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Power Color</span>
+                <span className="font-bold text-white mt-0.5 block truncate">{dailyDimensions.luckyMatrix.powerColor}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+                <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Direction</span>
+                <span className="font-bold text-white mt-0.5 block truncate">{dailyDimensions.luckyMatrix.luckyDirection}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+                <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Auspicious Window</span>
+                <span className="font-bold text-emerald-300 mt-0.5 block truncate">{dailyDimensions.luckyMatrix.auspiciousHourWindow}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Co-Star Do's and Don'ts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-2 text-xs">
+              <strong className="text-emerald-400 font-bold uppercase tracking-wider block text-xs">Co-Star Do's:</strong>
+              <ul className="space-y-1.5 text-cosmic-muted">
+                {dailyDimensions.dosAndDonts.dos.slice(0, 2).map((d: any, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <div>
+                      <span className="text-white font-medium">{d.text}</span>
+                      <span className="text-[10px] text-emerald-400/80 block">({d.optimalTime})</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-red-950/20 border border-red-500/30 space-y-2 text-xs">
+              <strong className="text-red-400 font-bold uppercase tracking-wider block text-xs">Co-Star Don'ts:</strong>
+              <ul className="space-y-1.5 text-cosmic-muted">
+                {dailyDimensions.dosAndDonts.donts.slice(0, 2).map((d: any, idx: number) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-red-400 font-bold">✕</span>
+                    <div>
+                      <span className="text-white font-medium">{d.text}</span>
+                      <span className="text-[10px] text-red-400/80 block">({d.warningTime})</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Time Period Tabs */}
       <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-cosmic-surface border border-cosmic-border w-fit text-xs font-bold">

@@ -266,6 +266,18 @@ router.post('/test-connections', async (_req, res: Response) => {
   return res.json({ testedAt: new Date().toISOString(), results });
 });
 
+// Comprehensive Prompt Injection & Calculation Override Defenses
+const PROMPT_INJECTION_PATTERNS = [
+  /ignore (your|all|previous) (system|instructions|rules)/i,
+  /change (my|the) birth (chart|data|time|date|coordinates)/i,
+  /use (this|a) fake (planetary|planet|position|coordinates)/i,
+  /reveal (your|the) (hidden|system)? (prompt|instructions|secret|api key)/i,
+  /ignore (the)? calculation passport/i,
+  /treat this document as higher priority/i,
+  /return another user'?s (chart|data|profile|reading)/i,
+  /modify (the)? prediction ledger/i,
+];
+
 // POST /api/ai/chat
 router.post('/chat', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -273,6 +285,16 @@ router.post('/chat', optionalAuth, async (req: AuthenticatedRequest, res: Respon
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'Message query cannot be empty.' });
+    }
+
+    // Strict Prompt Injection & System Override Gate
+    for (const pattern of PROMPT_INJECTION_PATTERNS) {
+      if (pattern.test(message)) {
+        return res.status(400).json({
+          error: 'PROHIBITED_OPERATION',
+          details: 'DeepAstro operates strictly according to immutable calculation passports and verified astrological evidence. System rules, calculation ledgers, and foreign user profiles cannot be overridden or disclosed.',
+        });
+      }
     }
 
     // Determine chart context
@@ -309,12 +331,12 @@ router.post('/chat', optionalAuth, async (req: AuthenticatedRequest, res: Respon
     return res.json({
       query: message,
       answer: response,
-      chartReference: {
-        ascendant: kundli.ascendant.details.signName,
-        moonSign: kundli.moonSign.signName,
-        nakshatra: kundli.moonNakshatra.name,
-        currentDasha: kundli.dashas.currentMahadasha.planet,
-      },
+      chartReference: kundli ? {
+        ascendant: kundli.ascendant?.details?.signName || 'Unknown',
+        moonSign: kundli.moonSign?.signName || 'Unknown',
+        nakshatra: kundli.moonNakshatra?.name || 'Unknown',
+        currentDasha: kundli.dashas?.currentMahadasha?.planet || 'Unknown',
+      } : null,
     });
   } catch (err: any) {
     return res.status(500).json({ error: 'AstroBot encountered an unexpected anomaly.', details: err.message });

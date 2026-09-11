@@ -24,6 +24,15 @@ import verificationRoutes from './routes/verificationRoutes.js';
 import personalizationRoutes from './routes/personalizationRoutes.js';
 import learningRoutes from './routes/learningRoutes.js';
 import adminLearningRoutes from './routes/adminLearningRoutes.js';
+import brainRoutes from './routes/brainRoutes.js';
+import { intelligenceRoutes } from './routes/intelligenceRoutes.js';
+import { predictionRoutes } from './routes/predictionRoutes.js';
+import { knowledgeRoutes } from './routes/knowledgeRoutes.js';
+import { realUserRouter } from './routes/realUserRoutes.js';
+import { governanceRouter } from './routes/governanceRoutes.js';
+import cosmicRoutes from './routes/cosmicRoutes.js';
+
+import { DeepAstroHealthEngine } from './services/DeepAstroHealthEngine.js';
 
 dotenv.config();
 EnvLoader.load();
@@ -38,12 +47,20 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Health Check
 app.get('/api/health', (_req: Request, res: Response) => {
+  const health = DeepAstroHealthEngine.getBrainHealth();
   res.json({
-    status: 'healthy',
+    status: health.overallStatus === 'HEALTHY' ? 'healthy' : health.overallStatus.toLowerCase(),
     system: 'DeepAstro Cosmic Engine',
-    timestamp: new Date().toISOString(),
+    timestamp: health.timestamp,
     ayanamsha: 'Lahiri (Chitra Paksha)',
-    version: '1.0.0',
+    version: DeepAstroHealthEngine.VERSION,
+    totalSubsystems: health.totalSubsystems,
+    healthyCount: health.healthyCount,
+    degradedCount: health.degradedCount,
+    failedCount: health.failedCount,
+    quarantinedCount: health.quarantinedCount,
+    subsystems: health.subsystems,
+    activeAnomalies: health.activeAnomalies,
   });
 });
 
@@ -64,6 +81,14 @@ app.use('/api/system-verification', verificationRoutes);
 app.use('/api/personalization', personalizationRoutes);
 app.use('/api/learning', learningRoutes);
 app.use('/api/admin/self-learning-lab', adminLearningRoutes);
+app.use('/api/brain', brainRoutes);
+app.use('/api/intelligence', intelligenceRoutes);
+app.use('/api/predictions', predictionRoutes);
+app.use('/api/decision', intelligenceRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/real-user', realUserRouter);
+app.use('/api/governance', governanceRouter);
+app.use('/api/cosmic', cosmicRoutes);
 
 // Friendly 404 handler
 app.use((_req: Request, res: Response) => {

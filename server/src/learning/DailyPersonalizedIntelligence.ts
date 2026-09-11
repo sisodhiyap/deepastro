@@ -73,7 +73,7 @@ export class DailyPersonalizedIntelligenceEngine {
     const primaryHouse = this.determineDailyFocusHouse(snapshot);
 
     const cosmicTheme = `${dashaLord}-${antardashaLord} Influence on ${ascSign} Ascendant: Focus on House ${primaryHouse}`;
-    const keyTransit = `Moon transiting ${panchang.nakshatra?.name || 'Chitra'} activates House ${primaryHouse}`;
+    const keyTransit = `Moon transiting ${panchang.nakshatra?.name || 'Transit Nakshatra'} activates House ${primaryHouse}`;
 
     const id = `daily_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -107,7 +107,7 @@ export class DailyPersonalizedIntelligenceEngine {
     );
 
     // Formulate favorable and cautionary actions based on Panchang Vara & House
-    const favorableActions = this.getFavorableActions(primaryHouse, panchang.vara?.name || 'Wednesday');
+    const favorableActions = this.getFavorableActions(primaryHouse, panchang.vara?.name || 'Current Day');
     const cautions = this.getCautions(primaryHouse);
 
     const confidence: MultiDimensionalConfidence = {
@@ -125,11 +125,11 @@ export class DailyPersonalizedIntelligenceEngine {
       date: todayStr,
       cosmicTheme,
       panchangSummary: {
-        tithi: panchang.tithi?.name || 'Shukla Navami',
-        vara: panchang.vara?.name || 'Budhavara',
-        nakshatra: panchang.nakshatra?.name || 'Rohini',
-        yoga: panchang.yoga?.name || 'Shubha',
-        karana: panchang.karana?.name || 'Balava',
+        tithi: panchang.tithi?.name || 'Tithi Pending',
+        vara: panchang.vara?.name || 'Vara Pending',
+        nakshatra: panchang.nakshatra?.name || 'Nakshatra Pending',
+        yoga: panchang.yoga?.name || 'Yoga Pending',
+        karana: panchang.karana?.name || 'Karana Pending',
       },
       activeDasha: {
         mahadasha: dashaLord,

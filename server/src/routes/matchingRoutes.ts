@@ -6,6 +6,7 @@
 import { Router, Request, Response } from 'express';
 import { VedicAstroEngine, BirthProfileInput } from '../astrology/VedicAstroEngine.js';
 import { calculateAshtakoota } from '../astrology/CompatibilityEngine.js';
+import { CosmicFeaturesEngine } from '../astrology/CosmicFeaturesEngine.js';
 
 const router = Router();
 
@@ -59,8 +60,11 @@ router.post('/analyze', (req: Request, res: Response) => {
       isManglikB
     );
 
+    const deepSynastry = CosmicFeaturesEngine.calculateDeepSynastry(chartA, chartB);
+
     return res.json({
       ...result,
+      deepSynastry,
       chartSummaryA: {
         ascendant: chartA.ascendant.details.signName,
         moonSign: chartA.moonSign.signName,

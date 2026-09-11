@@ -1,11 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { AIAuditor } from '../server/src/ai/AIAuditor.js';
 import { AIResponsePayload } from '../server/src/ai/AIProvider.js';
-import { VedicAstroEngine } from '../server/src/astrology/VedicAstroEngine.js';
-import { DEMO_BIRTH_PROFILE } from '../server/src/routes/astrologyRoutes.js';
+import { VedicAstroEngine, BirthProfileInput } from '../server/src/astrology/VedicAstroEngine.js';
 
 describe('AI Auditor & Anti-Hallucination Guard', () => {
-  const sampleKundli = VedicAstroEngine.calculateKundli(DEMO_BIRTH_PROFILE);
+  const testBirthProfile: BirthProfileInput = {
+    name: 'Test Native',
+    birthDate: '1995-08-15',
+    birthTime: '10:30',
+    birthPlace: 'New Delhi, India',
+    latitude: 28.6139,
+    longitude: 77.2090,
+    timezone: 5.5,
+    gender: 'Male',
+    isApproximateTime: false,
+  };
+  const sampleKundli = VedicAstroEngine.calculateKundli(testBirthProfile);
 
   it('flags dangerous financial and medical claims', () => {
     const dangerousCandidate: AIResponsePayload = {

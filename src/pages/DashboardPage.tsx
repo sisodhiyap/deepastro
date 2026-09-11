@@ -24,6 +24,8 @@ interface DashboardPageProps {
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userName = 'Cosmic Seeker' }) => {
   const [kundli, setKundli] = useState<any>(null);
   const [panchang, setPanchang] = useState<any>(null);
+  const [choghadiya, setChoghadiya] = useState<any>(null);
+  const [dailyDimensions, setDailyDimensions] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +50,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setPanchang(data);
+      })
+      .catch(() => {});
+
+    // 3. Fetch live Auspicious Choghadiya & Daily Dimensions
+    fetch('/api/cosmic/choghadiya-hora')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setChoghadiya(data);
+      })
+      .catch(() => {});
+
+    fetch('/api/cosmic/daily-dimensions')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setDailyDimensions(data);
       })
       .catch(() => {});
   }, []);
@@ -248,6 +265,66 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
               {ascendantDegree}
             </span>
           )}
+        </div>
+      </div>
+
+      {/* Cosmic Super-App Feature Hub Showcase */}
+      <div className="rounded-3xl border border-cyan-500/40 bg-gradient-to-r from-[#0a1024] via-cosmic-surface to-[#0a1024] p-6 sm:p-7 shadow-glow-cyan/20 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                New Super-App Suite
+              </span>
+              <span className="text-xs text-cosmic-muted font-medium">Co-Star • The Pattern • Sanctuary • AstroSage</span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-display font-extrabold text-white">
+              Live Auspicious Sky, Life Cycles & Graha Tarot
+            </h3>
+            <p className="text-xs text-cosmic-muted max-w-xl">
+              Real-time countdown to favorable Choghadiyas, 6-dimensional life vibe radar, 22 Graha Tarot card draw, and instant Prashna oracle.
+            </p>
+          </div>
+
+          <button
+            onClick={() => onNavigate('cosmic-hub')}
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-extrabold text-xs shadow-glow-cyan hover:opacity-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Open Cosmic Hub</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Quick indicators row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-cosmic-border/60">
+          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Live Choghadiya</span>
+            <span className="text-xs font-extrabold text-emerald-400 mt-0.5 block truncate">
+              {choghadiya?.currentChoghadiya?.name || 'Auspicious'} ({choghadiya?.currentChoghadiya?.nature || 'Active'})
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Planetary Hora</span>
+            <span className="text-xs font-extrabold text-cyan-300 mt-0.5 block truncate">
+              {choghadiya?.currentHora?.planet || 'Jupiter'} Hora
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Daily Vibe Score</span>
+            <span className="text-xs font-extrabold text-amber-300 mt-0.5 block">
+              {dailyDimensions?.overallVibeScore || 85}% Harmonized
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
+            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Power Color</span>
+            <span className="text-xs font-extrabold text-white mt-0.5 block truncate">
+              {dailyDimensions?.luckyMatrix?.powerColor || 'Royal Indigo'}
+            </span>
+          </div>
         </div>
       </div>
 

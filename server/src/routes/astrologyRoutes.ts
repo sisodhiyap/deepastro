@@ -21,19 +21,6 @@ import { NormalizationEngine } from '../reports/ReportIntelligenceEngine/Normali
 const router = Router();
 const uploadKundli = multer({ limits: { fileSize: 15 * 1024 * 1024 } });
 
-// Isolated test/demo baseline profile (MUST NOT be used as production fallback)
-export const DEMO_BIRTH_PROFILE: BirthProfileInput = {
-  name: 'Arjun Sharma',
-  birthDate: '1995-08-15',
-  birthTime: '10:30',
-  birthPlace: 'New Delhi, India',
-  latitude: 28.6139,
-  longitude: 77.2090,
-  timezone: 5.5,
-  gender: 'Male',
-  isApproximateTime: false,
-};
-
 // POST /api/astrology/calculate-kundli (Authoritative Server-Side Calculation Endpoint)
 router.post('/calculate-kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -487,8 +474,8 @@ function validateFileSignature(buffer: Buffer): { isValid: boolean; detectedForm
     return { isValid: true, detectedFormat: 'application/pdf' };
   }
 
-  // Support test mock payloads
-  if (buffer.toString('utf-8', 0, Math.min(buffer.length, 50)).includes('Kundli')) {
+  // Support test mock payloads in test environment only
+  if (process.env.NODE_ENV === 'test' && buffer.toString('utf-8', 0, Math.min(buffer.length, 50)).includes('Kundli')) {
     return { isValid: true, detectedFormat: 'application/pdf' };
   }
 
