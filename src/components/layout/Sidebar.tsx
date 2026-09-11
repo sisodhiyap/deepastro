@@ -100,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`w-64 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-y-auto select-none ${className}`}
+      className={`w-64 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-y-auto select-none shrink-0 ${className}`}
     >
       {/* Golden Stroke Luminescent Neon Edge (Right Border Accent) */}
       <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500/20 via-amber-400 to-amber-600/20 shadow-[0_0_16px_rgba(245,199,106,0.85)] pointer-events-none z-30" />

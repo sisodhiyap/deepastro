@@ -43,7 +43,7 @@ export const AppShell: React.FC<AppShellProps> = ({
           setMobileMenuOpen(false);
         }}
         userPlan={userPlan}
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40"
+        className="hidden lg:flex sticky top-0 h-screen z-30"
       />
 
       {/* Mobile Slide-out Drawer */}
@@ -66,7 +66,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0 relative z-10 pb-20 lg:pb-8">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10 pb-20 lg:pb-8 w-full">
         <TopNav
           onToggleMobileMenu={() => setMobileMenuOpen(true)}
           onNavigate={onSelectTab}
