@@ -74,7 +74,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   }, []);
 
   return (
-    <header className="h-16 border-b border-cosmic-border bg-cosmic-surface/80 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 select-none">
+    <header className="h-16 border-b border-cosmic-border bg-cosmic-surface/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-40 select-none w-full">
       <div className="flex items-center gap-3 sm:gap-4 flex-1">
         {/* Mobile menu toggle */}
         <button

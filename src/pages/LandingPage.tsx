@@ -92,11 +92,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="space-y-24 py-6">
+    <div className="space-y-16 py-4 w-full">
       {/* Hero Section */}
-      <section className="relative text-center space-y-8 pt-8 pb-12 overflow-hidden">
+      <section className="relative space-y-6 pt-4 pb-8 overflow-hidden w-full text-left">
         {/* Atmospheric ambient orbs */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-cyan-500/15 via-indigo-500/10 to-violet-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[350px] bg-gradient-to-tr from-cyan-500/15 via-indigo-500/10 to-violet-600/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/40 bg-cosmic-card/60 backdrop-blur-md shadow-glow-cyan/20">
           <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
@@ -105,36 +105,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           </span>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-4">
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display font-black tracking-tight text-cosmic-text leading-[1.1]">
+        <div className="space-y-4 max-w-4xl">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-display font-black tracking-tight text-cosmic-text leading-[1.1]">
             Your Cosmos Has a Story.{' '}
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-300 to-violet-400">
               DeepAstro Helps You Read It.
             </span>
           </h1>
-          <p className="text-base sm:text-xl text-cosmic-muted max-w-2xl mx-auto font-normal leading-relaxed">
+          <p className="text-sm sm:text-lg text-cosmic-muted max-w-2xl font-normal leading-relaxed">
             Ancient Vedic wisdom, precise planetary calculations, and modern AI intelligence—united in one personal cosmic experience.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+        <div className="flex flex-wrap items-center gap-4 pt-2">
           <button
             onClick={() => onNavigate('kundli')}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-extrabold text-sm uppercase tracking-wider transition-all duration-300 shadow-glow-cyan flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-black font-display font-extrabold text-sm uppercase tracking-wider transition-all duration-300 shadow-glow-cyan flex items-center justify-center gap-2"
           >
             <span>Create My Kundli</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => onNavigate('dashboard')}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-500/50 text-cosmic-text font-display font-bold text-sm uppercase tracking-wider transition-all duration-300"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-500/50 text-cosmic-text font-display font-bold text-sm uppercase tracking-wider transition-all duration-300"
           >
             Explore Dashboard
           </button>
         </div>
 
         {/* Feature Highlights Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-6 pt-6 text-xs text-cosmic-muted">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-3 text-xs text-cosmic-muted">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>100% Deterministic Vedic Engine</span>
@@ -151,10 +151,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Services Grid */}
-      <section className="space-y-8">
-        <div className="text-center space-y-2">
+      <section className="space-y-6 w-full">
+        <div className="space-y-1">
           <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Universal Intelligence</h2>
-          <h3 className="text-3xl sm:text-4xl font-display font-extrabold text-cosmic-text">
+          <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-cosmic-text">
             Everything You Need To Navigate Your Karma
           </h3>
         </div>
@@ -215,10 +215,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Pricing / Subscriptions Preview */}
-      <section className="space-y-8">
-        <div className="text-center space-y-2">
+      <section className="space-y-6 w-full">
+        <div className="space-y-1">
           <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Cosmic Access Plans</h2>
-          <h3 className="text-3xl sm:text-4xl font-display font-extrabold text-cosmic-text">
+          <h3 className="text-2xl sm:text-3xl font-display font-extrabold text-cosmic-text">
             Simple, Transparent Cosmic Tiers
           </h3>
         </div>
