@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Sidebar, NavTabId } from './Sidebar.js';
 import { TopNav } from './TopNav.js';
 import { Starfield } from '../common/Starfield.js';
-import { CosmicPlanets } from '../common/CosmicPlanets.js';
 import { AstroBotWidget } from '../bot/AstroBotWidget.js';
 import { Home, Sparkles, Bot, Users, User } from 'lucide-react';
 
@@ -35,9 +34,6 @@ export const AppShell: React.FC<AppShellProps> = ({
     <div className="min-h-screen flex bg-cosmic-bg text-cosmic-text relative overflow-x-hidden">
       {/* Background Celestial Star Particles */}
       <Starfield />
-
-      {/* Futuristic Slow-Drifting Cosmic Planets (80% Opacity) */}
-      <CosmicPlanets />
 
       {/* Desktop Left Sidebar */}
       <Sidebar
