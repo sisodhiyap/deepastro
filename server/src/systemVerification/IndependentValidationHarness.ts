@@ -21,7 +21,8 @@
  * N. Prediction Calibration (Brier score, calibration curves, no causal attribution)
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from '../astrology/astronomyBridge.js';
+import type * as AstronomyTypes from 'astronomy-engine';
 import {
   BirthProfileInput,
   VedicAstroEngine,
@@ -253,7 +254,7 @@ export class IndependentValidationHarness {
       errorMap['Moon'].push(moonDiff);
 
       // Planets
-      const planets: Array<{ name: string; body: Astronomy.Body }> = [
+      const planets: Array<{ name: string; body: AstronomyTypes.Body }> = [
         { name: 'Mars', body: Astronomy.Body.Mars },
         { name: 'Mercury', body: Astronomy.Body.Mercury },
         { name: 'Jupiter', body: Astronomy.Body.Jupiter },

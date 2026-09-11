@@ -8,7 +8,7 @@
  * Formulates balanced, non-fatalistic evaluations and actionable spiritual guidance.
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from './astronomyBridge.js';
 import { PlanetData, PlanetName } from './PlanetEngine.js';
 import { BhavaData } from './HouseEngine.js';
 import { getLahiriAyanamsha, normalizeDegrees, ZODIAC_SIGNS } from './astronomyMath.js';

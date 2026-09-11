@@ -10,7 +10,8 @@
  * 3. Never alters mathematical constants to artificially improve benchmark scores.
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from './astronomyBridge.js';
+import type * as AstronomyTypes from 'astronomy-engine';
 import {
   BirthProfileInput,
   VedicAstroEngine,
@@ -153,7 +154,7 @@ export class Phase4IndependentReferenceBenchmark {
     });
 
     // 4. Planets (Sun through Ketu)
-    const planetBodies: Array<{ name: string; body: Astronomy.Body | null; tolerance: number }> = [
+    const planetBodies: Array<{ name: string; body: AstronomyTypes.Body | null; tolerance: number }> = [
       { name: 'Sun', body: Astronomy.Body.Sun, tolerance: this.TOLERANCES.SUN_ARCSEC },
       { name: 'Moon', body: Astronomy.Body.Moon, tolerance: this.TOLERANCES.MOON_ARCSEC },
       { name: 'Mars', body: Astronomy.Body.Mars, tolerance: this.TOLERANCES.PLANET_ARCSEC },

@@ -7,7 +7,8 @@
  * retrograde calculation, classical combustion, dignities, and Vedic aspects (Drishti).
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from './astronomyBridge.js';
+import type * as AstronomyTypes from 'astronomy-engine';
 import { getLahiriAyanamsha, normalizeDegrees, toRadians, toDegrees, ZODIAC_SIGNS } from './astronomyMath.js';
 import { getNakshatraInfo, NakshatraInfo } from './NakshatraEngine.js';
 
@@ -191,7 +192,7 @@ export function getPlanetAspects(planet: PlanetName, house: number): number[] {
 /**
  * Compute Apparent Geocentric Tropical Longitude and Speed for Sun, Moon, and 5 True Planets
  */
-function getApparentPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, time: Astronomy.AstroTime): { lon: number; speed: number } {
+function getApparentPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, time: AstronomyTypes.AstroTime): { lon: number; speed: number } {
   const dt = 0.01; // 14.4 minutes step for speed derivative
   const timeNext = time.AddDays(dt);
 
@@ -210,7 +211,7 @@ function getApparentPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, t
     lon2 = Astronomy.Ecliptic(m2).elon;
   } else {
     // Mercury, Venus, Mars, Jupiter, Saturn
-    const bodyMap: Record<string, Astronomy.Body> = {
+    const bodyMap: Record<string, AstronomyTypes.Body> = {
       Mercury: Astronomy.Body.Mercury,
       Venus: Astronomy.Body.Venus,
       Mars: Astronomy.Body.Mars,
@@ -235,7 +236,7 @@ function getApparentPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, t
 /**
  * Compute Mean Lunar Nodes (Rahu and Ketu) using IAU theory
  */
-function getLunarNodes(time: Astronomy.AstroTime): { rahuLon: number; ketuLon: number; speed: number } {
+function getLunarNodes(time: AstronomyTypes.AstroTime): { rahuLon: number; ketuLon: number; speed: number } {
   const T = time.tt / 36525.0;
   // IAU / Simon & Chapront Mean Ascending Node of the Moon (Rahu)
   let omega = 125.0445550 - 1934.1361849 * T + 0.0020762 * T * T + (T * T * T) / 467410.0 - (T * T * T * T) / 60616000.0;

@@ -8,7 +8,7 @@
  * - Chani & Drik Panchang: Live Auspicious Choghadiya & Planetary Hora Clock, Moon Phase & Manifestation Engine
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from './astronomyBridge.js';
 import { getJulianDayFromDate, normalizeDegrees } from './astronomyMath.js';
 import { calculateAllPlanets, PlanetData, SANSKRIT_PLANET_NAMES, PLANET_SYMBOLS } from './PlanetEngine.js';
 import { getNakshatraInfo } from './NakshatraEngine.js';

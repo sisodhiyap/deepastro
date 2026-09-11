@@ -14,7 +14,7 @@
  * NO HARDCODED STRINGS. ZERO PLACEHOLDER TIMINGS.
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from './astronomyBridge.js';
 import { normalizeDegrees } from './astronomyMath.js';
 import { getNakshatraInfo } from './NakshatraEngine.js';
 

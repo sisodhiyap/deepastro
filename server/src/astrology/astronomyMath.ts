@@ -4,7 +4,8 @@
  * Powered by VSOP87 planetary theory & ELP-2000/82 lunar theory via astronomy-engine.
  */
 
-import * as Astronomy from 'astronomy-engine';
+import Astronomy from './astronomyBridge.js';
+import type * as AstronomyTypes from 'astronomy-engine';
 
 export interface GeoLocation {
   latitude: number;
@@ -73,7 +74,7 @@ export function getJulianDayFromDate(utcDate: Date): number {
 /**
  * Create an Astronomy.AstroTime from a UTC Date
  */
-export function makeAstroTime(utcDate: Date): Astronomy.AstroTime {
+export function makeAstroTime(utcDate: Date): AstronomyTypes.AstroTime {
   return Astronomy.MakeTime(utcDate);
 }
 
@@ -84,8 +85,8 @@ export function makeAstroTime(utcDate: Date): Astronomy.AstroTime {
  *
  * J2000.0 (2000-01-01 12:00:00 TT) Mean Lahiri = 23° 51' 25.533" = 23.8570925°
  */
-export function getLahiriAyanamsha(jdOrTime: number | Astronomy.AstroTime): number {
-  let time: Astronomy.AstroTime;
+export function getLahiriAyanamsha(jdOrTime: number | AstronomyTypes.AstroTime): number {
+  let time: AstronomyTypes.AstroTime;
   if (typeof jdOrTime === 'number') {
     // Convert JD to Date
     const ms = (jdOrTime - 2440587.5) * 86400000.0;
