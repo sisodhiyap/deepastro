@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Download, Printer, Sparkles, CheckCircle2, Eye, User, Calendar, Clock, MapPin } from 'lucide-react';
+import { getBirthProfile } from '../utils/birthStorage.js';
 
 export const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState('BLUEPRINT_5PAGE');
@@ -21,6 +22,20 @@ export const ReportsPage: React.FC = () => {
 
   // Automatically load saved chart profile if one exists
   React.useEffect(() => {
+    const saved = getBirthProfile();
+    if (saved?.name && saved?.birthDate) {
+      setBirthData({
+        name: saved.name,
+        birthDate: saved.birthDate,
+        birthTime: saved.birthTime || '',
+        birthPlace: saved.birthPlace || '',
+        latitude: saved.latitude || '',
+        longitude: saved.longitude || '',
+        timezone: saved.timezone || '5.5',
+        gender: saved.gender || 'Other',
+      });
+    }
+
     fetch('/api/astrology/chart')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -170,7 +185,7 @@ export const ReportsPage: React.FC = () => {
             <label className="text-cosmic-muted block mb-1 font-semibold">Full Name *</label>
             <input
               type="text"
-              placeholder="e.g. Priya Sharma"
+              placeholder="Enter recipient's full name"
               value={birthData.name}
               onChange={(e) => setBirthData({ ...birthData, name: e.target.value })}
               className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"

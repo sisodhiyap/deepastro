@@ -1,26 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { Hash, Sparkles, Sun, Palette, Calendar, AlertCircle } from 'lucide-react';
+import { getBirthProfile, getCalculatedChart, onChartUpdated } from '../utils/birthStorage.js';
 
 export const NumerologyPage: React.FC = () => {
-  const [name, setName] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [name, setName] = useState(() => {
+    const saved = getBirthProfile();
+    return saved?.name || '';
+  });
+  const [birthDate, setBirthDate] = useState(() => {
+    const saved = getBirthProfile();
+    return saved?.birthDate || '';
+  });
   const [report, setReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // If user has an active chart saved, pre-populate their real credentials
-    fetch('/api/astrology/chart')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const bd = data?.birthData || data?.chart?.birthData;
-        if (bd?.name && bd?.birthDate) {
-          setName(bd.name);
-          setBirthDate(bd.birthDate);
-          calculateNumerology(bd.name, bd.birthDate);
-        }
-      })
-      .catch(() => {});
+    // 1. Initial calculation if profile is present
+    const profile = getBirthProfile();
+    if (profile?.name && profile?.birthDate) {
+      setName(profile.name);
+      setBirthDate(profile.birthDate);
+      calculateNumerology(profile.name, profile.birthDate);
+    } else {
+      // 2. Fallback to server chart if logged in
+      fetch('/api/astrology/chart')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          const bd = data?.birthData || data?.chart?.birthData;
+          if (bd?.name && bd?.birthDate) {
+            setName(bd.name);
+            setBirthDate(bd.birthDate);
+            calculateNumerology(bd.name, bd.birthDate);
+          }
+        })
+        .catch(() => {});
+    }
+
+    // 3. Listen to cross-page updates
+    const unsubscribe = onChartUpdated(({ profile: updatedProfile }) => {
+      if (updatedProfile?.name && updatedProfile?.birthDate) {
+        setName(updatedProfile.name);
+        setBirthDate(updatedProfile.birthDate);
+        calculateNumerology(updatedProfile.name, updatedProfile.birthDate);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const calculateNumerology = async (calcName = name, calcDob = birthDate) => {
@@ -86,7 +112,7 @@ export const NumerologyPage: React.FC = () => {
             <label className="text-cosmic-muted block mb-1 font-semibold">Full Legal Name</label>
             <input
               type="text"
-              placeholder="e.g. Vikram Sharma"
+              placeholder="Enter your full legal name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"

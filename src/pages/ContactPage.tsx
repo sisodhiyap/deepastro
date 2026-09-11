@@ -86,7 +86,7 @@ export const ContactPage: React.FC = () => {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
-                    placeholder="e.g. Vikram Sharma"
+                    placeholder="Enter your name"
                   />
                 </div>
 

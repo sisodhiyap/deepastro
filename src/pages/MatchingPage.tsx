@@ -101,7 +101,7 @@ export const MatchingPage: React.FC = () => {
               <label className="text-cosmic-muted block mb-1 font-semibold">Full Name</label>
               <input
                 type="text"
-                placeholder="e.g. Rahul Sharma"
+                placeholder="Enter Groom / Primary name"
                 value={partnerA.name}
                 onChange={(e) => setPartnerA({ ...partnerA, name: e.target.value })}
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
@@ -153,7 +153,7 @@ export const MatchingPage: React.FC = () => {
               <label className="text-cosmic-muted block mb-1 font-semibold">Full Name</label>
               <input
                 type="text"
-                placeholder="e.g. Ananya Patel"
+                placeholder="Enter Bride / Partner name"
                 value={partnerB.name}
                 onChange={(e) => setPartnerB({ ...partnerB, name: e.target.value })}
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"

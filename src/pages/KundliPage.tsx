@@ -24,6 +24,14 @@ import { SouthIndianChart } from '../components/charts/SouthIndianChart.js';
 import { EastIndianChart } from '../components/charts/EastIndianChart.js';
 import { PlanetaryTable } from '../components/astrology/PlanetaryTable.js';
 import { DashaTimeline } from '../components/astrology/DashaTimeline.js';
+import {
+  getCalculatedChart,
+  getBirthProfile,
+  saveCalculatedChart,
+  onChartUpdated,
+} from '../utils/birthStorage.js';
+import { useAstrologicalCalculation } from '../hooks/useAstrologicalCalculation.js';
+import { CalculationProgressModal } from '../components/astrology/CalculationProgressModal.js';
 
 const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
   delhi: { lat: 28.6139, lng: 77.209, tz: 5.5 },
@@ -152,22 +160,28 @@ export const KundliPage: React.FC = () => {
     }
   };
 
+  const {
+    isCalculating,
+    calcStep,
+    calcMessage,
+    progressPercent,
+    error: calcError,
+    executeCalculation,
+  } = useAstrologicalCalculation();
+
   const calculateChart = async (overrideData?: any) => {
-    setIsLoading(true);
+    const targetData = overrideData || formData;
+    if (!targetData.name?.trim() || !targetData.birthDate || !targetData.birthTime) {
+      alert('Please enter your name, date of birth, and time of birth.');
+      return;
+    }
     try {
-      const res = await fetch('/api/astrology/kundli', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(overrideData || formData),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setKundli(data);
+      const data = await executeCalculation(targetData);
+      if (data) {
+        setKundli(data.chart || data);
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -275,13 +289,31 @@ export const KundliPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Only fetch saved chart if user or session already has one calculated
+    // 1. Check local storage first
+    const savedChart = getCalculatedChart();
+    const savedProfile = getBirthProfile();
+
+    if (savedChart && (savedChart.ascendant || savedChart.lagna)) {
+      setKundli(savedChart.chart || savedChart);
+    }
+    if (savedProfile && savedProfile.birthDate) {
+      setFormData((prev) => ({
+        ...prev,
+        ...savedProfile,
+        latitude: savedProfile.latitude?.toString() || prev.latitude,
+        longitude: savedProfile.longitude?.toString() || prev.longitude,
+        timezone: savedProfile.timezone?.toString() || prev.timezone,
+      }));
+    }
+
+    // 2. Fetch saved chart from server if logged in
     fetch('/api/astrology/chart')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         const activeChart = data?.chart || (data?.ascendant ? data : null);
         if (activeChart && activeChart.ascendant) {
           setKundli(activeChart);
+          saveCalculatedChart(activeChart);
           if (activeChart.birthData) {
             setFormData({
               name: activeChart.birthData.name || '',
@@ -298,6 +330,24 @@ export const KundliPage: React.FC = () => {
         }
       })
       .catch(() => {});
+
+    // 3. Listen to cross-component updates
+    const unsubscribe = onChartUpdated(({ chart, profile }) => {
+      if (chart) {
+        setKundli(chart.chart || chart);
+      }
+      if (profile) {
+        setFormData((prev) => ({
+          ...prev,
+          ...profile,
+          latitude: profile.latitude?.toString() || prev.latitude,
+          longitude: profile.longitude?.toString() || prev.longitude,
+          timezone: profile.timezone?.toString() || prev.timezone,
+        }));
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const getActivePlanets = () => {
@@ -333,6 +383,12 @@ export const KundliPage: React.FC = () => {
 
   return (
     <div className="space-y-10 animate-fadeIn">
+      <CalculationProgressModal
+        isOpen={isCalculating}
+        step={calcStep}
+        message={calcMessage}
+        progressPercent={progressPercent}
+      />
       {/* Page Title */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">

@@ -22,6 +22,7 @@ import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
 
 import { AuthModal } from './components/auth/AuthModal.js';
 import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
+import { getBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTabId>(() => {
@@ -32,8 +33,14 @@ export const App: React.FC = () => {
   });
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userPlan, setUserPlan] = useState<'FREE' | 'PREMIUM' | 'PRO'>('FREE');
-  const [userName, setUserName] = useState('Cosmic Seeker');
-  const [chartContext, setChartContext] = useState<any>(null);
+  const [userName, setUserName] = useState(() => {
+    const profile = getBirthProfile();
+    return profile?.name || 'Cosmic Seeker';
+  });
+  const [chartContext, setChartContext] = useState<any>(() => {
+    const saved = getCalculatedChart();
+    return saved?.chart || saved || null;
+  });
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [cosmicSosOpen, setCosmicSosOpen] = useState(false);
@@ -83,6 +90,14 @@ export const App: React.FC = () => {
         }
       })
       .catch(() => {});
+
+    // Listen to cross-component birth & chart updates
+    const unsubscribe = onChartUpdated(({ chart, profile }) => {
+      if (chart) setChartContext(chart.chart || chart);
+      if (profile?.name) setUserName(profile.name);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleOpenAuth = (mode: 'login' | 'register') => {
@@ -109,7 +124,7 @@ export const App: React.FC = () => {
       case 'home':
         return <LandingPage onNavigate={setActiveTab} />;
       case 'dashboard':
-        return <DashboardPage onNavigate={setActiveTab} userName={userName} />;
+        return <DashboardPage onNavigate={setActiveTab} userName={userName} chartContext={chartContext} />;
       case 'intelligence':
         return <CosmicIntelligencePage onNavigate={setActiveTab} chartContext={chartContext} />;
       case 'cosmic-hub':

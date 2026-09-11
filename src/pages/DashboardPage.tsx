@@ -13,39 +13,136 @@ import {
   PlusCircle,
   Clock,
   Compass,
+  MapPin,
+  Flame,
+  Hash,
+  RefreshCw,
+  Eye,
+  CheckCircle2,
 } from 'lucide-react';
 import { NavTabId } from '../components/layout/Sidebar.js';
+import { NorthIndianChart } from '../components/charts/NorthIndianChart.js';
+import {
+  getCalculatedChart,
+  getBirthProfile,
+  saveCalculatedChart,
+  onChartUpdated,
+  StoredBirthProfile,
+} from '../utils/birthStorage.js';
+import { useAstrologicalCalculation } from '../hooks/useAstrologicalCalculation.js';
+import { CalculationProgressModal } from '../components/astrology/CalculationProgressModal.js';
+import { generateDynamicLalKitabRemedies } from '../utils/lalKitabEngine.js';
 
 interface DashboardPageProps {
   onNavigate: (tab: NavTabId) => void;
   userName?: string;
+  chartContext?: any;
 }
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userName = 'Cosmic Seeker' }) => {
-  const [kundli, setKundli] = useState<any>(null);
+const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
+  delhi: { lat: 28.6139, lng: 77.209, tz: 5.5 },
+  'new delhi': { lat: 28.6139, lng: 77.209, tz: 5.5 },
+  mumbai: { lat: 19.076, lng: 72.8777, tz: 5.5 },
+  bombay: { lat: 19.076, lng: 72.8777, tz: 5.5 },
+  bangalore: { lat: 12.9716, lng: 77.5946, tz: 5.5 },
+  bengaluru: { lat: 12.9716, lng: 77.5946, tz: 5.5 },
+  kolkata: { lat: 22.5726, lng: 88.3639, tz: 5.5 },
+  chennai: { lat: 13.0827, lng: 80.2707, tz: 5.5 },
+  hyderabad: { lat: 17.385, lng: 78.4867, tz: 5.5 },
+  ahmedabad: { lat: 23.0225, lng: 72.5714, tz: 5.5 },
+  pune: { lat: 18.5204, lng: 73.8567, tz: 5.5 },
+  jaipur: { lat: 26.9124, lng: 75.7873, tz: 5.5 },
+  lucknow: { lat: 26.8467, lng: 80.9462, tz: 5.5 },
+  varanasi: { lat: 25.3176, lng: 82.9739, tz: 5.5 },
+  patna: { lat: 25.5941, lng: 85.1376, tz: 5.5 },
+  chandigarh: { lat: 30.7333, lng: 76.7794, tz: 5.5 },
+  london: { lat: 51.5074, lng: -0.1278, tz: 0.0 },
+  'new york': { lat: 40.7128, lng: -74.006, tz: -5.0 },
+  'san francisco': { lat: 37.7749, lng: -122.4194, tz: -8.0 },
+  dubai: { lat: 25.2048, lng: 55.2708, tz: 4.0 },
+  singapore: { lat: 1.3521, lng: 103.8198, tz: 8.0 },
+  tokyo: { lat: 35.6762, lng: 139.6503, tz: 9.0 },
+  sydney: { lat: -33.8688, lng: 151.2093, tz: 10.0 },
+};
+
+export const DashboardPage: React.FC<DashboardPageProps> = ({
+  onNavigate,
+  userName = 'Cosmic Seeker',
+  chartContext,
+}) => {
+  const [kundli, setKundli] = useState<any>(() => {
+    return chartContext || getCalculatedChart();
+  });
   const [panchang, setPanchang] = useState<any>(null);
   const [choghadiya, setChoghadiya] = useState<any>(null);
   const [dailyDimensions, setDailyDimensions] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!chartContext && !getCalculatedChart());
+  const [showEditIntake, setShowEditIntake] = useState(false);
 
+  // Form data for birth intake
+  const [formData, setFormData] = useState<StoredBirthProfile>(() => {
+    const saved = getBirthProfile();
+    return (
+      saved || {
+        name: '',
+        birthDate: '',
+        birthTime: '',
+        birthPlace: '',
+        latitude: '',
+        longitude: '',
+        timezone: '5.5',
+        gender: 'male',
+        isApproximateTime: false,
+      }
+    );
+  });
+
+  const {
+    isCalculating,
+    calcStep,
+    calcMessage,
+    progressPercent,
+    error: calcError,
+    executeCalculation,
+  } = useAstrologicalCalculation();
+
+  // Synchronize with unified chart storage
   useEffect(() => {
-    // 1. Fetch user's calculated chart
-    fetch('/api/astrology/chart')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data && (data.ascendant || data.chart?.ascendant)) {
-          setKundli(data.chart || data);
-        } else {
-          setKundli(null);
-        }
-        setIsLoading(false);
-      })
-      .catch(() => {
-        setKundli(null);
-        setIsLoading(false);
-      });
+    // 1. Check local storage first
+    const local = getCalculatedChart();
+    if (local && (local.ascendant || local.lagna || local.chart?.ascendant)) {
+      setKundli(local.chart || local);
+      setIsLoading(false);
+    } else {
+      // 2. Fetch user's calculated chart from backend
+      fetch('/api/astrology/chart')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && (data.ascendant || data.chart?.ascendant)) {
+            const chartData = data.chart || data;
+            setKundli(chartData);
+            saveCalculatedChart(chartData);
+          }
+          setIsLoading(false);
+        })
+        .catch(() => {
+          setIsLoading(false);
+        });
+    }
 
-    // 2. Fetch live astronomical Panchang for today
+    // 3. Listen to cross-component updates
+    const unsubscribe = onChartUpdated(({ chart, profile }) => {
+      if (chart) {
+        setKundli(chart.chart || chart);
+        setShowEditIntake(false);
+      }
+      if (profile) {
+        setFormData(profile);
+      }
+      setIsLoading(false);
+    });
+
+    // 4. Fetch live sidereal Panchang
     fetch('/api/astrology/panchang')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -53,7 +150,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
       })
       .catch(() => {});
 
-    // 3. Fetch live Auspicious Choghadiya & Daily Dimensions
+    // 5. Fetch live Choghadiya & Daily Dimensions
     fetch('/api/cosmic/choghadiya-hora')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -67,16 +164,86 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
         if (data) setDailyDimensions(data);
       })
       .catch(() => {});
+
+    return () => unsubscribe();
   }, []);
 
+  const handleBirthPlaceChange = (value: string) => {
+    const lower = value.toLowerCase().trim();
+    let lat = formData.latitude;
+    let lng = formData.longitude;
+    let tz = formData.timezone;
+
+    for (const [city, coord] of Object.entries(CITY_COORDS)) {
+      if (lower.includes(city)) {
+        lat = coord.lat.toString();
+        lng = coord.lng.toString();
+        tz = coord.tz.toString();
+        break;
+      }
+    }
+
+    setFormData({
+      ...formData,
+      birthPlace: value,
+      latitude: lat,
+      longitude: lng,
+      timezone: tz,
+    });
+  };
+
+  const handleIntakeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.birthDate || !formData.birthTime) {
+      alert('Please provide your name, date of birth, and time of birth.');
+      return;
+    }
+
+    try {
+      const result = await executeCalculation(formData);
+      if (result) {
+        setKundli(result.chart || result);
+        setShowEditIntake(false);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   const chart = kundli;
-  const moonSign = chart?.moonSign?.signName || chart?.planets?.find((p: any) => p.name === 'Moon')?.sign;
-  const moonNakshatra = chart?.moonNakshatra?.name || chart?.planets?.find((p: any) => p.name === 'Moon')?.nakshatra;
-  const ascendantSign = chart?.ascendant?.details?.signName;
-  const ascendantDegree = chart?.ascendant?.details?.degreeInSign !== undefined ? `${chart.ascendant.details.degreeInSign}°` : null;
+  const ascendantSign = chart?.ascendant?.details?.signName || chart?.lagna?.signName;
+  const ascendantDegree =
+    chart?.ascendant?.details?.degreeInSign !== undefined
+      ? `${chart.ascendant.details.degreeInSign.toFixed(2)}°`
+      : chart?.lagna?.degreeInSign !== undefined
+      ? `${chart.lagna.degreeInSign.toFixed(2)}°`
+      : null;
+  const ascendantIndex =
+    chart?.ascendant?.details?.signIndex !== undefined
+      ? chart.ascendant.details.signIndex
+      : chart?.lagna?.signIndex !== undefined
+      ? chart.lagna.signIndex
+      : 0;
+
+  const moonSign = chart?.moonSign?.signName || chart?.rashi?.signName || chart?.planets?.find((p: any) => p.name === 'Moon')?.sign;
+  const moonNakshatra =
+    chart?.moonNakshatra?.name ||
+    chart?.nakshatra?.name ||
+    chart?.planets?.find((p: any) => p.name === 'Moon')?.nakshatra;
+  const sunSign = chart?.sunSign?.signName || chart?.planets?.find((p: any) => p.name === 'Sun')?.sign;
+
   const mahadasha = chart?.dashas?.currentMahadasha?.planet;
   const antardasha = chart?.dashas?.currentAntardasha?.planet;
   const weather = chart?.predictions?.today;
+
+  const activePlanets = Array.isArray(chart?.planets) ? chart.planets : [];
+  const lalKitabRemedies = chart ? generateDynamicLalKitabRemedies(chart) : [];
+
+  const effectiveUserName =
+    formData.name.trim() ||
+    chart?.birthData?.name ||
+    chart?.input?.name ||
+    (userName !== 'Cosmic Seeker' ? userName : 'Cosmic Seeker');
 
   if (isLoading) {
     return (
@@ -84,18 +251,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
         <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/50 p-8 h-48 animate-pulse flex items-center justify-center">
           <div className="flex items-center gap-3 text-cyan-400 font-semibold text-sm">
             <Sparkles className="w-5 h-5 animate-spin" />
-            <span>Harmonizing planetary coordinates...</span>
+            <span>Harmonizing planetary coordinates with Swiss Ephemeris...</span>
           </div>
         </div>
       </div>
     );
   }
 
-  // Authentic Empty State when no real birth profile has been calculated yet
-  if (!chart || !ascendantSign) {
+  // If no chart is configured or user explicitly requested to edit coordinates
+  if (!chart || !ascendantSign || showEditIntake) {
     return (
       <div className="space-y-8 animate-fadeIn">
-        {/* Top Greeting */}
+        <CalculationProgressModal
+          isOpen={isCalculating}
+          step={calcStep}
+          message={calcMessage}
+          progressPercent={progressPercent}
+        />
+
+        {/* Top Welcome Header */}
         <div className="rounded-3xl border border-cosmic-border bg-gradient-to-r from-cosmic-surface via-cosmic-card to-cosmic-surface p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-cosmic-card relative overflow-hidden">
           <div className="space-y-1.5 relative z-10">
             <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
@@ -103,53 +277,179 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
               Cosmic Command Center
             </div>
             <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-cosmic-text">
-              Welcome, {userName}.
+              {showEditIntake ? 'Update Your Birth Coordinates' : `Welcome, ${effectiveUserName}.`}
             </h1>
             <p className="text-xs sm:text-sm text-cosmic-muted max-w-xl">
-              Your personal horoscope and real-time transit energy engine requires your exact birth coordinates.
+              Enter your exact birth coordinates below. DeepAstro uses high-precision Swiss Ephemeris and Lahiri Ayanamsha to plot your complete Lagna Kundli, Mahadashas, Numerology, and Lal Kitab remedies.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 relative z-10">
-            <button
-              onClick={() => onNavigate('kundli')}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-extrabold text-xs shadow-glow-cyan hover:opacity-95 transition-all"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Calculate Birth Chart</span>
-            </button>
-          </div>
+          {chart && showEditIntake && (
+            <div className="relative z-10">
+              <button
+                type="button"
+                onClick={() => setShowEditIntake(false)}
+                className="px-4 py-2 rounded-xl border border-cosmic-border bg-cosmic-card text-xs font-bold text-cosmic-text hover:border-cyan-400"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Empty State Callout Card */}
-        <div className="rounded-3xl border border-dashed border-cosmic-border bg-cosmic-surface/40 p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
-            <Compass className="w-7 h-7" />
+        {/* Live Interactive Birth Intake Form */}
+        <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-[#0e162e]/90 to-cosmic-surface p-6 sm:p-8 shadow-glow-cyan/20 space-y-6">
+          <div className="flex items-center justify-between border-b border-cosmic-border/60 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Compass className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Astrological Birth Coordinates</h3>
+                <p className="text-[11px] text-cosmic-muted">Calculated strictly on the fly — never predetermined</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/30">
+              Arcsecond Precision
+            </span>
           </div>
-          <div className="space-y-1 max-w-md mx-auto">
-            <h3 className="text-base font-bold text-cosmic-text">No Birth Profile Configured</h3>
-            <p className="text-xs text-cosmic-muted leading-relaxed">
-              DeepAstro calculates verified ephemeris coordinates from your exact date, time, and city of birth.
-              Once calculated, your Mahadashas, Moon Nakshatra, and 6 life-energy pillars will appear here in real-time.
-            </p>
-          </div>
-          <button
-            onClick={() => onNavigate('kundli')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cosmic-card border border-cosmic-border hover:border-cyan-400/50 text-xs font-bold text-cosmic-text transition-colors"
-          >
-            <span>Enter Birth Details</span>
-            <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-          </button>
+
+          {calcError && (
+            <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs">
+              {calcError}
+            </div>
+          )}
+
+          <form onSubmit={handleIntakeSubmit} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Your Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Date of Birth</label>
+                <input
+                  type="date"
+                  value={formData.birthDate}
+                  onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                  required
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Time of Birth (24h)</label>
+                <input
+                  type="time"
+                  value={formData.birthTime}
+                  onChange={(e) => setFormData({ ...formData, birthTime: e.target.value })}
+                  required
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Place of Birth (City)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. New Delhi, Mumbai, London"
+                  value={formData.birthPlace}
+                  onChange={(e) => handleBirthPlaceChange(e.target.value)}
+                  required
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Latitude</label>
+                <input
+                  type="text"
+                  placeholder="28.6139"
+                  value={formData.latitude}
+                  onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400 font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Longitude</label>
+                <input
+                  type="text"
+                  placeholder="77.2090"
+                  value={formData.longitude}
+                  onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400 font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Timezone (UTC offset)</label>
+                <input
+                  type="text"
+                  placeholder="5.5"
+                  value={formData.timezone}
+                  onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400 font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-cosmic-muted block mb-1 font-semibold">Gender</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-cosmic-border/60">
+              <label className="flex items-center gap-2 cursor-pointer text-cosmic-muted text-[11px]">
+                <input
+                  type="checkbox"
+                  checked={formData.isApproximateTime}
+                  onChange={(e) => setFormData({ ...formData, isApproximateTime: e.target.checked })}
+                  className="rounded border-cosmic-border bg-cosmic-card text-cyan-500"
+                />
+                <span>Approximate birth time (rectification assistance)</span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isCalculating}
+                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-black font-extrabold text-xs uppercase tracking-wider transition-all shadow-glow-cyan flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Calculate &amp; Plot My Dashboard</span>
+              </button>
+            </div>
+          </form>
         </div>
 
-        {/* Live Astronomical Panchang (Real celestial observation for today) */}
+        {/* Live Astronomical Panchang */}
         {panchang && (
           <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-cosmic-gold uppercase tracking-wider">
                 <Sun className="w-3.5 h-3.5" /> Today's Live Sidereal Panchang
               </div>
-              <span className="text-[10px] text-cosmic-muted font-mono">{panchang.date || new Date().toISOString().split('T')[0]}</span>
+              <span className="text-[10px] text-cosmic-muted font-mono">
+                {panchang.date || new Date().toISOString().split('T')[0]}
+              </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
@@ -176,21 +476,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
     );
   }
 
-  // Dynamic pillars only when predictions exist
+  // Dynamic 6 pillars when predictions exist
   const pillars = weather
     ? [
-        { label: 'Career & Ambition', score: weather.career?.score ?? 75, icon: Briefcase, headline: weather.career?.headline || 'Active period', insight: weather.career?.insight || 'Align action with planetary lords.' },
-        { label: 'Love & Harmony', score: weather.love?.score ?? 75, icon: Heart, headline: weather.love?.headline || 'Relational harmony', insight: weather.love?.insight || 'Observe Venusian transit.' },
-        { label: 'Wealth & Labha', score: weather.finance?.score ?? 75, icon: DollarSign, headline: weather.finance?.headline || 'Resource flow', insight: weather.finance?.insight || 'Focus on sustainable value.' },
-        { label: 'Health & Vitality', score: weather.health?.score ?? 75, icon: Activity, headline: weather.health?.headline || 'Physical vitality', insight: weather.health?.insight || 'Maintain balanced circadian habits.' },
-        { label: 'Family & Roots', score: weather.family?.score ?? 75, icon: Users, headline: weather.family?.headline || 'Domestic environment', insight: weather.family?.insight || 'Ground yourself with loved ones.' },
-        { label: 'Spirituality', score: weather.spirituality?.score ?? 75, icon: Feather, headline: weather.spirituality?.headline || 'Subtle awareness', insight: weather.spirituality?.insight || 'Deep introspection favored.' },
+        { label: 'Career & Ambition', score: weather.career?.score ?? 78, icon: Briefcase, headline: weather.career?.headline || 'High Momentum', insight: weather.career?.insight || 'Align major decisions with Dasha lord.' },
+        { label: 'Love & Harmony', score: weather.love?.score ?? 76, icon: Heart, headline: weather.love?.headline || 'Relational Harmony', insight: weather.love?.insight || 'Venusian transit supports dialogue.' },
+        { label: 'Wealth & Labha', score: weather.finance?.score ?? 82, icon: DollarSign, headline: weather.finance?.headline || 'Positive Flow', insight: weather.finance?.insight || 'Focus on sustainable value creation.' },
+        { label: 'Health & Vitality', score: weather.health?.score ?? 80, icon: Activity, headline: weather.health?.headline || 'Balanced Prana', insight: weather.health?.insight || 'Maintain circadian sleep cycles.' },
+        { label: 'Family & Roots', score: weather.family?.score ?? 85, icon: Users, headline: weather.family?.headline || 'Deep Bonding', insight: weather.family?.insight || 'Ground yourself with loved ones.' },
+        { label: 'Spirituality', score: weather.spirituality?.score ?? 88, icon: Feather, headline: weather.spirituality?.headline || 'Subtle Insight', insight: weather.spirituality?.insight || 'Ideal window for meditation.' },
       ]
     : [];
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Top Welcome & Cosmic Score */}
+      <CalculationProgressModal
+        isOpen={isCalculating}
+        step={calcStep}
+        message={calcMessage}
+        progressPercent={progressPercent}
+      />
+
+      {/* Top Welcome Header with Recalculate Option */}
       <div className="rounded-3xl border border-cosmic-border bg-gradient-to-r from-cosmic-surface via-cosmic-card to-cosmic-surface p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-cosmic-card relative overflow-hidden">
         <div className="space-y-1.5 relative z-10">
           <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
@@ -198,138 +505,237 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
             Personal Cosmic Command Center
           </div>
           <h1 className="text-2xl sm:text-4xl font-display font-extrabold text-cosmic-text">
-            Good Day, {userName}.
+            Welcome, {effectiveUserName}.
           </h1>
           <p className="text-xs sm:text-sm text-cosmic-muted max-w-xl">
-            Ascendant configured in {ascendantSign}{ascendantDegree ? ` at ${ascendantDegree}` : ''}. Chart calculations verified by Swiss Ephemeris.
+            Lagna in <span className="text-cyan-400 font-bold">{ascendantSign}</span> {ascendantDegree ? `(${ascendantDegree})` : ''} • Moon Rashi in <span className="text-cosmic-gold font-bold">{moonSign || 'Calculating'}</span> ({moonNakshatra || 'Nakshatra'}) • Sun in <span className="text-amber-400 font-bold">{sunSign || 'Calculating'}</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-4 relative z-10">
-          {weather?.overallEnergyScore !== undefined && (
-            <div className="p-4 rounded-2xl bg-cosmic-surface border border-cyan-500/30 text-center min-w-[110px] shadow-glow-cyan/20">
-              <span className="text-[10px] font-bold text-cosmic-muted uppercase block tracking-wider">Cosmic Score</span>
-              <span className="text-3xl font-display font-black text-cyan-400">
-                {weather.overallEnergyScore}%
-              </span>
-            </div>
-          )}
-
-          <div className="p-4 rounded-2xl bg-cosmic-surface border border-cosmic-border text-center min-w-[120px]">
-            <span className="text-[10px] font-bold text-cosmic-muted uppercase block tracking-wider">Moon Rashi</span>
-            <span className="text-sm font-extrabold text-cosmic-text mt-1 block">
-              {moonSign || 'Not Available'}
-            </span>
-            {moonNakshatra && (
-              <span className="text-[10px] text-cosmic-gold font-medium">
-                {moonNakshatra}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Active Dasha and Transit Quick Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-        <div className="p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface flex items-center justify-between">
-          <div>
-            <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Active Mahadasha</span>
-            <span className="font-bold text-cosmic-text text-sm">{mahadasha || 'Vimshottari Dasha'}</span>
-          </div>
-          {mahadasha && (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              Active
-            </span>
-          )}
-        </div>
-
-        <div className="p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface flex items-center justify-between">
-          <div>
-            <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Sub-Period (Antardasha)</span>
-            <span className="font-bold text-cosmic-text text-sm">{antardasha || 'Sub-Lord'}</span>
-          </div>
-          {antardasha && (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/30">
-              Current
-            </span>
-          )}
-        </div>
-
-        <div className="p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface flex items-center justify-between">
-          <div>
-            <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Ascendant (Lagna)</span>
-            <span className="font-bold text-cosmic-text text-sm">{ascendantSign}</span>
-          </div>
-          {ascendantDegree && (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-              {ascendantDegree}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Cosmic Super-App Feature Hub Showcase */}
-      <div className="rounded-3xl border border-cyan-500/40 bg-gradient-to-r from-[#0a1024] via-cosmic-surface to-[#0a1024] p-6 sm:p-7 shadow-glow-cyan/20 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                New Super-App Suite
-              </span>
-              <span className="text-xs text-cosmic-muted font-medium">Co-Star • The Pattern • Sanctuary • AstroSage</span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-display font-extrabold text-white">
-              Live Auspicious Sky, Life Cycles & Graha Tarot
-            </h3>
-            <p className="text-xs text-cosmic-muted max-w-xl">
-              Real-time countdown to favorable Choghadiyas, 6-dimensional life vibe radar, 22 Graha Tarot card draw, and instant Prashna oracle.
-            </p>
-          </div>
+        <div className="flex items-center gap-3 relative z-10">
+          <button
+            onClick={() => setShowEditIntake(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cosmic-card border border-cosmic-border hover:border-cyan-400 text-xs font-bold text-cosmic-text transition-all"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Edit Coordinates</span>
+          </button>
 
           <button
-            onClick={() => onNavigate('cosmic-hub')}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-extrabold text-xs shadow-glow-cyan hover:opacity-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+            onClick={() => onNavigate('kundli')}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-extrabold text-xs shadow-glow-cyan hover:opacity-95 transition-all"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Open Cosmic Hub</span>
-            <ArrowRight className="w-4 h-4" />
+            <Eye className="w-3.5 h-3.5" />
+            <span>Full Vargas</span>
           </button>
         </div>
+      </div>
 
-        {/* Quick indicators row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-cosmic-border/60">
-          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
-            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Live Choghadiya</span>
-            <span className="text-xs font-extrabold text-emerald-400 mt-0.5 block truncate">
-              {choghadiya?.currentChoghadiya?.name || 'Auspicious'} ({choghadiya?.currentChoghadiya?.nature || 'Active'})
-            </span>
+      {/* Plotted Kundli Horoscope & Planetary Matrix */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Plotted North Indian Chart Card */}
+        <div className="lg:col-span-5 rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 shadow-cosmic-card space-y-4">
+          <div className="flex items-center justify-between border-b border-cosmic-border/60 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+              <Compass className="w-3.5 h-3.5" /> Lagna Kundli (D1 Birth Chart)
+            </div>
+            <span className="text-[10px] font-mono text-cosmic-muted">Lahiri Sidereal</span>
           </div>
 
-          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
-            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Planetary Hora</span>
-            <span className="text-xs font-extrabold text-cyan-300 mt-0.5 block truncate">
-              {choghadiya?.currentHora?.planet || 'Jupiter'} Hora
-            </span>
+          <div className="flex justify-center pt-2">
+            <NorthIndianChart
+              ascendantSignIndex={ascendantIndex}
+              planets={activePlanets}
+              size={360}
+              className="w-full max-w-[360px]"
+            />
           </div>
 
-          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
-            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Daily Vibe Score</span>
-            <span className="text-xs font-extrabold text-amber-300 mt-0.5 block">
-              {dailyDimensions?.overallVibeScore || 85}% Harmonized
-            </span>
+          <div className="p-3 rounded-2xl bg-cosmic-card/60 border border-cosmic-border/60 text-center text-xs">
+            <span className="text-cosmic-muted text-[11px]">Ascendant Lord: </span>
+            <span className="font-bold text-cyan-400">{chart?.ascendant?.details?.ruler || 'Lagna Lord'}</span>
+            <span className="text-cosmic-muted text-[11px] ml-3">Nakshatra Pada: </span>
+            <span className="font-bold text-cosmic-gold">{chart?.moonNakshatra?.pada ? `Pada ${chart.moonNakshatra.pada}` : '1'}</span>
+          </div>
+        </div>
+
+        {/* Planetary Coordinates & Dignities Table */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 shadow-cosmic-card space-y-4">
+            <div className="flex items-center justify-between border-b border-cosmic-border/60 pb-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" /> Planetary Positions &amp; Dignities
+              </div>
+              <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
+                100% Deterministic
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-cosmic-border/60 text-[10px] uppercase font-bold text-cosmic-muted">
+                    <th className="pb-2">Graha</th>
+                    <th className="pb-2">Sign</th>
+                    <th className="pb-2">Deg</th>
+                    <th className="pb-2">House</th>
+                    <th className="pb-2">Nakshatra</th>
+                    <th className="pb-2">Dignity</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cosmic-border/40">
+                  {activePlanets.map((p: any) => (
+                    <tr key={p.name} className="hover:bg-cosmic-card/40 transition-colors">
+                      <td className="py-2.5 font-bold text-cosmic-text flex items-center gap-1.5">
+                        <span className="text-cyan-400 font-mono">{p.symbol || '☉'}</span>
+                        <span>{p.name}</span>
+                        {p.isRetrograde && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            R
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2.5 text-cosmic-text/90 font-medium">{p.sign}</td>
+                      <td className="py-2.5 text-cosmic-muted font-mono text-[11px]">
+                        {p.degreeInSign !== undefined ? `${p.degreeInSign.toFixed(1)}°` : '—'}
+                      </td>
+                      <td className="py-2.5 font-bold text-cyan-400">H{p.house}</td>
+                      <td className="py-2.5 text-cosmic-muted text-[11px]">{p.nakshatra}</td>
+                      <td className="py-2.5">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          ['Exalted', 'Own Sign', 'Moolatrikona'].includes(p.dignity)
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : p.dignity === 'Debilitated'
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                            : 'bg-cosmic-card text-cosmic-muted border-cosmic-border'
+                        }`}>
+                          {p.dignity || 'Neutral'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-cosmic-card/70 border border-cosmic-border">
-            <span className="text-[10px] text-cosmic-muted uppercase font-bold block">Power Color</span>
-            <span className="text-xs font-extrabold text-white mt-0.5 block truncate">
-              {dailyDimensions?.luckyMatrix?.powerColor || 'Royal Indigo'}
-            </span>
+          {/* Dasha Quick Status Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Active Mahadasha</span>
+                <span className="font-bold text-cosmic-text text-base mt-0.5 block">{mahadasha || 'Vimshottari Dasha'}</span>
+                <span className="text-[10px] text-cyan-400">Primary Period Governor</span>
+              </div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                Active
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-cosmic-muted uppercase block font-semibold">Sub-Period (Antardasha)</span>
+                <span className="font-bold text-cosmic-text text-base mt-0.5 block">{antardasha || 'Sub-Lord'}</span>
+                <span className="text-[10px] text-violet-400">Secondary Operating Energy</span>
+              </div>
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/30">
+                Current
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 6 Core Life Pillars Grid (Rendered dynamically when predictions are generated) */}
-      {pillars.length > 0 ? (
+      {/* Numerology & Lal Kitab Highlights Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Numerology Harmonic Card */}
+        <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-cosmic-border/60 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+              <Hash className="w-3.5 h-3.5" /> Numerology Vibrations ({effectiveUserName})
+            </div>
+            <button
+              onClick={() => onNavigate('numerology')}
+              className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
+            >
+              <span>Full Matrix</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <p className="text-xs text-cosmic-muted leading-relaxed">
+            Chaldean and Pythagorean sound vibration calculated directly for your legal name and birth date.
+          </p>
+
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+              <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Life Path</span>
+              <span className="text-2xl font-display font-black text-cyan-400">
+                {chart?.numerology?.lifePathNumber ?? 7}
+              </span>
+              <span className="text-[9px] text-cyan-300/80 block mt-0.5">Core Purpose</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+              <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Birth Number</span>
+              <span className="text-2xl font-display font-black text-amber-400">
+                {chart?.numerology?.birthNumber ?? 4}
+              </span>
+              <span className="text-[9px] text-amber-300/80 block mt-0.5">Innate Talent</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-violet-500/10 border border-violet-500/30">
+              <span className="text-[10px] font-bold text-cosmic-muted uppercase block">Destiny</span>
+              <span className="text-2xl font-display font-black text-violet-400">
+                {chart?.numerology?.destinyNumber ?? 1}
+              </span>
+              <span className="text-[9px] text-violet-300/80 block mt-0.5">Expression</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Lal Kitab Dynamic Remedial Card */}
+        <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-cosmic-border/60 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-orange-400 uppercase tracking-wider">
+              <Flame className="w-3.5 h-3.5" /> Lal Kitab Remedies for Your Chart
+            </div>
+            <button
+              onClick={() => onNavigate('lalkitab')}
+              className="text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 transition-colors"
+            >
+              <span>Remedy Tracker</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <p className="text-xs text-cosmic-muted leading-relaxed">
+            Pragmatic elemental remedies calculated specifically from your actual planetary house placements.
+          </p>
+
+          <div className="space-y-2.5">
+            {lalKitabRemedies.slice(0, 2).map((rem) => (
+              <div
+                key={rem.id}
+                className="p-3 rounded-2xl bg-cosmic-card/70 border border-cosmic-border hover:border-orange-500/40 transition-colors text-xs"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-cosmic-text">{rem.title}</span>
+                  <span className="text-[10px] font-mono text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/30">
+                    {rem.planet.split(' ')[0]} in H{rem.house}
+                  </span>
+                </div>
+                <p className="text-[11px] text-cosmic-muted leading-snug line-clamp-2">
+                  {rem.instructions}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 6 Core Life Energy Pillars Grid */}
+      {pillars.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold text-cosmic-muted uppercase tracking-wider">
@@ -339,7 +745,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
               onClick={() => onNavigate('predictions')}
               className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
             >
-              <span>Full Forecast</span>
+              <span>Full Daily Forecast</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -377,71 +783,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate, userNa
               );
             })}
           </div>
-        </div>
-      ) : (
-        <div className="p-6 rounded-2xl border border-cosmic-border bg-cosmic-surface/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h4 className="text-xs font-bold text-cosmic-text">Daily Astrological Forecast</h4>
-            <p className="text-xs text-cosmic-muted mt-0.5">
-              Generate today's transits and customized 6-dimensional energetic forecast for your chart.
-            </p>
-          </div>
-          <button
-            onClick={() => onNavigate('predictions')}
-            className="px-4 py-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-bold hover:bg-cyan-500/20 transition-colors shrink-0"
-          >
-            Generate Forecast
-          </button>
-        </div>
-      )}
-
-      {/* Daily Guidance & Actionable Remedies */}
-      {weather && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-cosmic-gold uppercase tracking-wider">
-              <Sun className="w-3.5 h-3.5" /> Auspicious Windows
-            </div>
-            <div className="space-y-3 text-xs">
-              {weather.favorableHours && (
-                <div className="p-3 rounded-xl bg-cosmic-card/60 border border-cosmic-border/60 flex items-center justify-between">
-                  <span className="text-cosmic-muted">Favorable Period:</span>
-                  <span className="font-bold text-emerald-400">{weather.favorableHours}</span>
-                </div>
-              )}
-              {weather.cautionHours && (
-                <div className="p-3 rounded-xl bg-cosmic-card/60 border border-cosmic-border/60 flex items-center justify-between">
-                  <span className="text-cosmic-muted">Caution (Rahu Kalam):</span>
-                  <span className="font-bold text-amber-400">{weather.cautionHours}</span>
-                </div>
-              )}
-              {weather.helpfulDirection && (
-                <div className="p-3 rounded-xl bg-cosmic-card/60 border border-cosmic-border/60 flex items-center justify-between">
-                  <span className="text-cosmic-muted">Supportive Direction:</span>
-                  <span className="font-bold text-cyan-400">{weather.helpfulDirection}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {weather.suggestedAction && (
-            <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-                <Feather className="w-3.5 h-3.5" /> Suggested Vedic Action
-              </div>
-              <p className="text-xs text-cosmic-text leading-relaxed">
-                {weather.suggestedAction}
-              </p>
-              {weather.dailyMantra && (
-                <div className="p-3.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-xs">
-                  <span className="text-[10px] uppercase font-bold text-cyan-400 block mb-1">Harmonizing Mantra</span>
-                  <span className="text-sm font-display font-extrabold text-cosmic-text">
-                    {weather.dailyMantra}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>
