@@ -100,20 +100,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`w-64 h-screen border-r border-cosmic-border bg-cosmic-surface/90 flex flex-col justify-between overflow-y-auto select-none ${className}`}
+      className={`w-64 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-y-auto select-none ${className}`}
     >
-      {/* Brand Header */}
-      <div className="p-5 border-b border-cosmic-border/80">
+      {/* Golden Stroke Luminescent Neon Edge (Right Border Accent) */}
+      <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500/20 via-amber-400 to-amber-600/20 shadow-[0_0_16px_rgba(245,199,106,0.85)] pointer-events-none z-30" />
+
+      {/* Atmospheric Golden Ambient Halo */}
+      <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/8 via-amber-500/3 to-transparent pointer-events-none blur-xl z-0" />
+
+      {/* Brand Header with Golden Stroke Divider */}
+      <div className="relative z-10 p-5 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10">
         <Logo size="md" showTagline={true} />
       </div>
 
       {/* Navigation Sections */}
-      <div className="flex-1 py-4 px-3 space-y-6">
+      <div className="relative z-10 flex-1 py-4 px-3 space-y-6">
         {sections.map((sec) => (
           <div key={sec.title} className="space-y-1">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-cosmic-muted/70 px-3 block mb-1.5">
-              {sec.title}
-            </span>
+            <div className="flex items-center gap-2 px-3 mb-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,199,106,0.9)]" />
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-300/80 block">
+                {sec.title}
+              </span>
+            </div>
 
             {sec.items.map((item) => {
               const Icon = item.icon;
@@ -123,30 +132,75 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 group ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 group relative overflow-hidden ${
                     isActive
-                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/40 shadow-glow-cyan/20'
-                      : 'text-cosmic-text/80 hover:text-cosmic-text hover:bg-cosmic-card/60'
+                      ? 'bg-cyan-500/15 text-cyan-300 border border-amber-400/50 shadow-[0_0_15px_rgba(245,199,106,0.25)]'
+                      : 'text-cosmic-text/80 hover:text-white hover:bg-slate-800/70 border border-transparent hover:border-amber-400/40 hover:shadow-[0_0_12px_rgba(245,199,106,0.15)]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-cyan-400' : 'text-cosmic-muted group-hover:text-cyan-400'}`} />
-                    <span>{item.label}</span>
+                  <div className="relative z-10 flex items-center gap-2.5">
+                    <Icon
+                      className={`w-4 h-4 transition-all duration-300 ${
+                        isActive
+                          ? 'text-cyan-400 scale-110 drop-shadow-[0_0_8px_rgba(0,229,255,0.7)]'
+                          : 'text-cosmic-muted group-hover:text-amber-300 group-hover:scale-105'
+                      }`}
+                    />
+                    <span className="tracking-wide">{item.label}</span>
                   </div>
 
                   {item.badge && (
                     <span
-                      className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      className={`relative z-10 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         item.badge === 'PRO'
-                          ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40'
+                          ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40 shadow-[0_0_8px_rgba(139,92,246,0.3)]'
                           : item.badge === 'PREMIUM'
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                          : 'bg-cosmic-card text-cosmic-muted border border-cosmic-border'
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_8px_rgba(0,229,255,0.3)]'
+                          : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                       }`}
                     >
                       {item.badge}
                     </span>
                   )}
+
+                  {/* ============================================================ */}
+                  {/* Water Animation at Lower of Button on Hover / Active State   */}
+                  {/* ============================================================ */}
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 h-3 overflow-hidden rounded-b-xl pointer-events-none transition-all duration-300 ${
+                      isActive
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-1.5 group-hover:opacity-100 group-hover:translate-y-0'
+                    }`}
+                  >
+                    {/* Aquatic Pool Gradient Reservoir */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/35 via-cyan-400/15 to-transparent" />
+
+                    {/* Primary Flowing Water Wave */}
+                    <div className="absolute -bottom-1 left-0 w-[200%] h-4 animate-water-wave-1 opacity-90 pointer-events-none">
+                      <svg
+                        viewBox="0 0 1200 120"
+                        preserveAspectRatio="none"
+                        className="w-full h-full text-cyan-400 fill-current"
+                      >
+                        <path d="M0,25 C150,75 350,-20 500,40 C650,100 850,-10 1000,45 C1150,100 1200,30 1200,30 L1200,120 L0,120 Z" />
+                      </svg>
+                    </div>
+
+                    {/* Secondary Golden-Aqua Shimmer Wave */}
+                    <div className="absolute -bottom-1 left-0 w-[200%] h-4 animate-water-wave-2 opacity-70 pointer-events-none">
+                      <svg
+                        viewBox="0 0 1200 120"
+                        preserveAspectRatio="none"
+                        className="w-full h-full text-amber-300 fill-current"
+                      >
+                        <path d="M0,45 C200,90 400,-10 600,50 C800,110 1000,20 1200,60 L1200,120 L0,120 Z" />
+                      </svg>
+                    </div>
+
+                    {/* Water Meniscus Surface Beam */}
+                    <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-200 to-transparent shadow-[0_0_8px_rgba(0,229,255,0.9)] animate-water-surface" />
+                  </div>
                 </button>
               );
             })}
@@ -154,12 +208,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* Subscription Tier Banner */}
-      <div className="p-4 border-t border-cosmic-border/80 bg-cosmic-card/40">
-        <div className="p-3 rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-violet-950/20">
+      {/* Subscription Tier Banner with Golden Frame */}
+      <div className="relative z-10 p-4 border-t border-amber-500/30 bg-gradient-to-t from-amber-950/20 via-cosmic-card/80 to-transparent">
+        <div className="p-3 rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-950/30 via-slate-900/90 to-purple-950/30 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Current Orbit</span>
-            <span className="text-[10px] font-extrabold text-cosmic-gold">{userPlan} Plan</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Current Orbit</span>
+            <span className="text-[10px] font-extrabold text-amber-300 drop-shadow-[0_0_6px_rgba(245,199,106,0.6)]">
+              {userPlan} Plan
+            </span>
           </div>
           <p className="text-[11px] text-cosmic-muted mt-1 leading-tight">
             {userPlan === 'FREE'
@@ -169,7 +225,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {userPlan === 'FREE' && (
             <button
               onClick={() => onSelectTab('subscription')}
-              className="mt-2.5 w-full py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-[11px] font-extrabold uppercase tracking-wider transition-all shadow-glow-cyan"
+              className="mt-2.5 w-full py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black text-[11px] font-extrabold uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)]"
             >
               Ascend to Premium
             </button>
