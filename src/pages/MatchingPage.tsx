@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Heart, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 import { MatchingCard, MatchingDataUI } from '../components/astrology/MatchingCard.js';
+import { MarriageCompatibilityCard } from '../components/astrology/MarriageCompatibilityCard.js';
+import { MarriageCompatibilityReport } from '../../server/src/astrology/MarriageCompatibilityEngine.js';
 
 export const MatchingPage: React.FC = () => {
   const [partnerA, setPartnerA] = useState({
@@ -26,12 +28,13 @@ export const MatchingPage: React.FC = () => {
   });
 
   const [result, setResult] = useState<MatchingDataUI | null>(null);
+  const [compatibilityReport, setCompatibilityReport] = useState<MarriageCompatibilityReport | null>(null);
   const [deepSynastry, setDeepSynastry] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleMatch = async () => {
-    if (!partnerA.birthDate || !partnerA.birthTime || !partnerB.birthDate || !partnerB.birthTime) {
+  const runMatchingWith = async (aData = partnerA, bData = partnerB) => {
+    if (!aData.birthDate || !aData.birthTime || !bData.birthDate || !bData.birthTime) {
       setErrorMessage('Please enter both birth date and birth time for Partner A and Partner B.');
       return;
     }
@@ -42,12 +45,15 @@ export const MatchingPage: React.FC = () => {
       const matchRes = await fetch('/api/matching/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ personA: partnerA, personB: partnerB }),
+        body: JSON.stringify({ personA: aData, personB: bData }),
       });
 
       if (matchRes.ok) {
         const data = await matchRes.json();
         setResult(data);
+        if (data.compatibilityReport) {
+          setCompatibilityReport(data.compatibilityReport);
+        }
         if (data.deepSynastry) {
           setDeepSynastry(data.deepSynastry);
         }
@@ -59,6 +65,60 @@ export const MatchingPage: React.FC = () => {
       setErrorMessage(err.message || 'Error communicating with matching engine.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleMatch = () => runMatchingWith();
+
+  const applyPreset = (type: 'favorable' | 'challenging') => {
+    if (type === 'favorable') {
+      const a = {
+        name: 'Arjun Sharma',
+        birthDate: '1992-03-12',
+        birthTime: '10:15',
+        birthPlace: 'New Delhi, India',
+        latitude: '28.6139',
+        longitude: '77.2090',
+        timezone: '5.5',
+        gender: 'Male',
+      };
+      const b = {
+        name: 'Priya Mehta',
+        birthDate: '1994-08-25',
+        birthTime: '18:40',
+        birthPlace: 'Jaipur, India',
+        latitude: '26.9124',
+        longitude: '75.7873',
+        timezone: '5.5',
+        gender: 'Female',
+      };
+      setPartnerA(a);
+      setPartnerB(b);
+      runMatchingWith(a, b);
+    } else {
+      const a = {
+        name: 'Rahul Verma',
+        birthDate: '1990-06-05',
+        birthTime: '09:20',
+        birthPlace: 'Lucknow, India',
+        latitude: '26.8467',
+        longitude: '80.9462',
+        timezone: '5.5',
+        gender: 'Male',
+      };
+      const b = {
+        name: 'Neha Singh',
+        birthDate: '1993-11-14',
+        birthTime: '23:45',
+        birthPlace: 'Bhopal, India',
+        latitude: '23.2599',
+        longitude: '77.4126',
+        timezone: '5.5',
+        gender: 'Female',
+      };
+      setPartnerA(a);
+      setPartnerB(b);
+      runMatchingWith(a, b);
     }
   };
 
@@ -83,6 +143,30 @@ export const MatchingPage: React.FC = () => {
           <span>{errorMessage}</span>
         </div>
       )}
+
+      {/* Quick Test Presets: Favorable vs Challenging (Matches Reference Design) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#0E131F] border border-cyan-500/20 shadow-md">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-cyan-400" />
+          <span className="text-xs font-semibold text-slate-200">
+            Instant Test Scenarios:
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => applyPreset('favorable')}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900/70 border border-cyan-500/40 transition shadow-[0_0_12px_rgba(6,182,212,0.25)] flex items-center gap-1.5"
+          >
+            <span>💙 Favorable: Arjun &amp; Priya (Souls Aligned)</span>
+          </button>
+          <button
+            onClick={() => applyPreset('challenging')}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-300 bg-rose-950/70 hover:bg-rose-900/70 border border-rose-500/40 transition shadow-[0_0_12px_rgba(244,63,94,0.25)] flex items-center gap-1.5"
+          >
+            <span>💔 Challenging: Rahul &amp; Neha (Different Paths)</span>
+          </button>
+        </div>
+      </div>
 
       {/* Dual Partner Input Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -202,10 +286,17 @@ export const MatchingPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Result Display or Authentic Empty State */}
-      {result ? (
-        <div className="space-y-8">
-          <MatchingCard data={result} />
+      {/* Result Display: Production Marriage Compatibility Card */}
+      {(compatibilityReport || result) ? (
+        <div className="space-y-8 animate-fadeIn">
+          {compatibilityReport ? (
+            <MarriageCompatibilityCard
+              report={compatibilityReport}
+              onPrint={() => window.print()}
+            />
+          ) : result ? (
+            <MatchingCard data={result} />
+          ) : null}
 
           {/* The Pattern-Style Deep Psychological Dynamics Breakdown */}
           {deepSynastry && (
@@ -323,7 +414,7 @@ export const MatchingPage: React.FC = () => {
             </div>
             <h3 className="text-base font-bold text-cosmic-text">Enter Both Partner Profiles</h3>
             <p className="text-xs text-cosmic-muted max-w-md mx-auto leading-relaxed">
-              Fill in birth coordinates for both partners above and click &quot;Analyze Kundli Compatibility&quot; to calculate the 36 Guna Ashtakoota score, Nadi Dosha, Bhakoot, and Manglik equilibrium.
+              Fill in birth coordinates for both partners above or pick an instant preset to calculate the 36 Guna Ashtakoota score, Nadi Dosha, Bhakoot, and Manglik equilibrium.
             </p>
           </div>
         )
