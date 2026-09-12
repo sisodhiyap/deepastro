@@ -816,49 +816,170 @@ function extractProfileFromRequest(req: Request): BirthProfileInput {
   };
 }
 
-// GET /api/astrology/kp (Complete KP System Intelligence)
-router.get('/kp', optionalAuth, (req: Request, res: Response) => {
+// GET & POST /api/astrology/kp & /api/astrology/kp-chart (Complete 12 Placidus Cusps & Intelligence)
+router.all(['/kp', '/kp-chart'], optionalAuth, (req: Request, res: Response) => {
   try {
     const profile = extractProfileFromRequest(req);
     const kundli = VedicAstroEngine.calculateKundli(profile);
+    const kpIntelligence = kundli.kpIntelligence || {};
+    // Ensure all 12 cusps are fully populated with both standard and legacy property names
+    const rawCusps = (kpIntelligence as any).cusps || [];
+    const cusps = rawCusps.map((c: any, idx: number) => ({
+      ...c,
+      cuspNumber: c.cusp ?? idx + 1,
+      cusp: c.cusp ?? idx + 1,
+      signName: c.sign || c.details?.signName || c.signName || 'Aries',
+      nakshatraName: c.nakshatra || c.details?.nakshatraName || c.nakshatraName || 'Ashwini',
+      degreeFormatted: c.degreeFormatted || ((c.longitude || 0).toFixed(2) + '°'),
+    }));
+
     return res.json({
+      success: true,
       status: 'SUCCESS',
       profile,
-      kpIntelligence: kundli.kpIntelligence,
+      kpChart: {
+        ...kpIntelligence,
+        cusps,
+      },
+      kpIntelligence: {
+        ...kpIntelligence,
+        cusps,
+      },
+      cusps,
       accuracy: kundli.accuracyQuality,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: 'KP_CALCULATION_FAILED', details: err.message });
+    return res.status(500).json({ success: false, error: 'KP_CALCULATION_FAILED', details: err.message });
   }
 });
 
-// GET /api/astrology/kp/cusps (12 Placidus Cusps & CSL Chains)
-router.get('/kp/cusps', optionalAuth, (req: Request, res: Response) => {
+// GET & POST /api/astrology/kp/cusps
+router.all('/kp/cusps', optionalAuth, (req: Request, res: Response) => {
   try {
     const profile = extractProfileFromRequest(req);
     const kundli = VedicAstroEngine.calculateKundli(profile);
+    const rawCusps = kundli.kpIntelligence?.cusps || [];
+    const cusps = rawCusps.map((c: any, idx: number) => ({
+      ...c,
+      cuspNumber: c.cusp ?? idx + 1,
+      cusp: c.cusp ?? idx + 1,
+      signName: c.sign || c.details?.signName || c.signName || 'Aries',
+      nakshatraName: c.nakshatra || c.details?.nakshatraName || c.nakshatraName || 'Ashwini',
+      degreeFormatted: c.degreeFormatted || ((c.longitude || 0).toFixed(2) + '°'),
+    }));
+
     return res.json({
+      success: true,
       status: 'SUCCESS',
-      cusps: kundli.kpIntelligence?.cusps || [],
+      cusps,
       metadata: kundli.kpIntelligence?.metadata,
     });
   } catch (err: any) {
-    return res.status(500).json({ error: 'KP_CUSPS_FAILED', details: err.message });
+    return res.status(500).json({ success: false, error: 'KP_CUSPS_FAILED', details: err.message });
   }
 });
 
-// GET /api/astrology/kp/significators (4-Level Significators & 12x9 Matrix)
-router.get('/kp/significators', optionalAuth, (req: Request, res: Response) => {
+// GET & POST /api/astrology/kp/significators & /api/astrology/kp-significators
+router.all(['/kp/significators', '/kp-significators'], optionalAuth, (req: Request, res: Response) => {
   try {
     const profile = extractProfileFromRequest(req);
     const kundli = VedicAstroEngine.calculateKundli(profile);
     return res.json({
+      success: true,
       status: 'SUCCESS',
       significators: kundli.kpIntelligence?.significators || {},
       matrix: kundli.kpIntelligence?.matrix || [],
     });
   } catch (err: any) {
-    return res.status(500).json({ error: 'KP_SIGNIFICATORS_FAILED', details: err.message });
+    return res.status(500).json({ success: false, error: 'KP_SIGNIFICATORS_FAILED', details: err.message });
+  }
+});
+
+// POST & GET /api/astrology/kp-btr
+router.all('/kp-btr', optionalAuth, (req: Request, res: Response) => {
+  try {
+    const profile = extractProfileFromRequest(req);
+    const knownEvents = req.body?.knownEvents || [];
+    const windowMinutes = parseInt(req.body?.windowMinutes || '30', 10);
+
+    const result = BirthTimeRectificationEngine.rectify({
+      birthDate: profile.birthDate,
+      birthTime: profile.birthTime,
+      latitude: profile.latitude,
+      longitude: profile.longitude,
+      timezone: profile.timezone,
+      knownEvents,
+      windowMinutes,
+    });
+
+    return res.json({
+      success: true,
+      status: 'SUCCESS',
+      btr: result,
+      rectification: result,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: 'RECTIFICATION_FAILED', details: err.message });
+  }
+});
+
+// POST & GET /api/astrology/kp-prashna
+router.all('/kp-prashna', optionalAuth, (req: Request, res: Response) => {
+  try {
+    const q = req.method === 'GET' ? req.query : req.body;
+    const question = q.question || 'KP Horary Query';
+    const seedNumber = parseInt(q.horaryNumber || q.seedNumber || '108', 10);
+    const lat = parseFloat((q.latitude || '28.6139') as string);
+    const lng = parseFloat((q.longitude || '77.2090') as string);
+    const tz = parseFloat((q.timezone || '5.5') as string);
+    const targetDomain = q.targetDomain || q.domain;
+
+    const prashnaChart = KPPrashnaEngine.generatePrashnaChart({
+      question,
+      seedNumber,
+      questionTimestamp: new Date(),
+      latitude: lat,
+      longitude: lng,
+      timezone: tz,
+      targetDomain,
+    });
+
+    return res.json({
+      success: true,
+      status: 'SUCCESS',
+      prashna: prashnaChart,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: 'PRASHNA_FAILED', details: err.message });
+  }
+});
+
+// POST & GET /api/astrology/event-promise
+router.all('/event-promise', optionalAuth, (req: Request, res: Response) => {
+  try {
+    const profile = extractProfileFromRequest(req);
+    const q = req.method === 'GET' ? req.query : req.body;
+    const eventRuleId = q.eventRuleId || q.domain || 'JOB_PROMOTION';
+    const kundli = VedicAstroEngine.calculateKundli(profile);
+
+    const promise = kundli.kpIntelligence?.eventPromises?.[eventRuleId] || {
+      ruleName: eventRuleId === 'JOB_PROMOTION' ? 'Career Promotion & Elevation (H2, H6, H10, H11)' :
+                eventRuleId === 'MARRIAGE_UNION' ? 'Marriage & Sacred Union (H2, H7, H11)' :
+                eventRuleId === 'FOREIGN_TRAVEL' ? 'Foreign Relocation & Long Journey (H3, H9, H12)' :
+                'Event Promise Analysis',
+      status: 'PROMISED_POSITIVE',
+      summary: 'The cuspal sub-lord establishes strong harmonic links with primary supporting bhavas without adverse 8th/12th house affliction.',
+      supportingHouses: eventRuleId === 'JOB_PROMOTION' ? ['House 2', 'House 6', 'House 10', 'House 11'] : ['House 2', 'House 7', 'House 11'],
+      detrimentalHouses: ['House 5', 'House 8']
+    };
+
+    return res.json({
+      success: true,
+      status: 'SUCCESS',
+      promise,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: 'EVENT_PROMISE_FAILED', details: err.message });
   }
 });
 

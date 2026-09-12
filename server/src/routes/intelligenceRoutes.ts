@@ -301,7 +301,9 @@ router.post('/purge-user', optionalAuth, (req: AuthenticatedRequest, res: Respon
 router.post('/analyze', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId || req.body.userId || 'guest_user';
-    const { query, birthProfile, allowWorldResearch, destinationCity, decisionOptions } = req.body;
+    const rawQuery = req.body.query || req.body.question || req.body.message || req.body.text;
+    const query = typeof rawQuery === 'string' ? rawQuery.trim() : '';
+    const { birthProfile, allowWorldResearch, destinationCity, decisionOptions } = req.body;
 
     if (!query) {
       return res.status(400).json({ error: 'query string is required.' });
@@ -316,7 +318,22 @@ router.post('/analyze', optionalAuth, async (req: AuthenticatedRequest, res: Res
       decisionOptions,
     });
 
-    res.json({ success: true, intelligence: response });
+    const anyResp = response as any;
+    res.json({
+      success: true,
+      intelligence: response,
+      data: response,
+      answer: {
+        summary: response.directAnswer,
+        interpretation: response.directAnswer,
+        evidence: (response.whyThisReading?.primaryFactors || []).concat(
+          (anyResp.evidence || []).map((e: any) => `${e.system}: ${e.finding}`)
+        ),
+        recommendations: anyResp.actionableAdvice?.dailyPractices || [],
+        remedies: anyResp.actionableAdvice?.recommendedRemedies || [],
+        disclaimer: anyResp.limitations,
+      },
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

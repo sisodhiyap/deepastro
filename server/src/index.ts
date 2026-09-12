@@ -97,6 +97,7 @@ app.use('/api/governance', governanceRouter);
 app.use('/api/cosmic', cosmicRoutes);
 app.use('/api/astrology/western', westernRoutes);
 app.use('/api/finance', financialRoutes);
+app.use('/api/financial', financialRoutes);
 
 // Friendly 404 handler
 app.use((_req: Request, res: Response) => {

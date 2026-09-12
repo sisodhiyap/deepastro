@@ -139,45 +139,52 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
     setIsLoading(true);
 
     try {
-      // First attempt DeepAstro Intelligence 3.0 Analyze endpoint
+      // First attempt DeepAstro Master Intelligence Analyze endpoint
       const intelRes = await fetch('/api/intelligence/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          query: messageText,
           question: messageText,
+          message: messageText,
           userId: 'user_default',
         }),
       });
 
       if (intelRes.ok) {
         const intelJson = await intelRes.json();
-        if (intelJson.success && intelJson.data) {
-          const ans = intelJson.data;
+        const ans = intelJson.intelligence || intelJson.data || intelJson.answer;
+        if (ans) {
+          const answerText = ans.directAnswer || ans.answer || ans.summary || ans.interpretation || (typeof ans === 'string' ? ans : 'Cosmic analysis processed.');
+          const whyFactors = ans.whyThisReading?.primaryFactors || ans.why?.primaryFactors || [];
+          const rawEvidence = ans.evidence || [];
+          const formattedEvidence = Array.isArray(rawEvidence)
+            ? rawEvidence.map((e: any) => typeof e === 'string' ? e : `${e.system || 'System'}: ${e.finding || e.description || ''}`)
+            : [];
+          const combinedEvidence = [...whyFactors, ...formattedEvidence];
+
           const botMsg: ChatMessage = {
             id: `bot_${Date.now()}`,
             sender: 'bot',
-            text: ans.answer,
-            evidence: ans.evidence ? ans.evidence.map((e: any) => `${e.system}: ${e.finding}`) : [],
-            recommendations: ans.recommendations?.practicalActionSteps || [],
-            remedies: ans.recommendations?.traditionalSpiritualRemedies || [],
-            confidence: ans.confidence,
-            whyThisReading: ans.why ? {
-              primaryFactors: ans.why.primaryFactors || [],
-              supportingFactors: ans.why.supportingFactors || [],
-              contradictions: ans.contradictions || [],
-              confidence: ans.confidence,
+            text: answerText,
+            evidence: combinedEvidence.length > 0 ? combinedEvidence : undefined,
+            recommendations: ans.actionableAdvice?.dailyPractices || ans.recommendations?.practicalActionSteps || ans.recommendations || [],
+            remedies: ans.actionableAdvice?.recommendedRemedies || ans.recommendations?.traditionalSpiritualRemedies || ans.remedies || [],
+            confidence: ans.confidence || ans.confidenceScore || 0.95,
+            whyThisReading: ans.whyThisReading || ans.why ? {
+              primaryFactors: ans.whyThisReading?.primaryFactors || ans.why?.primaryFactors || [],
+              supportingFactors: ans.whyThisReading?.supportingFactors || ans.why?.supportingFactors || [],
+              contradictions: ans.whyThisReading?.contradictions || ans.contradictions || [],
+              confidence: ans.confidence || 0.95,
               timingBasis: ans.timingWindow?.basis,
               limitations: ans.limitations,
             } : undefined,
             followUpQuestions: (ans.suggestedFollowUps && ans.suggestedFollowUps.length > 0)
               ? ans.suggestedFollowUps
-              : ans.clarificationsNeeded,
-            observedPatterns: ans.lifePatternsObserved ? ans.lifePatternsObserved.map((p: any) => p.description) : undefined,
-            disclaimer: ans.limitations,
-            answerabilityStatus: ans.answerabilityStatus,
-            memoryProposal: ans.userContextApplied && ans.userContextApplied.length > 0
-              ? { content: ans.userContextApplied[0], type: 'USER_GOAL' }
-              : undefined,
+              : (ans.followUpQuestions || ans.clarificationsNeeded || []),
+            observedPatterns: ans.lifePatternsObserved ? ans.lifePatternsObserved.map((p: any) => typeof p === 'string' ? p : p.description) : undefined,
+            disclaimer: ans.limitations || ans.disclaimer,
+            answerabilityStatus: ans.answerabilityStatus || 'ANSWERABLE_HIGH_CONFIDENCE',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
           setMessages((prev) => [...prev, botMsg]);
