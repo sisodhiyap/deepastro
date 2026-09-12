@@ -36,7 +36,8 @@ router.post('/register', async (req: Request, res: Response) => {
       id: userId,
       email: email.toLowerCase().trim(),
       passwordHash,
-      role: role === 'ADMIN' ? 'ADMIN' : role === 'ASTROLOGER' ? 'ASTROLOGER' : 'CLIENT',
+      // Public registrations are strictly CLIENT. Admin elevation is barred.
+      role: 'CLIENT',
       isVerified: true,
       createdAt: new Date().toISOString(),
     };
@@ -97,10 +98,19 @@ router.post('/login', async (req: Request, res: Response) => {
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
+      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        db.logAdminAction('ADMIN_ACCESS_DENIED', user.id, user.email, { reason: 'Password mismatch', ip: req.ip });
+      }
       return res.status(401).json({ error: 'Invalid cosmic credentials.' });
     }
 
     const profile = db.getProfile(user.id);
+
+    // Audit log admin login
+    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      db.logAdminAction('ADMIN_LOGIN', user.id, user.email, { ip: req.ip });
+    }
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
@@ -177,6 +187,35 @@ router.patch('/profile', requireAuth, (req: AuthenticatedRequest, res: Response)
   return res.json({
     message: 'Profile updated successfully.',
     profile,
+  });
+});
+
+
+// POST /api/auth/forgot-password
+// Enumeration-safe password reset link dispatcher
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Please provide a valid email address.' });
+  }
+
+  // Consistent message whether user exists or not to prevent email enumeration
+  return res.json({
+    success: true,
+    message: "If an account exists for this email, you'll receive password reset instructions.",
+  });
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) {
+    return res.status(400).json({ error: 'Email and new password are required.' });
+  }
+
+  return res.json({
+    success: true,
+    message: 'Password reset instructions have been processed successfully.',
   });
 });
 

@@ -80,11 +80,10 @@ export const AdminPage: React.FC = () => {
         }
         setIsAuthenticatedAdmin(true);
       } else {
-        // Fallback to telemetry preview
-        setIsAuthenticatedAdmin(Boolean(token));
+        setIsAuthenticatedAdmin(false);
       }
-    } catch (err) {
-      console.warn('Live admin metrics unreachable, keeping cached telemetry:', err);
+    } catch {
+      setIsAuthenticatedAdmin(false);
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +101,6 @@ export const AdminPage: React.FC = () => {
     setAuthMessage(null);
 
     try {
-      // Test the admin key as Bearer token
       const res = await fetch('/api/admin/metrics', {
         headers: { Authorization: `Bearer ${adminKeyInput.trim()}` },
       });
@@ -113,15 +111,14 @@ export const AdminPage: React.FC = () => {
         if (data.featureFlags) setFeatureFlags(data.featureFlags);
         localStorage.setItem('deepastro_token', adminKeyInput.trim());
         setIsAuthenticatedAdmin(true);
-        setAuthMessage('✓ Super Admin Master Key verified! Live production metrics connected.');
+        setAuthMessage('Super Admin credentials verified by server. Live production console connected.');
       } else {
-        // Authorize locally for administrator session
-        setIsAuthenticatedAdmin(true);
-        setAuthMessage('✓ Admin session initialized in Supervisory Telemetry Mode.');
+        setIsAuthenticatedAdmin(false);
+        setAuthMessage('Administrator access is required for this account.');
       }
-    } catch (err: any) {
-      setIsAuthenticatedAdmin(true);
-      setAuthMessage('✓ Admin mode unlocked.');
+    } catch {
+      setIsAuthenticatedAdmin(false);
+      setAuthMessage('Administrator access is required for this account.');
     } finally {
       setIsLoading(false);
     }
@@ -142,13 +139,65 @@ export const AdminPage: React.FC = () => {
         body: JSON.stringify({ flags: updated }),
       });
     } catch (err) {
-      console.warn('Feature flag updated locally:', err);
+      console.warn('Feature flag update issue:', err);
     }
   };
 
   const activeMetrics = metrics || FALLBACK_METRICS;
   const overview = activeMetrics.overview || FALLBACK_METRICS.overview;
   const providerUsage = activeMetrics.aiUsageByProvider || FALLBACK_METRICS.aiUsageByProvider;
+
+  if (!isAuthenticatedAdmin && !isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-[#111827]/90 border border-violet-500/40 rounded-3xl p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl animate-fade-in space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-violet-950/60 border border-violet-500/30 flex items-center justify-center mx-auto text-violet-400">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold font-display text-white">Administrator Access Required</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Administrator access is required for this account. Only accounts with verified server-side privileges can access DeepAstro Command Center.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminKeySubmit} className="space-y-3">
+            <div className="relative text-left">
+              <label className="block text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+                Admin Bearer Token / Master Key
+              </label>
+              <input
+                type="password"
+                placeholder="Enter verified administrator token"
+                value={adminKeyInput}
+                onChange={(e) => setAdminKeyInput(e.target.value)}
+                className="w-full bg-[#1A1F2B] border border-[#2A3441] focus:border-violet-500 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 outline-none font-mono"
+              />
+            </div>
+
+            {authMessage && (
+              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/40 text-rose-300 text-xs font-semibold text-left">
+                {authMessage}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading || !adminKeyInput.trim()}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
+            >
+              {isLoading ? 'Verifying with Server...' : 'Verify Admin Privileges'}
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-[#2A3441]/60 text-[11px] text-slate-500 font-mono">
+            403 Forbidden · Server-Side Role Enforcement Active
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-fadeIn">

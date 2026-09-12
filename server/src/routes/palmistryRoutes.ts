@@ -1,18 +1,20 @@
-/**
+﻿/**
  * Palmistry Routes
- * Handles palm photo uploads, vision analysis pipeline, and structured interpretations.
+ * Handles palm photo uploads, vision analysis pipeline, quality gating,
+ * and dual-hand (Left vs Right) Samudrika Shastra synthesis.
  */
 
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { PalmistryVisionService } from '../ai/PalmistryVisionService.js';
+import { PalmQualityGate } from '../engines/palmistry/palmQualityGate.js';
+import { PalmFeatureAnalyzer } from '../engines/palmistry/palmFeatureAnalyzer.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-// Configure memory storage for uploaded palm imagery
 const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
   fileFilter: (_req, file, cb) => {
     const validMimes = ['image/jpeg', 'image/png', 'image/webp'];
     if (validMimes.includes(file.mimetype.toLowerCase())) {
@@ -61,6 +63,20 @@ router.post(
         }
       }
 
+      // 1. Strict Quality Gate Pre-flight
+      if (imageBuffer) {
+        const qualityGate = PalmQualityGate.evaluate(imageBuffer);
+        if (!qualityGate.passed) {
+          return res.status(422).json({
+            error: 'QUALITY_INSUFFICIENT',
+            message: qualityGate.rejectionMessage || 'Palm image quality insufficient for analysis.',
+            reason: qualityGate.reason,
+            qualityScore: qualityGate.qualityScore,
+            diagnostics: qualityGate.diagnostics
+          });
+        }
+      }
+
       const fileSize = imageBuffer ? imageBuffer.length : (req.file ? req.file.size : 250000);
 
       const analysis = await PalmistryVisionService.analyzePalmImageVision(
@@ -88,5 +104,19 @@ router.post(
     }
   }
 );
+
+// POST /api/palmistry/dual-analyze (Left vs Right comparison)
+router.post('/dual-analyze', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { leftQuality, rightQuality } = req.body;
+    const lQ = Number(leftQuality) || 85;
+    const rQ = Number(rightQuality) || 88;
+
+    const comparison = PalmFeatureAnalyzer.compareDualPalms(lQ, rQ);
+    return res.json({ success: true, comparison });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to execute dual-palm analysis.', details: err.message });
+  }
+});
 
 export default router;

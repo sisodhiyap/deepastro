@@ -355,7 +355,44 @@ export interface EngineVersionRecord {
 }
 
 // In-Memory Database Store initialized with Seed Data
+export interface AdminAuditLogRecord {
+  id: string;
+  event: 'ADMIN_LOGIN' | 'ADMIN_LOGOUT' | 'ADMIN_ACCESS_DENIED' | 'ADMIN_USER_VIEW' | 'ADMIN_ROLE_CHANGE' | 'ADMIN_DATA_EXPORT';
+  actorId: string;
+  actorEmail?: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
 class DatabaseStore {
+  public adminAuditLogs: AdminAuditLogRecord[] = [];
+
+  public logAdminAction(
+    event: AdminAuditLogRecord['event'],
+    actorId: string,
+    actorEmail?: string,
+    metadata?: Record<string, any>
+  ): AdminAuditLogRecord {
+    const cleanMeta: Record<string, any> = {};
+    if (metadata) {
+      for (const [key, val] of Object.entries(metadata)) {
+        if (!/password|secret|token|hash|key/i.test(key)) {
+          cleanMeta[key] = val;
+        }
+      }
+    }
+    const log: AdminAuditLogRecord = {
+      id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      event,
+      actorId,
+      actorEmail,
+      timestamp: new Date().toISOString(),
+      metadata: cleanMeta,
+    };
+    this.adminAuditLogs.push(log);
+    return log;
+  }
+
   public users: Map<string, UserRecord> = new Map();
   public profiles: Map<string, ProfileRecord> = new Map();
   public birthProfiles: Map<string, BirthProfileRecord> = new Map();

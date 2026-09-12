@@ -112,4 +112,63 @@ router.get('/users', (_req, res: Response) => {
   return res.json({ count: users.length, users });
 });
 
+
+// POST /api/admin/provision-admin
+// Secure server-side administrator provisioning (Admin privilege required)
+router.post('/provision-admin', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { email, password, fullName } = req.body;
+    if (!email || !password || !fullName) {
+      return res.status(400).json({ error: 'Email, password, and full name are required.' });
+    }
+
+    const bcrypt = await import('bcryptjs');
+    const { userRepository } = await import('../database/repositories/UserRepository.js');
+
+    const existing = (await userRepository.getUserByEmail(email)) || db.getUserByEmail(email);
+    if (existing) {
+      return res.status(409).json({ error: 'User with this email already exists.' });
+    }
+
+    const salt = await bcrypt.default.genSalt(10);
+    const passwordHash = await bcrypt.default.hash(password, salt);
+    const adminId = `admin_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    const newAdmin = {
+      id: adminId,
+      email: email.toLowerCase().trim(),
+      passwordHash,
+      role: 'ADMIN' as const,
+      isVerified: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    await userRepository.createUser(newAdmin);
+    db.users.set(adminId, newAdmin);
+
+    db.logAdminAction('ADMIN_ROLE_CHANGE', req.user!.userId, req.user!.email, {
+      provisionedEmail: email,
+      assignedRole: 'ADMIN',
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Administrator account provisioned successfully.',
+      admin: { id: adminId, email: newAdmin.email, role: 'ADMIN' },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to provision admin.', details: err.message });
+  }
+});
+
+// GET /api/admin/audit-logs
+// Returns immutable administrative audit trail
+router.get('/audit-logs', (req: AuthenticatedRequest, res: Response) => {
+  db.logAdminAction('ADMIN_USER_VIEW', req.user!.userId, req.user!.email, { view: 'audit-logs' });
+  return res.json({
+    count: db.adminAuditLogs.length,
+    logs: db.adminAuditLogs.slice(-100).reverse(),
+  });
+});
+
 export default router;

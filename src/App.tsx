@@ -22,31 +22,107 @@ import { CosmicHubPage } from './pages/CosmicHubPage.js';
 import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
 import { TarotPage } from './pages/TarotPage.js';
 
+// DeepAstro 6.0 Multi-System Pages
+import { WesternPage } from './pages/WesternPage.js';
+import { KPAstrologyPage } from './pages/KPAstrologyPage.js';
+import { InvestmentLabPage } from './pages/InvestmentLabPage.js';
+import { AIAstrologerPage } from './pages/AIAstrologerPage.js';
+import { LoginPage } from './pages/LoginPage.js';
+import { SecurityGate } from './components/auth/SecurityGate.js';
+import { LanguageProvider } from './context/LanguageContext.js';
+import { AuthProvider, useAuth } from './context/AuthContext.js';
+
 import { AuthModal } from './components/auth/AuthModal.js';
 import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
 import { ErrorBoundary } from './components/common/ErrorBoundary.js';
 import { getBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
 
 export const App: React.FC = () => {
+  // Security verification gate state (server verified via /api/security/verify)
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return Boolean(localStorage.getItem('deepastro_security_token'));
+    }
+    return false;
+  });
+  // Verify security gate token with server
+  useEffect(() => {
+    const secToken = typeof window !== 'undefined' ? localStorage.getItem('deepastro_security_token') : null;
+    if (secToken) {
+      fetch('/api/security/status', {
+        headers: { Authorization: `Bearer ${secToken}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.unlocked) {
+            setIsUnlocked(true);
+          } else {
+            localStorage.removeItem('deepastro_security_token');
+            localStorage.removeItem('deepastro_security_passed');
+            setIsUnlocked(false);
+          }
+        })
+        .catch(() => {
+          // If server is offline during initial check, retain unlocked if token exists
+          setIsUnlocked(Boolean(secToken));
+        });
+    } else {
+      setIsUnlocked(false);
+    }
+  }, []);
+
+
   const [activeTab, setActiveTab] = useState<NavTabId>(() => {
-    if (typeof window !== 'undefined' && window.location.pathname.includes('/admin/system-verification')) {
-      return 'system-verification';
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname.includes('/admin/system-verification')) {
+        return 'system-verification';
+      }
+      if (window.location.pathname === '/login') {
+        return 'profile';
+      }
     }
     return 'home';
   });
-  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('deepastro_user');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    return null;
+  });
+
   const [userPlan, setUserPlan] = useState<'FREE' | 'PREMIUM' | 'PRO'>('FREE');
   const [userName, setUserName] = useState(() => {
     const profile = getBirthProfile();
     return profile?.name || 'Cosmic Seeker';
   });
+
+  const [currentProfile, setCurrentProfile] = useState<any>(() => {
+    const saved = getBirthProfile();
+    return saved || {
+      name: 'Cosmic Seeker',
+      birthDate: '1995-05-15',
+      birthTime: '14:30',
+      birthPlace: 'New Delhi, India',
+      latitude: 28.6139,
+      longitude: 77.2090,
+      timezone: 5.5,
+      gender: 'other'
+    };
+  });
+
   const [chartContext, setChartContext] = useState<any>(() => {
     const saved = getCalculatedChart();
     return saved?.chart || saved || null;
   });
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [cosmicSosOpen, setCosmicSosOpen] = useState(false);
+  const [showDedicatedLogin, setShowDedicatedLogin] = useState(false);
 
   // Verify and load authenticated user session on mount
   useEffect(() => {
@@ -67,8 +143,7 @@ export const App: React.FC = () => {
           }
         })
         .catch(() => {
-          localStorage.removeItem('deepastro_token');
-          setCurrentUser(null);
+          // Token expired or server offline
         });
     }
 
@@ -98,6 +173,7 @@ export const App: React.FC = () => {
     const unsubscribe = onChartUpdated(({ chart, profile }) => {
       if (chart) setChartContext(chart.chart || chart);
       if (profile?.name) setUserName(profile.name);
+      if (profile) setCurrentProfile(profile);
     });
 
     return () => unsubscribe();
@@ -105,14 +181,16 @@ export const App: React.FC = () => {
 
   const handleOpenAuth = (mode: 'login' | 'register') => {
     setAuthModalMode(mode);
-    setAuthModalOpen(true);
+    setShowDedicatedLogin(true);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('deepastro_token');
+    localStorage.removeItem('deepastro_user');
     setCurrentUser(null);
     setUserName('Cosmic Seeker');
     setUserPlan('FREE');
+    setShowDedicatedLogin(false);
   };
 
   const handleAuthSuccess = (user: any) => {
@@ -120,7 +198,38 @@ export const App: React.FC = () => {
     setUserName(user.name || 'Cosmic Seeker');
     setUserPlan(user.plan || 'FREE');
     setAuthModalOpen(false);
+    setShowDedicatedLogin(false);
+    if (user.role === 'admin') {
+      setActiveTab('admin');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
+
+  // 1. Enforce Server-Verified Security Gate
+  if (!isUnlocked) {
+    return (
+      <AuthProvider>
+        <LanguageProvider>
+          <SecurityGate onUnlock={() => setIsUnlocked(true)} />
+        </LanguageProvider>
+      </AuthProvider>
+    );
+  }
+
+  // 2. Full-Screen Split-Screen Authentication Page
+  if (showDedicatedLogin) {
+    return (
+      <AuthProvider>
+        <LanguageProvider>
+          <LoginPage 
+            onSuccess={handleAuthSuccess} 
+            onNavigateLanding={() => setShowDedicatedLogin(false)} 
+          />
+        </LanguageProvider>
+      </AuthProvider>
+    );
+  }
 
   const renderActiveView = () => {
     switch (activeTab) {
@@ -134,6 +243,18 @@ export const App: React.FC = () => {
         return <CosmicHubPage onNavigate={setActiveTab} userName={userName} />;
       case 'kundli':
         return <KundliPage />;
+      case 'kp-astrology':
+        return <KPAstrologyPage />;
+      case 'western':
+        return <WesternPage />;
+      case 'investment-lab':
+      case 'market-pulse':
+      case 'financial-astrology':
+      case 'news-intelligence':
+      case 'global-risk':
+        return <InvestmentLabPage />;
+      case 'ai-astrologer':
+        return <AIAstrologerPage profile={currentProfile} />;
       case 'predictions':
         return <DailyPredictionsPage />;
       case 'matching':
@@ -163,7 +284,14 @@ export const App: React.FC = () => {
       case 'reports':
         return <ReportsPage />;
       case 'profile':
-        return <ProfilePage onNavigate={setActiveTab} userPlan={userPlan} currentUser={currentUser} onOpenAuth={handleOpenAuth} />;
+        return (
+          <ProfilePage 
+            onNavigate={setActiveTab} 
+            userPlan={userPlan} 
+            currentUser={currentUser} 
+            onOpenAuth={handleOpenAuth} 
+          />
+        );
       case 'admin':
         return <AdminPage />;
       case 'system-verification':
@@ -176,8 +304,9 @@ export const App: React.FC = () => {
   };
 
   return (
-    <>
-      <AppShell
+    <AuthProvider>
+      <LanguageProvider>
+        <AppShell
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         userPlan={userPlan}
@@ -196,7 +325,7 @@ export const App: React.FC = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialMode={authModalMode}
-        onAuthSuccess={handleAuthSuccess}
+        onAuthSuccess={(user: any) => handleAuthSuccess(user)}
       />
 
       <CosmicSOSModal
@@ -204,7 +333,8 @@ export const App: React.FC = () => {
         onClose={() => setCosmicSosOpen(false)}
         chartContext={chartContext}
       />
-    </>
+      </LanguageProvider>
+    </AuthProvider>
   );
 };
 

@@ -9,6 +9,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { EnvLoader } from './config/envLoader.js';
 import authRoutes from './routes/authRoutes.js';
+import securityRoutes from './routes/securityRoutes.js';
+
 import astrologyRoutes from './routes/astrologyRoutes.js';
 import matchingRoutes from './routes/matchingRoutes.js';
 import astrologerRoutes from './routes/astrologerRoutes.js';
@@ -31,6 +33,8 @@ import { knowledgeRoutes } from './routes/knowledgeRoutes.js';
 import { realUserRouter } from './routes/realUserRoutes.js';
 import { governanceRouter } from './routes/governanceRoutes.js';
 import cosmicRoutes from './routes/cosmicRoutes.js';
+import westernRoutes from './routes/westernRoutes.js';
+import financialRoutes from './routes/financialRoutes.js';
 
 import { DeepAstroHealthEngine } from './services/DeepAstroHealthEngine.js';
 
@@ -66,6 +70,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
+  app.use('/api/security', securityRoutes);
+
 app.use('/api/astrology', astrologyRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/astrologers', astrologerRoutes);
@@ -89,6 +95,8 @@ app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/real-user', realUserRouter);
 app.use('/api/governance', governanceRouter);
 app.use('/api/cosmic', cosmicRoutes);
+app.use('/api/astrology/western', westernRoutes);
+app.use('/api/finance', financialRoutes);
 
 // Friendly 404 handler
 app.use((_req: Request, res: Response) => {
