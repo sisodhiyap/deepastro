@@ -31,6 +31,21 @@ import { calculatePanchang, PanchangData } from './PanchangEngine.js';
 import { AstronomicalVerificationEngine, VerificationResult } from './AstronomicalVerificationEngine.js';
 import { CalculationPassportEngine, CalculationPassport } from './CalculationPassport.js';
 import { BirthTimeSensitivityEngine, BirthTimeSensitivityReport } from './BirthTimeSensitivityEngine.js';
+import { KPCuspEngine } from '../engines/kp/kpCuspEngine.js';
+import { KPPlanetaryTableEngine } from '../engines/kp/kpPlanetaryTable.js';
+import { FourLevelSignificatorsEngine } from '../engines/significators/fourLevelSignificators.js';
+import { HouseSignificatorMatrixEngine } from '../engines/significators/houseSignificatorMatrix.js';
+import { KPRulingPlanetsEngine } from '../engines/kp/kpRulingPlanets.js';
+import { KPEventPromiseEngine } from '../engines/eventPrediction/kpEventPromiseEngine.js';
+import { KPDashaTimingEngine } from '../engines/dasha/kpDashaTimingEngine.js';
+import { KPConfigEngine } from '../engines/kp/kpConfig.js';
+import { KPAyanamsaEngine } from '../engines/kp/kpAyanamsa.js';
+import { ShodashavargaEngine } from '../engines/varga/shodashavargaEngine.js';
+import { NavamsaDeepEngine } from '../engines/varga/navamsaDeepEngine.js';
+import { DasamshaDeepEngine } from '../engines/varga/dasamshaDeepEngine.js';
+import { AccuracyModel } from '../engines/eventPrediction/accuracyModel.js';
+import { MultiMethodPredictionEngine } from '../engines/eventPrediction/multiMethodPredictionEngine.js';
+
 
 export interface BirthProfileInput {
   name: string;
@@ -95,6 +110,24 @@ export interface FullKundliResult {
   fingerprint?: string;
   passport?: CalculationPassport;
   sensitivity?: BirthTimeSensitivityReport;
+  // DeepAstro 5.0 Enhanced Engines
+  kpIntelligence?: {
+    status: 'AVAILABLE' | 'KP_NOT_AVAILABLE';
+    cusps: any[];
+    planets: any[];
+    significators: any;
+    matrix: any[];
+    rulingPlanets: any;
+    eventPromises: any;
+    eventWindows?: any[];
+    metadata: any;
+  };
+  shodashavargaDetail?: Record<string, any>;
+  navamsaDeep?: any;
+  dasamshaDeep?: any;
+  multiMethodPredictions?: any;
+  accuracyQuality?: any;
+
 }
 
 export interface CalculationSnapshot {
@@ -255,6 +288,138 @@ export class VedicAstroEngine {
     if (!input._skipSensitivity) {
       result.sensitivity = BirthTimeSensitivityEngine.analyzeSensitivity(input, result);
     }
+
+    
+    // DeepAstro 5.0: Calculate KP Placidus Cusps, 4-Level Significators & Ruling Planets
+    let kpIntelligence: FullKundliResult['kpIntelligence'];
+    if (!input.isApproximateTime) {
+      const kpCusps = KPCuspEngine.calculateKPCusps({
+        jd,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        ayanamsaType: 'KP_NEW',
+      });
+      const kpPlanets = KPPlanetaryTableEngine.calculateTable({
+        planets,
+        cusps: kpCusps,
+        jd,
+        ayanamsaType: 'KP_NEW',
+      });
+      const kpSignificators = FourLevelSignificatorsEngine.calculateSignificators(kpPlanets, kpCusps);
+      const kpMatrix = HouseSignificatorMatrixEngine.generateMatrix(kpSignificators);
+      const kpRulingPlanets = KPRulingPlanetsEngine.calculateRulingPlanets({
+        utcDate: new Date(),
+        latitude: input.latitude,
+        longitude: input.longitude,
+        timezone: input.timezone,
+        locationName: input.birthPlace,
+        ayanamsaType: 'KP_NEW',
+      });
+      const kpEventPromises = KPEventPromiseEngine.evaluateAllEvents({
+        cusps: kpCusps,
+        significators: kpSignificators,
+      });
+      const kpEventWindows = KPDashaTimingEngine.findEventWindows({
+        eventType: 'CAREER',
+        dasha: dashas,
+        significators: kpSignificators,
+        rulingPlanets: kpRulingPlanets,
+      });
+
+      kpIntelligence = {
+        status: 'AVAILABLE',
+        cusps: kpCusps,
+        planets: kpPlanets,
+        significators: kpSignificators,
+        matrix: kpMatrix,
+        rulingPlanets: kpRulingPlanets,
+        eventPromises: kpEventPromises,
+        eventWindows: kpEventWindows,
+        metadata: KPConfigEngine.buildMetadata({
+          ayanamsaValue: ayanamsha - KPAyanamsaEngine.KP_NEW_OFFSET_DEG,
+          latitude: input.latitude,
+          longitude: input.longitude,
+        }),
+      };
+    } else {
+      kpIntelligence = {
+        status: 'KP_NOT_AVAILABLE',
+        cusps: [],
+        planets: [],
+        significators: {},
+        matrix: [],
+        rulingPlanets: null,
+        eventPromises: null,
+        metadata: KPConfigEngine.buildMetadata({
+          ayanamsaValue: ayanamsha - KPAyanamsaEngine.KP_NEW_OFFSET_DEG,
+          latitude: input.latitude,
+          longitude: input.longitude,
+        }),
+      };
+    }
+
+    // DeepAstro 5.0: Enhanced Shodashavargas and Deep Navamsa/Dasamsha
+    const shodashavargaDetail = ShodashavargaEngine.calculateAllShodashavargas({
+      planets,
+      ascendantLongitude: ascDeg,
+    });
+    const navamsaDeep = NavamsaDeepEngine.analyze({
+      planets,
+      ascendantLongitude: ascDeg,
+    });
+    const dasamshaDeep = DasamshaDeepEngine.analyze({
+      planets,
+      ascendantLongitude: ascDeg,
+    });
+
+    // DeepAstro 5.0: Accuracy & Sensitivity Quality Evaluation
+    const accuracyQuality = AccuracyModel.evaluateAccuracyAndSensitivity({
+      cusps: kpIntelligence.cusps,
+      moonLongitude: moonPlanet.siderealLongitude,
+      isApproximateTime: input.isApproximateTime,
+    });
+
+    // DeepAstro 5.0: Multi-Method Prediction Synthesis
+    let multiMethodPredictions: Record<string, any> = {};
+    if (kpIntelligence.eventPromises) {
+      multiMethodPredictions = {
+        marriage: MultiMethodPredictionEngine.synthesizePrediction({
+          domain: 'MARRIAGE',
+          kpPromise: kpIntelligence.eventPromises.MARRIAGE,
+          vargaChart: shodashavargaDetail.d9,
+          parashariHouseStatus: 'SUPPORTIVE',
+          accuracyMetrics: accuracyQuality,
+        }),
+        career: MultiMethodPredictionEngine.synthesizePrediction({
+          domain: 'CAREER',
+          kpPromise: kpIntelligence.eventPromises.CAREER,
+          vargaChart: shodashavargaDetail.d10,
+          parashariHouseStatus: 'SUPPORTIVE',
+          accuracyMetrics: accuracyQuality,
+        }),
+        finance: MultiMethodPredictionEngine.synthesizePrediction({
+          domain: 'FINANCE',
+          kpPromise: kpIntelligence.eventPromises.FINANCE,
+          vargaChart: shodashavargaDetail.d2,
+          parashariHouseStatus: 'SUPPORTIVE',
+          accuracyMetrics: accuracyQuality,
+        }),
+        health: MultiMethodPredictionEngine.synthesizePrediction({
+          domain: 'HEALTH',
+          kpPromise: kpIntelligence.eventPromises.HEALTH,
+          vargaChart: shodashavargaDetail.d30 || shodashavargaDetail.d1,
+          parashariHouseStatus: 'SUPPORTIVE',
+          accuracyMetrics: accuracyQuality,
+        }),
+      };
+    }
+
+    result.kpIntelligence = kpIntelligence;
+    result.shodashavargaDetail = shodashavargaDetail;
+    result.navamsaDeep = navamsaDeep;
+    result.dasamshaDeep = dasamshaDeep;
+    result.multiMethodPredictions = multiMethodPredictions;
+    result.accuracyQuality = accuracyQuality;
 
     return result;
   }
