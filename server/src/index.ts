@@ -99,6 +99,30 @@ app.use('/api/astrology/western', westernRoutes);
 app.use('/api/finance', financialRoutes);
 app.use('/api/financial', financialRoutes);
 
+// Direct root route aliases for resilient Vercel Serverless Function gateway compatibility
+app.use('/auth', authRoutes);
+app.use('/security', securityRoutes);
+app.use('/astrology', astrologyRoutes);
+app.use('/matching', matchingRoutes);
+app.use('/astrologers', astrologerRoutes);
+app.use('/subscription', subscriptionRoutes);
+app.use('/ai', aiRoutes);
+app.use('/numerology', numerologyRoutes);
+app.use('/palmistry', palmistryRoutes);
+app.use('/reports', reportRoutes);
+app.use('/admin', adminRoutes);
+app.use('/contact', contactRoutes);
+app.use('/privacy', privacyRoutes);
+app.use('/system-verification', verificationRoutes);
+app.use('/personalization', personalizationRoutes);
+app.use('/learning', learningRoutes);
+app.use('/intelligence', intelligenceRoutes);
+app.use('/predictions', predictionRoutes);
+app.use('/decision', intelligenceRoutes);
+app.use('/knowledge', knowledgeRoutes);
+app.use('/finance', financialRoutes);
+app.use('/financial', financialRoutes);
+
 // Friendly 404 handler
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
