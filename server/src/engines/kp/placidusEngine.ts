@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Placidus House Cusp Calculation Engine
  * High-precision iterative semi-arc trisection based on Placidus de Titis spherical trigonometry.
  * Deterministically computes all 12 unequal house cusps for any geographic coordinate and RAMC.
@@ -55,55 +55,51 @@ export class PlacidusEngine {
     let tropicalAsc = toDegrees(Math.atan2(ascY, ascX));
     tropicalAsc = normalizeDegrees(tropicalAsc);
 
-    // Iterative trisection for cusps 11, 12, 2, 3
     const cuspsTropical: number[] = new Array(12);
-    cuspsTropical[9] = tropicalMC;        // Cusp 10 (0-indexed: 9)
-    cuspsTropical[0] = tropicalAsc;       // Cusp 1  (0-indexed: 0)
+    cuspsTropical[9] = tropicalMC;                            // Cusp 10 (0-indexed: 9)
+    cuspsTropical[0] = tropicalAsc;                           // Cusp 1  (0-indexed: 0)
     cuspsTropical[3] = normalizeDegrees(tropicalMC + 180.0);  // Cusp 4
     cuspsTropical[6] = normalizeDegrees(tropicalAsc + 180.0); // Cusp 7
 
-    // Placidus iteration helper
-    const solveIntermediateCusp = (
-      ramcOffsetDeg: number,
+    // Placidus diurnal semi-arc solver for diurnal cusps (11, 12, 9, 8)
+    // direction: +1 for Eastern quadrant (towards Ascendant: 11, 12)
+    //           -1 for Western quadrant (towards Descendant: 9, 8)
+    const solveDiurnalCusp = (
       semiArcFraction: number,
-      isDiurnal: boolean
+      direction: 1 | -1
     ): number => {
-      // If polar latitude exceeds Placidus limit
+      // Polar latitude fallback
       if (Math.abs(latitude) >= 66.5) {
-        // Porphyry quadrant trisection fallback for extreme polar latitudes
-        const base = isDiurnal ? tropicalMC : normalizeDegrees(tropicalAsc + 180.0);
-        return normalizeDegrees(base + (isDiurnal ? (tropicalAsc - tropicalMC) : (tropicalMC + 180.0 - (tropicalAsc + 180.0))) * semiArcFraction);
+        const quadrantSpan = direction === 1 
+          ? normalizeDegrees(tropicalAsc - tropicalMC)
+          : normalizeDegrees(tropicalMC - normalizeDegrees(tropicalAsc + 180.0));
+        return normalizeDegrees(tropicalMC + direction * quadrantSpan * semiArcFraction);
       }
 
-      let ra = normalizeDegrees(ramcDeg + ramcOffsetDeg);
-      for (let iter = 0; iter < 50; iter++) {
+      let ra = normalizeDegrees(ramcDeg + direction * 30.0 * (semiArcFraction < 0.5 ? 1 : 2));
+      for (let iter = 0; iter < 60; iter++) {
         const raRad = toRadians(ra);
-        // Ecliptic longitude from RA
-        const tanLon = Math.tan(raRad) / Math.cos(epsRad);
-        let lon = toDegrees(Math.atan(tanLon));
-        // Quadrant correction
         const cosRa = Math.cos(raRad);
         const sinRa = Math.sin(raRad);
-        lon = toDegrees(Math.atan2(sinRa, cosRa * Math.cos(epsRad)));
-        lon = normalizeDegrees(lon);
-
+        const lon = normalizeDegrees(toDegrees(Math.atan2(sinRa, cosRa * Math.cos(epsRad))));
         const lonRad = toRadians(lon);
+
         // Declination
         const sinDec = Math.sin(epsRad) * Math.sin(lonRad);
         const decRad = Math.asin(Math.max(-1, Math.min(1, sinDec)));
 
-        // Semi-arc equation
+        // Semi-arc equation (Diurnal semi-arc = 90 + ascensional difference)
         const tanLatTanDec = Math.tan(latRad) * Math.tan(decRad);
         if (Math.abs(tanLatTanDec) >= 1.0) {
-          // Circumpolar fallback for this specific degree
+          // Circumpolar limit
           break;
         }
 
         const ad = toDegrees(Math.asin(tanLatTanDec));
-        const semiArc = isDiurnal ? (90.0 - ad) : (90.0 + ad);
-        const targetHa = semiArc * semiArcFraction;
+        const dsa = 90.0 + ad;
+        const targetHa = dsa * semiArcFraction;
 
-        const nextRa = normalizeDegrees(isDiurnal ? (ramcDeg + targetHa) : (ramcDeg + 180.0 - targetHa));
+        const nextRa = normalizeDegrees(ramcDeg + direction * targetHa);
         const diff = Math.abs(nextRa - ra);
         ra = nextRa;
         if (diff < 1e-8) {
@@ -111,25 +107,27 @@ export class PlacidusEngine {
         }
       }
 
-      // Final longitude from converged RA
       const raRad = toRadians(ra);
-      const lon = normalizeDegrees(toDegrees(Math.atan2(Math.sin(raRad), Math.cos(raRad) * Math.cos(epsRad))));
-      return lon;
+      return normalizeDegrees(toDegrees(Math.atan2(Math.sin(raRad), Math.cos(raRad) * Math.cos(epsRad))));
     };
 
-    // Calculate Houses 11 and 12 (Diurnal from MC to Asc)
-    cuspsTropical[10] = solveIntermediateCusp(30.0, 1.0 / 3.0, true);  // Cusp 11
-    cuspsTropical[11] = solveIntermediateCusp(60.0, 2.0 / 3.0, true);  // Cusp 12
+    // Calculate Houses 11 and 12 (Diurnal Eastern: MC to Asc)
+    cuspsTropical[10] = solveDiurnalCusp(1.0 / 3.0, +1); // Cusp 11
+    cuspsTropical[11] = solveDiurnalCusp(2.0 / 3.0, +1); // Cusp 12
 
-    // Calculate Houses 2 and 3 (Nocturnal from Asc to IC)
-    cuspsTropical[1] = solveIntermediateCusp(120.0, 2.0 / 3.0, false); // Cusp 2
-    cuspsTropical[2] = solveIntermediateCusp(150.0, 1.0 / 3.0, false); // Cusp 3
+    // Calculate Houses 9 and 8 (Diurnal Western: MC to Desc)
+    cuspsTropical[8] = solveDiurnalCusp(1.0 / 3.0, -1);  // Cusp 9
+    cuspsTropical[7] = solveDiurnalCusp(2.0 / 3.0, -1);  // Cusp 8
 
-    // Opposite houses (5, 6, 8, 9)
+    // Symmetrical opposite cusps:
+    // Cusp 5 = Cusp 11 + 180°
+    // Cusp 6 = Cusp 12 + 180°
+    // Cusp 3 = Cusp 9  + 180°
+    // Cusp 2 = Cusp 8  + 180°
     cuspsTropical[4] = normalizeDegrees(cuspsTropical[10] + 180.0); // Cusp 5
     cuspsTropical[5] = normalizeDegrees(cuspsTropical[11] + 180.0); // Cusp 6
-    cuspsTropical[7] = normalizeDegrees(cuspsTropical[1] + 180.0);  // Cusp 8
-    cuspsTropical[8] = normalizeDegrees(cuspsTropical[2] + 180.0);  // Cusp 9
+    cuspsTropical[2] = normalizeDegrees(cuspsTropical[8]  + 180.0); // Cusp 3
+    cuspsTropical[1] = normalizeDegrees(cuspsTropical[7]  + 180.0); // Cusp 2
 
     // Convert to Sidereal degrees using KP ayanamsa and build Cusp results
     const results: PlacidusCuspResult[] = [];

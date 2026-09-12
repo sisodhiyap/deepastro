@@ -10,14 +10,16 @@ import { getCalculatedChart } from '../utils/birthStorage.js';
 const DEFAULT_MARKET_PULSE = {
   timestamp: new Date().toISOString(),
   marketStatus: "OPEN",
+  dataStatus: "SIMULATED",
+  sourceProvider: "DeepAstro Multi-Exchange Simulation Feed",
   primaryIndices: [
-    { symbol: "NIFTY 50", name: "NIFTY 50 Benchmark Index", exchange: "NSE", currentPrice: 24865.40, change: 142.15, percentChange: 0.58, open: 24750.0, high: 24910.8, low: 24715.2, currency: "INR" },
-    { symbol: "SENSEX", name: "BSE SENSEX 30", exchange: "BSE", currentPrice: 81480.20, change: 410.80, percentChange: 0.51, open: 81150.0, high: 81620.5, low: 81020.3, currency: "INR" },
-    { symbol: "BANK NIFTY", name: "NIFTY Bank Index", exchange: "NSE", currentPrice: 52380.60, change: 285.40, percentChange: 0.55, open: 52120.0, high: 52510.0, low: 52050.1, currency: "INR" }
+    { symbol: "NIFTY 50", name: "NIFTY 50 Benchmark Index", exchange: "NSE", currentPrice: 24865.40, change: 142.15, percentChange: 0.58, open: 24750.0, high: 24910.8, low: 24715.2, currency: "INR", source: "NSE Simulation Feed", dataStatus: "SIMULATED" },
+    { symbol: "SENSEX", name: "BSE SENSEX 30", exchange: "BSE", currentPrice: 81480.20, change: 410.80, percentChange: 0.51, open: 81150.0, high: 81620.5, low: 81020.3, currency: "INR", source: "BSE Simulation Feed", dataStatus: "SIMULATED" },
+    { symbol: "BANK NIFTY", name: "NIFTY Bank Index", exchange: "NSE", currentPrice: 52380.60, change: 285.40, percentChange: 0.55, open: 52120.0, high: 52510.0, low: 52050.1, currency: "INR", source: "NSE Simulation Feed", dataStatus: "SIMULATED" }
   ],
   globalBenchmarks: [
-    { symbol: "S&P 500", name: "Standard & Poor's 500", exchange: "NYSE", currentPrice: 5815.25, change: 24.10, percentChange: 0.42, currency: "USD" },
-    { symbol: "NASDAQ 100", name: "Nasdaq Composite", exchange: "NASDAQ", currentPrice: 18290.80, change: 110.50, percentChange: 0.61, currency: "USD" }
+    { symbol: "S&P 500", name: "Standard & Poor's 500", exchange: "NYSE", currentPrice: 5815.25, change: 24.10, percentChange: 0.42, currency: "USD", source: "NYSE Simulation Feed", dataStatus: "SIMULATED" },
+    { symbol: "NASDAQ 100", name: "Nasdaq Composite", exchange: "NASDAQ", currentPrice: 18290.80, change: 110.50, percentChange: 0.61, currency: "USD", source: "NASDAQ Simulation Feed", dataStatus: "SIMULATED" }
   ],
   commoditiesAndCurrencies: [
     { symbol: "BRENT CRUDE", name: "Brent Crude Oil Futures", exchange: "FOREX", currentPrice: 74.65, change: -0.85, percentChange: -1.13, currency: "USD/bbl" },
@@ -235,7 +237,12 @@ export const InvestmentLabPage: React.FC = () => {
             <span className="px-2.5 py-0.5 rounded text-xs font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800">
               DEEPASTRO 6.0 QUANT & FINANCIAL INTELLIGENCE
             </span>
-            <span className="text-xs text-slate-400 font-mono">Institutional Telemetry • Real Market Breadth • Updated {lastRefreshed}</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+              <span className="px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800 text-[10px] font-bold tracking-wider">
+                STATUS: SIMULATED (DEMO DATA)
+              </span>
+              <span className="text-slate-400">Source: DeepAstro Multi-Exchange Simulation • Last Updated: {lastRefreshed}</span>
+            </div>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mt-1">
             Cosmic Financial & Macro Intelligence Lab
@@ -317,17 +324,26 @@ export const InvestmentLabPage: React.FC = () => {
               <div key={idx.symbol} className="bg-[#111827] border border-[#2A3441] rounded-xl p-5 space-y-2 shadow-md">
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-white tracking-wide">{idx.symbol}</span>
-                  <span className="text-[10px] text-slate-400 font-mono">{idx.exchange}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800/80 font-mono font-semibold">
+                      {idx.dataStatus || 'SIMULATED'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">{idx.exchange}</span>
+                  </div>
                 </div>
                 <div className="text-2xl font-bold font-mono text-white">
                   ₹{Number(idx.currentPrice).toLocaleString()}
                 </div>
-                <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center justify-between text-xs">
                   <span className={`flex items-center font-semibold ${idx.percentChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {idx.percentChange >= 0 ? <TrendingUp className="w-3.5 h-3.5 mr-1" /> : <TrendingDown className="w-3.5 h-3.5 mr-1" />}
                     {idx.percentChange >= 0 ? '+' : ''}{idx.percentChange}%
                   </span>
                   <span className="text-slate-500 font-mono">({idx.change >= 0 ? '+' : ''}{idx.change})</span>
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono border-t border-slate-800/80 pt-2 mt-1 flex justify-between">
+                  <span>Source: {idx.source || `${idx.exchange} / Simulated`}</span>
+                  <span>Updated: {lastRefreshed}</span>
                 </div>
               </div>
             ))}
@@ -342,13 +358,21 @@ export const InvestmentLabPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[...(pulse.globalBenchmarks || []), ...(pulse.commoditiesAndCurrencies || [])].map((item: any) => (
                 <div key={item.symbol} className="bg-[#1A1F2B] border border-[#2A3441] rounded-lg p-3 space-y-1">
-                  <span className="text-[11px] text-slate-400 block truncate">{item.name}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] text-slate-300 font-medium truncate">{item.name}</span>
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-amber-950/60 text-amber-400 border border-amber-800/50 font-mono">
+                      {item.dataStatus || 'SIMULATED'}
+                    </span>
+                  </div>
                   <div className="text-base font-bold font-mono text-white">
                     {item.currency?.includes('USD') ? '$' : ''}{Number(item.currentPrice).toLocaleString()} {item.currency?.includes('Yield') || item.currency?.includes('bbl') || item.currency?.includes('oz') ? item.currency : ''}
                   </div>
-                  <span className={`text-[11px] font-semibold ${item.percentChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {item.percentChange >= 0 ? '+' : ''}{item.percentChange}%
-                  </span>
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className={`font-semibold ${item.percentChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {item.percentChange >= 0 ? '+' : ''}{item.percentChange}%
+                    </span>
+                    <span className="text-slate-500 font-mono">{item.exchange || 'SIM'}</span>
+                  </div>
                 </div>
               ))}
             </div>

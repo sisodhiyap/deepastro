@@ -24,6 +24,8 @@ export interface MarketTicker {
   previousClose: number;
   currency: string;
   timestamp: string;
+  source?: string;
+  dataStatus?: 'LIVE' | 'SIMULATED' | 'DEMO DATA';
 }
 
 export interface SectorPerformance {
@@ -47,6 +49,8 @@ export interface MarketBreadth {
 export interface MarketPulseSnapshot {
   timestamp: string;
   marketStatus: 'OPEN' | 'CLOSED' | 'PRE_OPEN' | 'WEEKEND';
+  dataStatus: 'LIVE' | 'SIMULATED' | 'DEMO DATA';
+  sourceProvider: string;
   primaryIndices: MarketTicker[];
   globalBenchmarks: MarketTicker[];
   commoditiesAndCurrencies: MarketTicker[];
@@ -82,7 +86,9 @@ export class DefaultMarketDataProvider implements IMarketDataProvider {
         low: 24715.20,
         previousClose: 24723.25,
         currency: 'INR',
-        timestamp: now
+        timestamp: now,
+        source: 'NSE Simulation Feed',
+        dataStatus: 'SIMULATED'
       },
       {
         symbol: 'SENSEX',
@@ -96,7 +102,9 @@ export class DefaultMarketDataProvider implements IMarketDataProvider {
         low: 81020.30,
         previousClose: 81069.40,
         currency: 'INR',
-        timestamp: now
+        timestamp: now,
+        source: 'BSE Simulation Feed',
+        dataStatus: 'SIMULATED'
       },
       {
         symbol: 'BANK NIFTY',
@@ -110,7 +118,9 @@ export class DefaultMarketDataProvider implements IMarketDataProvider {
         low: 52050.10,
         previousClose: 52095.20,
         currency: 'INR',
-        timestamp: now
+        timestamp: now,
+        source: 'NSE Simulation Feed',
+        dataStatus: 'SIMULATED'
       }
     ];
 
@@ -274,17 +284,23 @@ export class DefaultMarketDataProvider implements IMarketDataProvider {
     return {
       timestamp: now,
       marketStatus: 'OPEN',
+      dataStatus: 'SIMULATED',
+      sourceProvider: 'DeepAstro Multi-Exchange Simulation Feed',
       primaryIndices,
       globalBenchmarks,
       commoditiesAndCurrencies,
       sovereignYields,
-      volatilityIndex,
+      volatilityIndex: {
+        ...volatilityIndex,
+        source: 'NSE Volatility Index (Simulated)',
+        dataStatus: 'SIMULATED'
+      },
       marketBreadth,
       sectorHeatmap,
       sourceMetadata: {
-        provider: 'DeepAstro Multi-Exchange Aggregator Service (EOD / Snapshot)',
-        feedLatencyMs: 42,
-        disclaimer: 'Market data is for informational and educational purposes only. DeepAstro is not a registered stock broker or SEBI investment adviser.'
+        provider: 'DeepAstro Multi-Exchange Aggregator Service (Simulated Snapshot / Offline Demo)',
+        feedLatencyMs: 0,
+        disclaimer: 'Market data is SIMULATED for research and educational purposes only. DeepAstro is not a registered stock broker or SEBI investment adviser.'
       }
     };
   }
