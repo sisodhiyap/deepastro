@@ -70,7 +70,7 @@ export const analyzeSpreadPatterns = (drawnCards: TarotDraw[]): TarotPatternAnal
     pentacles: 0,
   };
 
-  const elementCounts = {
+  const elementCounts: { Fire: number; Water: number; Air: number; Earth: number; Spirit: number; [key: string]: number } = {
     Fire: 0,
     Water: 0,
     Air: 0,

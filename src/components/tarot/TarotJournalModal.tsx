@@ -147,7 +147,7 @@ export const TarotJournalModal: React.FC<TarotJournalModalProps> = ({
 
                   {/* 3 Drawn Cards Preview */}
                   <div className="grid grid-cols-3 gap-2 my-2">
-                    {reading.cards.map((c) => {
+                    {reading.cards?.map((c: any) => {
                       const cardMeta = TAROT_DECK.find((cd) => cd.id === c.cardId);
                       return (
                         <div

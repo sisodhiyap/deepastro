@@ -9,7 +9,7 @@ export type TarotSuit = 'wands' | 'cups' | 'swords' | 'pentacles';
 export type TarotOrientation = 'upright' | 'reversed';
 export type TarotPosition = 'root' | 'present' | 'direction';
 
-export type TarotElement = 'Fire' | 'Water' | 'Air' | 'Earth' | 'Spirit';
+export type TarotElement = 'Fire' | 'Water' | 'Air' | 'Earth' | 'Spirit' | string;
 
 export interface TarotMeaningDetail {
   keywords: string[];
@@ -26,7 +26,7 @@ export interface TarotCorrespondence {
   planet?: string;
   element: TarotElement;
   vedicAnalogy?: string; // Vedic graha or devata archetype
-  vedicGuna: 'Sattva' | 'Rajas' | 'Tamas';
+  vedicGuna: 'Sattva' | 'Rajas' | 'Tamas' | string;
   chakra?: string;
 }
 
@@ -80,7 +80,7 @@ export interface TarotPatternAnalysis {
     swords: number;
     pentacles: number;
   };
-  elementCounts: {
+  elementCounts: Record<string, number> & {
     Fire: number;
     Water: number;
     Air: number;
@@ -95,6 +95,7 @@ export interface TarotPatternAnalysis {
 
 export interface TarotInterpretation {
   story: string;
+  narrativeStory?: string;
   cosmicCrossReading: string;
   keyMessage: string;
   reflectionQuestion: string;
@@ -113,7 +114,10 @@ export interface TarotSession {
   interpretation: TarotInterpretation;
   createdAt: string;
   favorite?: boolean;
+  isFavorite?: boolean;
   notes?: string;
+  userNote?: string;
+  cards?: any[];
 }
 
 export type TarotQuestionCategory =
@@ -125,6 +129,8 @@ export type TarotQuestionCategory =
   | 'DECISION & CROSSROADS'
   | 'PERSONAL GROWTH'
   | 'SPIRITUALITY'
-  | 'TODAY’S ENERGY'
+  | 'TODAY\'S ENERGY' | 'TODAY’S ENERGY'
   | 'FUTURE DIRECTION'
   | 'SURPRISE ME';
+
+export type TarotSavedReading = TarotSession & { cards?: any[] };

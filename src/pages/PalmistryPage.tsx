@@ -288,7 +288,7 @@ export const PalmistryPage: React.FC = () => {
           )}
 
           <button
-            onClick={handleAnalyze}
+            onClick={() => handleAnalyze()}
             disabled={!selectedFile || isLoading}
             className={`w-full py-3.5 rounded-2xl font-display font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
               !selectedFile || isLoading

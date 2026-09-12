@@ -349,3 +349,39 @@ export const toggleFavoriteJournal = (sessionId: string): boolean => {
     return false;
   }
 };
+
+export const getTarotReadings = (): any[] => {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('deepastro_tarot_readings') : null;
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const deleteTarotReading = (sessionId: string): void => {
+  try {
+    const list = getTarotReadings().filter((r: any) => r.sessionId !== sessionId);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('deepastro_tarot_readings', JSON.stringify(list));
+    }
+  } catch {}
+};
+
+export const toggleFavoriteTarotReading = (sessionId: string): void => {
+  try {
+    const list = getTarotReadings().map((r: any) => r.sessionId === sessionId ? { ...r, favorite: !r.favorite } : r);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('deepastro_tarot_readings', JSON.stringify(list));
+    }
+  } catch {}
+};
+
+export const addNoteToTarotReading = (sessionId: string, note: string): void => {
+  try {
+    const list = getTarotReadings().map((r: any) => r.sessionId === sessionId ? { ...r, notes: note } : r);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('deepastro_tarot_readings', JSON.stringify(list));
+    }
+  } catch {}
+};

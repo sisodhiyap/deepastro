@@ -1,3 +1,8 @@
+﻿
+import { KPIntelligencePanel } from '../components/astrology/KPIntelligencePanel.js';
+import { VargaExplorerPanel } from '../components/astrology/VargaExplorerPanel.js';
+import { AstrologyEvidenceModal } from '../components/astrology/AstrologyEvidenceModal.js';
+import { GitMerge } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
@@ -102,6 +107,24 @@ export const KundliPage: React.FC = () => {
   const [entryMode, setEntryMode] = useState<'manual' | 'upload'>('manual');
   const [chartStyle, setChartStyle] = useState<'north' | 'south' | 'east'>('north');
   const [activeVarga, setActiveVarga] = useState<'d1' | 'd9' | 'd10'>('d1');
+  const [activeMasterTab, setActiveMasterTab] = useState<
+    | 'overview'
+    | 'rashi'
+    | 'bhava'
+    | 'kp'
+    | 'navamsa'
+    | 'vargas'
+    | 'planets'
+    | 'nakshatras'
+    | 'dasha'
+    | 'yogas'
+    | 'aspects'
+    | 'significators'
+    | 'timeline'
+    | 'predictions'
+    | 'remedies'
+  >('overview');
+  const [showEvidenceModal, setShowEvidenceModal] = useState(false);
   const [kundli, setKundli] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -262,7 +285,7 @@ export const KundliPage: React.FC = () => {
     if (pendingReview.calculatedKundli) {
       setKundli(pendingReview.calculatedKundli);
     }
-    setUploadStatus(`✓ Verified & Confirmed for ${ef.name.value}! Sovereign Vedic Kundli Calculated.`);
+    setUploadStatus(`âœ“ Verified & Confirmed for ${ef.name.value}! Sovereign Vedic Kundli Calculated.`);
     setPendingReview(null);
     setEntryMode('manual');
   };
@@ -416,7 +439,7 @@ export const KundliPage: React.FC = () => {
                   : 'bg-cosmic-card text-cosmic-muted hover:text-cosmic-text'
               }`}
             >
-              <span>✍️ Manual Birth Details</span>
+              <span>âœï¸ Manual Birth Details</span>
             </button>
             <button
               type="button"
@@ -428,7 +451,7 @@ export const KundliPage: React.FC = () => {
               }`}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>📸 Upload Kundli (Pic / PDF)</span>
+              <span>ðŸ“¸ Upload Kundli (Pic / PDF)</span>
             </button>
           </div>
 
@@ -564,7 +587,7 @@ export const KundliPage: React.FC = () => {
                 onClick={() => setPendingReview(null)}
                 className="p-1.5 rounded-xl border border-cosmic-border hover:border-cosmic-muted text-cosmic-muted text-xs"
               >
-                ✕
+                âœ•
               </button>
             </div>
 
@@ -674,7 +697,7 @@ export const KundliPage: React.FC = () => {
                         >
                           <div className="font-bold text-xs">{cand.displayName}</div>
                           <div className="text-[10px] opacity-80">
-                            Lat: {cand.latitude}°, Lon: {cand.longitude}°, UTC{cand.timezone >= 0 ? `+${cand.timezone}` : cand.timezone}
+                            Lat: {cand.latitude}Â°, Lon: {cand.longitude}Â°, UTC{cand.timezone >= 0 ? `+${cand.timezone}` : cand.timezone}
                           </div>
                         </button>
                       ))}
@@ -684,7 +707,7 @@ export const KundliPage: React.FC = () => {
                   <div className="font-bold text-sm text-cosmic-text flex items-center justify-between">
                     <span>{pendingReview.extractedFields.birthPlace.value}</span>
                     <span className="text-xs text-cosmic-muted font-normal">
-                      Lat: {pendingReview.extractedFields.latitude.value}°, Lon: {pendingReview.extractedFields.longitude.value}°, UTC+{pendingReview.extractedFields.timezone.value}
+                      Lat: {pendingReview.extractedFields.latitude.value}Â°, Lon: {pendingReview.extractedFields.longitude.value}Â°, UTC+{pendingReview.extractedFields.timezone.value}
                     </span>
                   </div>
                 )}
@@ -729,6 +752,51 @@ export const KundliPage: React.FC = () => {
 
       {kundli && (
         <div className="space-y-8">
+          
+          {/* Master 15-Tab Navigation */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-cosmic-border/60 scrollbar-thin">
+            {[
+              { id: 'overview', label: 'OVERVIEW' },
+              { id: 'rashi', label: 'RASHI (D1)' },
+              { id: 'bhava', label: 'BHAVA' },
+              { id: 'kp', label: 'KP INTELLIGENCE' },
+              { id: 'navamsa', label: 'NAVAMSA (D9)' },
+              { id: 'vargas', label: 'VARGAS (D1â€“D60)' },
+              { id: 'planets', label: 'PLANETS' },
+              { id: 'nakshatras', label: 'NAKSHATRAS' },
+              { id: 'dasha', label: 'DASHA' },
+              { id: 'yogas', label: 'YOGAS' },
+              { id: 'aspects', label: 'ASPECTS' },
+              { id: 'significators', label: 'SIGNIFICATORS' },
+              { id: 'timeline', label: 'TIMELINE' },
+              { id: 'predictions', label: 'PREDICTIONS' },
+              { id: 'remedies', label: 'REMEDIES' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveMasterTab(tab.id as any)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  activeMasterTab === tab.id
+                    ? 'bg-cyan-500 text-black shadow-glow-cyan'
+                    : 'bg-cosmic-card text-cosmic-muted hover:text-white border border-cosmic-border'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Birth Time Sensitivity Alert if Applicable */}
+          {kundli.accuracyQuality?.isBoundarySensitive && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-xs text-amber-300">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-bold block text-sm">Birth-Time Sensitivity Notice</strong>
+                <span>{kundli.accuracyQuality.userNotice}</span>
+              </div>
+            </div>
+          )}
+
           {/* Chart Controls Bar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl border border-cosmic-border bg-cosmic-surface">
             {/* Chart Style Switcher */}
@@ -817,117 +885,334 @@ export const KundliPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Chart Canvas & Essentials Summary */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-6 flex justify-center">
-              {chartStyle === 'north' && (
-                <NorthIndianChart
-                  ascendantSignIndex={kundli.ascendant.details.signIndex}
-                  planets={getActivePlanets()}
-                  size={420}
-                />
-              )}
-              {chartStyle === 'south' && (
-                <SouthIndianChart
-                  ascendantSignIndex={kundli.ascendant.details.signIndex}
-                  planets={getActivePlanets()}
-                  size={420}
-                />
-              )}
-              {chartStyle === 'east' && (
-                <EastIndianChart
-                  ascendantSignIndex={kundli.ascendant.details.signIndex}
-                  planets={getActivePlanets()}
-                  size={420}
-                />
-              )}
-            </div>
-
-            {/* Right Summary Breakdown */}
-            <div className="lg:col-span-6 space-y-4">
-              <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
-                <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
-                  Vedic Coordinate Essentials
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
-                    <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Ascendant (Lagna)</span>
-                    <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block">
-                      {kundli.ascendant.details.signName} ({kundli.ascendant.details.degreeInSign}° {kundli.ascendant.details.minutes}')
-                    </span>
-                    <span className="text-[10px] text-cyan-400 font-bold">
-                      {kundli.ascendant.nakshatra.name} Pada {kundli.ascendant.nakshatra.pada}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
-                    <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Moon (Chandra)</span>
-                    <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block">
-                      {kundli.moonSign.signName} ({kundli.moonSign.degreeInSign}° {kundli.moonSign.minutes}')
-                    </span>
-                    <span className="text-[10px] text-cosmic-gold font-bold">
-                      {kundli.moonNakshatra.name} Pada {kundli.moonNakshatra.pada}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
-                    <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Sun (Surya)</span>
-                    <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block">
-                      {kundli.sunSign.signName} ({kundli.sunSign.degreeInSign}° {kundli.sunSign.minutes}')
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
-                    <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Ayanamsha (Lahiri)</span>
-                    <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block font-mono">
-                      {kundli.astronomy.ayanamshaDegrees.toFixed(4)}°
-                    </span>
-                  </div>
+          
+          {/* TAB 1: OVERVIEW */}
+          {activeMasterTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Chart Canvas & Essentials Summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="lg:col-span-6 flex justify-center p-4 rounded-3xl border border-cosmic-border bg-cosmic-surface/60 overflow-hidden">
+                  {chartStyle === 'north' && (
+                    <NorthIndianChart
+                      ascendantSignIndex={kundli.ascendant.details.signIndex}
+                      planets={getActivePlanets()}
+                      size={420}
+                    />
+                  )}
+                  {chartStyle === 'south' && (
+                    <SouthIndianChart
+                      ascendantSignIndex={kundli.ascendant.details.signIndex}
+                      planets={getActivePlanets()}
+                      size={420}
+                    />
+                  )}
+                  {chartStyle === 'east' && (
+                    <EastIndianChart
+                      ascendantSignIndex={kundli.ascendant.details.signIndex}
+                      planets={getActivePlanets()}
+                      size={420}
+                    />
+                  )}
                 </div>
 
-                {/* Yogas and Doshas Chips */}
-                <div className="pt-2 border-t border-cosmic-border/60 space-y-2">
-                  <span className="text-[10px] font-bold text-cosmic-muted uppercase tracking-wider block">
-                    Formed Planetary Yogas
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {kundli.yogas.map((y: any) => (
-                      <span
-                        key={y.name}
-                        className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30"
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                        Vedic Coordinate Essentials
+                      </h3>
+                      <button
+                        onClick={() => setShowEvidenceModal(true)}
+                        className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold flex items-center gap-1 hover:bg-cyan-500/20"
                       >
-                        {y.name}
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        EVIDENCE CHAIN
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
+                        <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Ascendant (Lagna)</span>
+                        <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block">
+                          {kundli.ascendant.details.signName} ({kundli.ascendant.details.degreeInSign}Â° {kundli.ascendant.details.minutes}')
+                        </span>
+                        <span className="text-[10px] text-cyan-400 font-bold">
+                          {kundli.ascendant.nakshatra.name} Pada {kundli.ascendant.nakshatra.pada}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
+                        <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Moon (Chandra)</span>
+                        <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block">
+                          {kundli.moonSign.signName} ({kundli.moonSign.degreeInSign}Â° {kundli.moonSign.minutes}')
+                        </span>
+                        <span className="text-[10px] text-cosmic-gold font-bold">
+                          {kundli.moonNakshatra.name} Pada {kundli.moonNakshatra.pada}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
+                        <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Sun (Surya)</span>
+                        <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block">
+                          {kundli.sunSign.signName} ({kundli.sunSign.degreeInSign}Â° {kundli.sunSign.minutes}')
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
+                        <span className="text-cosmic-muted block text-[10px] uppercase font-semibold">Ayanamsha (Lahiri)</span>
+                        <span className="text-sm font-extrabold text-cosmic-text mt-0.5 block font-mono">
+                          {kundli.astronomy.ayanamshaDegrees.toFixed(4)}Â°
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Yogas Chips */}
+                    <div className="pt-2 border-t border-cosmic-border/60 space-y-2">
+                      <span className="text-[10px] font-bold text-cosmic-muted uppercase tracking-wider block">
+                        Active Planetary Yogas
                       </span>
-                    ))}
+                      <div className="flex flex-wrap gap-1.5">
+                        {kundli.yogas?.map((y: any) => (
+                          <span
+                            key={y.name}
+                            className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30"
+                          >
+                            {y.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Quick Planetary Table */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold text-cosmic-muted uppercase tracking-wider">
+                  Sidereal Planetary Coordinates Table
+                </h3>
+                <PlanetaryTable planets={kundli.planets} />
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Planetary Table */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-cosmic-muted uppercase tracking-wider">
-              Sidereal Planetary Coordinates Table
-            </h3>
+          {/* TAB 2: RASHI (D1) */}
+          {activeMasterTab === 'rashi' && (
+            <div className="space-y-6">
+              <div className="flex justify-center p-6 rounded-3xl border border-cosmic-border bg-cosmic-surface/60 overflow-hidden">
+                {chartStyle === 'north' && <NorthIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} />}
+                {chartStyle === 'south' && <SouthIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} />}
+                {chartStyle === 'east' && <EastIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} />}
+              </div>
+              <PlanetaryTable planets={kundli.planets} />
+            </div>
+          )}
+
+          {/* TAB 3: BHAVA */}
+          {activeMasterTab === 'bhava' && (
+            <div className="rounded-2xl bg-[#111827] border border-[#2A3441] overflow-hidden p-6 space-y-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Bhava Chalit & House Cusps</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#1A1F2B] text-slate-400 uppercase text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4">House</th>
+                      <th className="py-3 px-4">Sign</th>
+                      <th className="py-3 px-4">Lord</th>
+                      <th className="py-3 px-4">Mid Cusp</th>
+                      <th className="py-3 px-4">Planets in House</th>
+                      <th className="py-3 px-4">Category</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#2A3441]/60">
+                    {kundli.houses?.map((h: any) => (
+                      <tr key={h.houseNumber} className="hover:bg-slate-800/30">
+                        <td className="py-3 px-4 font-bold text-white">House {h.houseNumber}</td>
+                        <td className="py-3 px-4 text-slate-300">{h.signName}</td>
+                        <td className="py-3 px-4 text-slate-300">{h.lord}</td>
+                        <td className="py-3 px-4 font-mono text-cyan-300">{h.midCuspDegree?.toFixed(2)}Â°</td>
+                        <td className="py-3 px-4 text-slate-300">{h.planetsInHouse?.join(', ') || 'â€”'}</td>
+                        <td className="py-3 px-4 text-slate-400">{h.category}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: KP INTELLIGENCE */}
+          {activeMasterTab === 'kp' && (
+            <KPIntelligencePanel
+              kpData={kundli.kp || kundli.kpIntelligence}
+              chartStyle={chartStyle}
+              onShowEvidence={() => setShowEvidenceModal(true)}
+            />
+          )}
+
+          {/* TAB 5: NAVAMSA (D9) */}
+          {activeMasterTab === 'navamsa' && (
+            <VargaExplorerPanel
+              shodashavargaDetail={kundli.shodashavarga || kundli.shodashavargaDetail}
+              navamsaDeep={kundli.navamsaDeep}
+              dasamshaDeep={kundli.dasamshaDeep}
+              chartStyle={chartStyle}
+            />
+          )}
+
+          {/* TAB 6: VARGAS (D1-D60) */}
+          {activeMasterTab === 'vargas' && (
+            <VargaExplorerPanel
+              shodashavargaDetail={kundli.shodashavarga || kundli.shodashavargaDetail}
+              navamsaDeep={kundli.navamsaDeep}
+              dasamshaDeep={kundli.dasamshaDeep}
+              chartStyle={chartStyle}
+            />
+          )}
+
+          {/* TAB 7: PLANETS */}
+          {activeMasterTab === 'planets' && (
             <PlanetaryTable planets={kundli.planets} />
-          </div>
+          )}
 
-          {/* Dasha Timeline */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-cosmic-muted uppercase tracking-wider">
-              Vimshottari Dasha Progression
-            </h3>
+          {/* TAB 8: NAKSHATRAS */}
+          {activeMasterTab === 'nakshatras' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-5 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-2">
+                <span className="text-[10px] text-cyan-400 font-bold uppercase">Janma Nakshatra (Moon)</span>
+                <h4 className="text-xl font-bold text-white">{kundli.moonNakshatra.name}</h4>
+                <p className="text-xs text-slate-400">Pada: {kundli.moonNakshatra.pada} â€¢ Lord: {kundli.moonNakshatra.ruler}</p>
+                <p className="text-xs text-slate-300 pt-2 border-t border-slate-800">Deity: {kundli.moonNakshatra.deity || 'Vedic Archetype'}</p>
+              </div>
+              <div className="p-5 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-2">
+                <span className="text-[10px] text-amber-400 font-bold uppercase">Lagna Nakshatra (Ascendant)</span>
+                <h4 className="text-xl font-bold text-white">{kundli.ascendant.nakshatra.name}</h4>
+                <p className="text-xs text-slate-400">Pada: {kundli.ascendant.nakshatra.pada} â€¢ Lord: {kundli.ascendant.nakshatra.ruler}</p>
+              </div>
+              <div className="p-5 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-2">
+                <span className="text-[10px] text-emerald-400 font-bold uppercase">Surya Nakshatra (Sun)</span>
+                <h4 className="text-xl font-bold text-white">{kundli.sunSign.signName}</h4>
+                <p className="text-xs text-slate-400">Degree: {kundli.sunSign.degreeInSign}Â° {kundli.sunSign.minutes}'</p>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 9: DASHA */}
+          {activeMasterTab === 'dasha' && (
             <DashaTimeline
               currentMahadasha={kundli.dashas.currentMahadasha}
               currentAntardasha={kundli.dashas.currentAntardasha}
               allMahadashas={kundli.dashas.allMahadashas}
             />
-          </div>
+          )}
+
+          {/* TAB 10: YOGAS */}
+          {activeMasterTab === 'yogas' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {kundli.yogas?.map((y: any) => (
+                <div key={y.name} className="p-5 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
+                    {y.category || 'Auspicious Yoga'}
+                  </span>
+                  <h4 className="font-bold text-white text-base">{y.name}</h4>
+                  <p className="text-xs text-slate-400">{y.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* TAB 11: ASPECTS */}
+          {activeMasterTab === 'aspects' && (
+            <div className="p-6 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Vedic Graha Drishti (Aspects Matrix)</h3>
+              <div className="space-y-2 text-xs">
+                {kundli.planets?.map((p: any) => (
+                  <div key={p.name} className="flex items-center justify-between p-3 rounded-xl bg-[#1A1F2B] border border-[#2A3441]">
+                    <span className="font-bold text-white">{p.name} (H{p.house})</span>
+                    <span className="text-slate-300 font-mono">
+                      Aspects Houses: {((p.house + 6) % 12 || 12)}
+                      {p.name === 'Mars' && `, ${((p.house + 3) % 12 || 12)}, ${((p.house + 7) % 12 || 12)}`}
+                      {p.name === 'Jupiter' && `, ${((p.house + 4) % 12 || 12)}, ${((p.house + 8) % 12 || 12)}`}
+                      {p.name === 'Saturn' && `, ${((p.house + 2) % 12 || 12)}, ${((p.house + 9) % 12 || 12)}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 12: SIGNIFICATORS */}
+          {activeMasterTab === 'significators' && (
+            <KPIntelligencePanel
+              kpData={kundli.kp || kundli.kpIntelligence}
+              chartStyle={chartStyle}
+              onShowEvidence={() => setShowEvidenceModal(true)}
+            />
+          )}
+
+          {/* TAB 13: TIMELINE */}
+          {activeMasterTab === 'timeline' && (
+            <DashaTimeline
+              currentMahadasha={kundli.dashas.currentMahadasha}
+              currentAntardasha={kundli.dashas.currentAntardasha}
+              allMahadashas={kundli.dashas.allMahadashas}
+            />
+          )}
+
+          {/* TAB 14: PREDICTIONS */}
+          {activeMasterTab === 'predictions' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-[#111827] border border-[#2A3441]">
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Multi-Method Integrated Predictions</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Parashari + KP Cuspal Sub-Lord + Harmonic Vargas</p>
+                </div>
+                <button
+                  onClick={() => setShowEvidenceModal(true)}
+                  className="px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs font-bold"
+                >
+                  SHOW EVIDENCE
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(kundli.multiMethodPredictions || {}).map(([dom, pred]: [string, any]) => (
+                  <div key={dom} className="p-5 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-white text-sm uppercase">{pred.title || dom}</h4>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300">
+                        {pred.integratedAssessment}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">{pred.conflictResolutionSummary}</p>
+                    <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                      <span>Integrity: {pred.accuracyMetrics?.calculationIntegrity}</span>
+                      <span>KP Sub-Lord: {pred.methodologyOutputs?.kp?.verdict}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 15: REMEDIES */}
+          {activeMasterTab === 'remedies' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {kundli.remedies?.map((rem: any, idx: number) => (
+                <div key={idx} className="p-5 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
+                    {rem.planet} Remedy
+                  </span>
+                  <h4 className="font-bold text-white text-sm">{rem.title || rem.remedy}</h4>
+                  <p className="text-xs text-slate-300">{rem.description || rem.instructions}</p>
+                  <p className="text-[11px] text-slate-400 italic pt-1 border-t border-slate-800">
+                    Traditional practice â€¢ Completely non-commercial
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
         </div>
       )}
 
-      {/* MY LIFE BLUEPRINT — PREMIUM REPORT MODAL */}
+      {/* MY LIFE BLUEPRINT â€” PREMIUM REPORT MODAL */}
       {showBlueprintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="relative w-full max-w-2xl rounded-3xl border border-amber-400/40 bg-[#0A0E1A] p-6 md:p-8 shadow-2xl text-cosmic-text space-y-6">
@@ -940,7 +1225,7 @@ export const KundliPage: React.FC = () => {
                 MY LIFE BLUEPRINT
               </h2>
               <p className="text-xs font-semibold tracking-widest text-amber-300/80 uppercase">
-                Janam Kundli & Numerology Report • 5-Page Edition
+                Janam Kundli & Numerology Report â€¢ 5-Page Edition
               </p>
             </div>
 
@@ -1006,10 +1291,10 @@ export const KundliPage: React.FC = () => {
                     <div className="w-4 h-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
                   )}
                   {blueprintStep === 'ready' && (
-                    <span className="text-emerald-400 font-bold text-sm">✓</span>
+                    <span className="text-emerald-400 font-bold text-sm">âœ“</span>
                   )}
                   {blueprintStep === 'error' && (
-                    <span className="text-red-400 font-bold text-sm">⚠</span>
+                    <span className="text-red-400 font-bold text-sm">âš </span>
                   )}
                   <span className="text-xs font-bold text-amber-200 uppercase tracking-wide">
                     {blueprintStep === 'preparing_chart' && 'Preparing chart & astronomical coordinates...'}
@@ -1065,6 +1350,11 @@ export const KundliPage: React.FC = () => {
           </div>
         </div>
       )}
+      <AstrologyEvidenceModal
+        isOpen={showEvidenceModal}
+        onClose={() => setShowEvidenceModal(false)}
+        kundli={kundli}
+      />
     </div>
   );
 };
