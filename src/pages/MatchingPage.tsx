@@ -1,3 +1,4 @@
+import { PlaceSelector } from '../components/common/PlaceSelector.js';
 import React, { useState } from 'react';
 import { Heart, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 import { MatchingCard, MatchingDataUI } from '../components/astrology/MatchingCard.js';
@@ -210,13 +211,20 @@ export const MatchingPage: React.FC = () => {
               />
             </div>
             <div className="col-span-2">
-              <label className="text-cosmic-muted block mb-1 font-semibold">Birth Place (City)</label>
-              <input
-                type="text"
-                placeholder="e.g. New Delhi"
+              <PlaceSelector
                 value={partnerA.birthPlace}
-                onChange={(e) => setPartnerA({ ...partnerA, birthPlace: e.target.value })}
-                className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                latitude={partnerA.latitude}
+                longitude={partnerA.longitude}
+                timezone={partnerA.timezone}
+                onChange={({ birthPlace, latitude, longitude, timezone }) => {
+                  setPartnerA((prev) => ({
+                    ...prev,
+                    birthPlace,
+                    latitude,
+                    longitude,
+                    timezone,
+                  }));
+                }}
               />
             </div>
           </div>
@@ -262,13 +270,20 @@ export const MatchingPage: React.FC = () => {
               />
             </div>
             <div className="col-span-2">
-              <label className="text-cosmic-muted block mb-1 font-semibold">Birth Place (City)</label>
-              <input
-                type="text"
-                placeholder="e.g. Mumbai"
+              <PlaceSelector
                 value={partnerB.birthPlace}
-                onChange={(e) => setPartnerB({ ...partnerB, birthPlace: e.target.value })}
-                className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                latitude={partnerB.latitude}
+                longitude={partnerB.longitude}
+                timezone={partnerB.timezone}
+                onChange={({ birthPlace, latitude, longitude, timezone }) => {
+                  setPartnerB((prev) => ({
+                    ...prev,
+                    birthPlace,
+                    latitude,
+                    longitude,
+                    timezone,
+                  }));
+                }}
               />
             </div>
           </div>

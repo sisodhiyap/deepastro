@@ -37,6 +37,7 @@ import {
 } from '../utils/birthStorage.js';
 import { useAstrologicalCalculation } from '../hooks/useAstrologicalCalculation.js';
 import { CalculationProgressModal } from '../components/astrology/CalculationProgressModal.js';
+import { PlaceSelector } from '../components/common/PlaceSelector.js';
 
 const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
   delhi: { lat: 28.6139, lng: 77.209, tz: 5.5 },
@@ -69,9 +70,9 @@ export const KundliPage: React.FC = () => {
     name: '',
     birthDate: '',
     birthTime: '',
-    birthPlace: '',
-    latitude: '',
-    longitude: '',
+    birthPlace: 'New Delhi, Delhi, India',
+    latitude: '28.6139',
+    longitude: '77.2090',
     timezone: '5.5',
     gender: 'male',
     isApproximateTime: false,
@@ -536,12 +537,34 @@ export const KundliPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-cosmic-muted block mb-1 font-semibold">Birth City / Country</label>
-              <input
-                type="text"
+              <label className="text-cosmic-muted block mb-1 font-semibold">Gender</label>
+              <select
+                value={formData.gender}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400 cursor-pointer"
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            {/* Comprehensive Searchable Dropdown of Places with Country, City, Lat & Lng */}
+            <div className="sm:col-span-2 lg:col-span-4 pt-1">
+              <PlaceSelector
                 value={formData.birthPlace}
-                onChange={(e) => handleBirthPlaceChange(e.target.value)}
-                className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3.5 py-2.5 text-cosmic-text focus:outline-none focus:border-cyan-400"
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                timezone={formData.timezone}
+                onChange={({ birthPlace, latitude, longitude, timezone }) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    birthPlace,
+                    latitude,
+                    longitude,
+                    timezone,
+                  }));
+                }}
               />
             </div>
 
