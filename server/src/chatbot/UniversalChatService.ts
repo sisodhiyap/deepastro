@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { UniversalQuestionRouter, QuestionIntent } from './UniversalQuestionRouter.js';
 import { DeepAstroToolRegistry } from './DeepAstroToolRegistry.js';
 import { CardImagePromptBuilder } from './CardImagePromptBuilder.js';
@@ -144,7 +145,7 @@ export class UniversalChatService {
     const visualImageUrl = await ImageGenerationProvider.generateVisual(visualPromptSpec);
 
     const card: DeepAstroAnswerCardSpec = {
-      id: `card_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+      id: `card_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
       version: '6.0.4',
       question,
       primaryHeader,

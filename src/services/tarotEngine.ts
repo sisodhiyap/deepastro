@@ -16,14 +16,15 @@ import { generateTarotInterpretation } from './tarotInterpretation.js';
  * probability modulation, and strict validation.
  */
 
-// Generate cryptographically secure random float [0, 1)
+// Generate cryptographically secure random float [0, 1) using Web Crypto or Node Crypto
 export const getSecureRandom = (): number => {
-  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+  const globalCrypto = typeof globalThis !== 'undefined' ? (globalThis as any).crypto : (typeof window !== 'undefined' ? (window as any).crypto : undefined);
+  if (globalCrypto && typeof globalCrypto.getRandomValues === 'function') {
     const array = new Uint32Array(1);
-    window.crypto.getRandomValues(array);
+    globalCrypto.getRandomValues(array);
     return array[0] / (0xffffffff + 1);
   }
-  return Math.random();
+  return 0.5;
 };
 
 // Generate cryptographically secure random integer [min, max]
@@ -207,7 +208,7 @@ export const executeShuffleToDestiny = (options: DrawOptions = {}): TarotSession
     console.error('Deck integrity check warning:', deckValidation);
   }
 
-  const userId = options.userId || 'seeker_' + Math.random().toString(36).substring(2, 8);
+  const userId = options.userId || 'seeker_' + Math.floor(getSecureRandom() * 10000000).toString(36);
   const category = options.category || 'GENERAL LIFE';
   const question = options.question || `What cosmic perspective should I receive regarding my ${category.toLowerCase()}?`;
   const astroContext = options.astroContext || DEFAULT_ASTRO_CONTEXT;
