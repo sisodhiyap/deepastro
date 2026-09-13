@@ -31,7 +31,7 @@ export class PalmQualityGate {
         passed: false,
         qualityScore: 10,
         reason: 'Image file size is too small (' + (buffer ? buffer.length : 0) + ' bytes) for chiromancy feature resolution.',
-        rejectionMessage: 'Palm image quality is too low or empty. Please capture a clear, well-lit photo of your palm.',
+        rejectionMessage: 'Palm image quality insufficient for analysis.',
         diagnostics: {
           mimeType: 'unknown',
           fileSizeBytes: buffer ? buffer.length : 0,

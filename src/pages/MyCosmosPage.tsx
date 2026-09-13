@@ -166,6 +166,42 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
               </div>
             </div>
 
+                        {/* Recruiter / Evaluator 1-Click Fast Track */}
+            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-cyan-500/10 to-amber-500/15 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg shadow-amber-500/5">
+              <div>
+                <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>RECRUITER PRODUCTION EVALUATION FAST-TRACK</span>
+                </div>
+                <div className="text-[11px] text-slate-300 mt-0.5">
+                  Explore full production Kundli, KP, Vargas, and 10-chapter cosmic story with 1 click.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  calculateSession({
+                    name: 'Demo Native (Recruiter Sample)',
+                    date: '1995-05-15',
+                    time: '14:30',
+                    latitude: 28.6139,
+                    longitude: 77.2090,
+                    timezone: 5.5,
+                    city: 'New Delhi',
+                    country: 'India',
+                    gender: 'female',
+                    ayanamsa: 'Lahiri',
+                    houseSystem: 'Placidus'
+                  });
+                }}
+                disabled={isLoading}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-bold text-xs whitespace-nowrap hover:opacity-95 shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5 shrink-0"
+              >
+                {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                <span>Explore Demo Chart</span>
+              </button>
+            </div>
+
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Full Name</label>

@@ -7,7 +7,7 @@ export default function handler(req: any, res: any) {
     return res.end(JSON.stringify({
       status: 'UP',
       service: 'DeepAstro Cosmic Intelligence API',
-      version: '6.0.1',
+      version: '6.0.2',
       environment: process.env.NODE_ENV || 'production',
       timestamp: new Date().toISOString()
     }));
