@@ -21,6 +21,8 @@ import { ContactPage } from './pages/ContactPage.js';
 import { CosmicHubPage } from './pages/CosmicHubPage.js';
 import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
 import { TarotPage } from './pages/TarotPage.js';
+import { MyCosmosPage } from './pages/MyCosmosPage.js';
+import { ChartSessionProvider } from './context/ChartSessionContext.js';
 
 // DeepAstro 6.0 Multi-System Pages
 import { WesternPage } from './pages/WesternPage.js';
@@ -306,33 +308,35 @@ export const App: React.FC = () => {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <AppShell
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        userPlan={userPlan}
-        userName={userName}
-        currentUser={currentUser}
-        onOpenAuth={handleOpenAuth}
-        onLogout={handleLogout}
-        chartContext={chartContext}
-      >
-        <ErrorBoundary fallbackTitle="Cosmic Matrix Synchronizing">
-          {renderActiveView()}
-        </ErrorBoundary>
-      </AppShell>
+        <ChartSessionProvider>
+          <AppShell
+            activeTab={activeTab}
+            onSelectTab={setActiveTab}
+            userPlan={userPlan}
+            userName={userName}
+            currentUser={currentUser}
+            onOpenAuth={handleOpenAuth}
+            onLogout={handleLogout}
+            chartContext={chartContext}
+          >
+            <ErrorBoundary fallbackTitle="Cosmic Matrix Synchronizing">
+              {renderActiveView()}
+            </ErrorBoundary>
+          </AppShell>
 
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authModalMode}
-        onAuthSuccess={(user: any) => handleAuthSuccess(user)}
-      />
+          <AuthModal
+            isOpen={authModalOpen}
+            onClose={() => setAuthModalOpen(false)}
+            initialMode={authModalMode}
+            onAuthSuccess={(user: any) => handleAuthSuccess(user)}
+          />
 
-      <CosmicSOSModal
-        isOpen={cosmicSosOpen}
-        onClose={() => setCosmicSosOpen(false)}
-        chartContext={chartContext}
-      />
+          <CosmicSOSModal
+            isOpen={cosmicSosOpen}
+            onClose={() => setCosmicSosOpen(false)}
+            chartContext={chartContext}
+          />
+        </ChartSessionProvider>
       </LanguageProvider>
     </AuthProvider>
   );

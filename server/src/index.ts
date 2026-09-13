@@ -35,6 +35,7 @@ import { governanceRouter } from './routes/governanceRoutes.js';
 import cosmicRoutes from './routes/cosmicRoutes.js';
 import westernRoutes from './routes/westernRoutes.js';
 import financialRoutes from './routes/financialRoutes.js';
+import cosmosRoutes from './routes/cosmosRoutes.js';
 
 import { DeepAstroHealthEngine } from './services/DeepAstroHealthEngine.js';
 
@@ -98,6 +99,7 @@ app.use('/api/cosmic', cosmicRoutes);
 app.use('/api/astrology/western', westernRoutes);
 app.use('/api/finance', financialRoutes);
 app.use('/api/financial', financialRoutes);
+app.use('/api/cosmos', cosmosRoutes);
 
 // Direct root route aliases for resilient Vercel Serverless Function gateway compatibility
 app.use('/auth', authRoutes);
@@ -107,6 +109,7 @@ app.use('/matching', matchingRoutes);
 app.use('/astrologers', astrologerRoutes);
 app.use('/subscription', subscriptionRoutes);
 app.use('/ai', aiRoutes);
+app.use('/cosmos', cosmosRoutes);
 app.use('/numerology', numerologyRoutes);
 app.use('/palmistry', palmistryRoutes);
 app.use('/reports', reportRoutes);
