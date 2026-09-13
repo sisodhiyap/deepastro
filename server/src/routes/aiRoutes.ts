@@ -1,3 +1,4 @@
+import { registerUniversalChatRoutes } from './universalChatRoutes.js';
 /**
  * AI Intelligence Routes (AstroBot)
  * Orchestrates multi-model query responses grounded in deterministic chart data and scripture RAG.
@@ -342,5 +343,7 @@ router.post('/chat', optionalAuth, async (req: AuthenticatedRequest, res: Respon
     return res.status(500).json({ error: 'AstroBot encountered an unexpected anomaly.', details: err.message });
   }
 });
+
+registerUniversalChatRoutes(router);
 
 export default router;

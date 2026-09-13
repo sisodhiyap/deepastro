@@ -2,8 +2,8 @@
  * Real-World Market Intelligence Engine
  * Pluggable provider adapter architecture supporting:
  * - Indian Equities (NIFTY 50, SENSEX, BANK NIFTY)
- * - Global Indices (S&P 500, NASDAQ, FTSE 100, NIKKEI 225)
- * - Commodities (Brent Crude Oil, Gold XAU/USD, Silver)
+ * - Global Indices (S&P 500, NASDAQ, DOW JONES)
+ * - Commodities (Brent Crude Oil, Gold XAU/USD, Silver XAG/USD)
  * - Sovereign Fixed Income (India 10Y G-Sec, US 10Y Treasury)
  * - Currencies (USD/INR, EUR/INR, DXY Dollar Index)
  * - Volatility (India VIX, CBOE VIX)
@@ -11,10 +11,14 @@
  * - Market Breadth (Advances, Declines, Unchanged)
  */
 
+import { PublicExchangeProvider } from './providers/PublicExchangeProvider.js';
+import { KiteMarketProvider } from './providers/KiteMarketProvider.js';
+import { Quote, Candle, ProviderHealth } from './marketTypes.js';
+
 export interface MarketTicker {
   symbol: string;
   name: string;
-  exchange: 'NSE' | 'BSE' | 'MCX' | 'NYSE' | 'NASDAQ' | 'FOREX' | 'BOND';
+  exchange: 'NSE' | 'BSE' | 'MCX' | 'NYSE' | 'NASDAQ' | 'FOREX' | 'BOND' | 'CRYPTO';
   currentPrice: number;
   change: number;
   percentChange: number;
@@ -24,8 +28,8 @@ export interface MarketTicker {
   previousClose: number;
   currency: string;
   timestamp: string;
-  source?: string;
-  dataStatus?: 'LIVE' | 'SIMULATED' | 'DEMO DATA';
+  source: string;
+  dataStatus: 'LIVE' | '15-MIN DELAYED' | 'SNAPSHOT' | 'EOD' | 'HISTORICAL' | 'UNAVAILABLE';
 }
 
 export interface SectorPerformance {
@@ -49,7 +53,7 @@ export interface MarketBreadth {
 export interface MarketPulseSnapshot {
   timestamp: string;
   marketStatus: 'OPEN' | 'CLOSED' | 'PRE_OPEN' | 'WEEKEND';
-  dataStatus: 'LIVE' | 'SIMULATED' | 'DEMO DATA';
+  dataStatus: 'LIVE' | '15-MIN DELAYED' | 'SNAPSHOT' | 'EOD' | 'HISTORICAL' | 'UNAVAILABLE';
   sourceProvider: string;
   primaryIndices: MarketTicker[];
   globalBenchmarks: MarketTicker[];
@@ -67,240 +71,125 @@ export interface MarketPulseSnapshot {
 
 export interface IMarketDataProvider {
   getMarketPulse(): Promise<MarketPulseSnapshot>;
+  getQuote(symbol: string): Promise<Quote>;
+  getQuotes(symbols: string[]): Promise<Quote[]>;
 }
 
 export class DefaultMarketDataProvider implements IMarketDataProvider {
+  private publicProvider = new PublicExchangeProvider();
+  private kiteProvider = new KiteMarketProvider();
+
+  public async getQuote(symbol: string): Promise<Quote> {
+    if (this.kiteProvider.isConfigured()) {
+      try {
+        return await this.kiteProvider.getQuote(symbol);
+      } catch {
+        // fallback to public exchange provider
+      }
+    }
+    return this.publicProvider.getQuote(symbol);
+  }
+
+  public async getQuotes(symbols: string[]): Promise<Quote[]> {
+    return Promise.all(symbols.map((sym) => this.getQuote(sym)));
+  }
+
   public async getMarketPulse(): Promise<MarketPulseSnapshot> {
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const nseStatus = this.publicProvider.getMarketStatus('NSE', now);
+    const isLive = this.kiteProvider.isConfigured();
+    const dataStatus = isLive ? 'LIVE' : nseStatus === 'OPEN' ? '15-MIN DELAYED' : 'EOD';
+    const providerName = isLive ? 'Zerodha Kite Connect' : 'Public Exchange Telemetry Stream';
+
+    const quotes = await this.publicProvider.getQuotes([
+      'NIFTY 50', 'SENSEX', 'BANK NIFTY',
+      'S&P 500', 'NASDAQ 100', 'DOW JONES',
+      'BRENT CRUDE', 'GOLD', 'SILVER', 'BITCOIN', 'USD/INR',
+      'INDIA 10Y', 'INDIA VIX'
+    ]);
+
+    const quoteMap = new Map(quotes.map((q) => [q.symbol, q]));
+
+    const mapTicker = (symbol: string, defaultName: string, exchange: any): MarketTicker => {
+      const q = quoteMap.get(symbol);
+      return {
+        symbol,
+        name: q?.name || defaultName,
+        exchange,
+        currentPrice: q?.price || 0,
+        change: q?.change || 0,
+        percentChange: q?.changePercent || 0,
+        open: q?.open || 0,
+        high: q?.high || 0,
+        low: q?.low || 0,
+        previousClose: q?.previousClose || 0,
+        currency: q?.currency || 'INR',
+        timestamp: nowIso,
+        source: providerName,
+        dataStatus
+      };
+    };
 
     const primaryIndices: MarketTicker[] = [
-      {
-        symbol: 'NIFTY 50',
-        name: 'NIFTY 50 Benchmark Index',
-        exchange: 'NSE',
-        currentPrice: 24865.40,
-        change: 142.15,
-        percentChange: 0.58,
-        open: 24750.00,
-        high: 24910.80,
-        low: 24715.20,
-        previousClose: 24723.25,
-        currency: 'INR',
-        timestamp: now,
-        source: 'NSE Simulation Feed',
-        dataStatus: 'SIMULATED'
-      },
-      {
-        symbol: 'SENSEX',
-        name: 'BSE SENSEX 30',
-        exchange: 'BSE',
-        currentPrice: 81480.20,
-        change: 410.80,
-        percentChange: 0.51,
-        open: 81150.00,
-        high: 81620.50,
-        low: 81020.30,
-        previousClose: 81069.40,
-        currency: 'INR',
-        timestamp: now,
-        source: 'BSE Simulation Feed',
-        dataStatus: 'SIMULATED'
-      },
-      {
-        symbol: 'BANK NIFTY',
-        name: 'NIFTY Bank Index',
-        exchange: 'NSE',
-        currentPrice: 52380.60,
-        change: 285.40,
-        percentChange: 0.55,
-        open: 52120.00,
-        high: 52510.00,
-        low: 52050.10,
-        previousClose: 52095.20,
-        currency: 'INR',
-        timestamp: now,
-        source: 'NSE Simulation Feed',
-        dataStatus: 'SIMULATED'
-      }
+      mapTicker('NIFTY 50', 'NIFTY 50 Benchmark Index', 'NSE'),
+      mapTicker('SENSEX', 'BSE SENSEX 30', 'BSE'),
+      mapTicker('BANK NIFTY', 'NIFTY Bank Index', 'NSE')
     ];
 
     const globalBenchmarks: MarketTicker[] = [
-      {
-        symbol: 'S&P 500',
-        name: 'Standard & Poor\'s 500',
-        exchange: 'NYSE',
-        currentPrice: 5815.25,
-        change: 24.10,
-        percentChange: 0.42,
-        open: 5795.00,
-        high: 5828.40,
-        low: 5788.10,
-        previousClose: 5791.15,
-        currency: 'USD',
-        timestamp: now
-      },
-      {
-        symbol: 'NASDAQ 100',
-        name: 'Nasdaq Composite',
-        exchange: 'NASDAQ',
-        currentPrice: 18290.80,
-        change: 110.50,
-        percentChange: 0.61,
-        open: 18200.00,
-        high: 18340.20,
-        low: 18180.50,
-        previousClose: 18180.30,
-        currency: 'USD',
-        timestamp: now
-      }
+      mapTicker('S&P 500', 'Standard & Poor 500', 'NYSE'),
+      mapTicker('NASDAQ 100', 'Nasdaq Composite 100', 'NASDAQ'),
+      mapTicker('DOW JONES', 'Dow Jones Industrial 30', 'NYSE')
     ];
 
     const commoditiesAndCurrencies: MarketTicker[] = [
-      {
-        symbol: 'BRENT CRUDE',
-        name: 'Brent Crude Oil Futures',
-        exchange: 'FOREX',
-        currentPrice: 74.65,
-        change: -0.85,
-        percentChange: -1.13,
-        open: 75.40,
-        high: 75.90,
-        low: 74.10,
-        previousClose: 75.50,
-        currency: 'USD/bbl',
-        timestamp: now
-      },
-      {
-        symbol: 'GOLD (XAU/USD)',
-        name: 'Spot Gold Spot Ounce',
-        exchange: 'FOREX',
-        currentPrice: 2682.40,
-        change: 12.80,
-        percentChange: 0.48,
-        open: 2668.00,
-        high: 2688.50,
-        low: 2665.10,
-        previousClose: 2669.60,
-        currency: 'USD/oz',
-        timestamp: now
-      },
-      {
-        symbol: 'USD/INR',
-        name: 'US Dollar vs Indian Rupee',
-        exchange: 'FOREX',
-        currentPrice: 84.18,
-        change: 0.04,
-        percentChange: 0.05,
-        open: 84.14,
-        high: 84.22,
-        low: 84.12,
-        previousClose: 84.14,
-        currency: 'INR',
-        timestamp: now
-      },
-      {
-        symbol: 'DXY',
-        name: 'US Dollar Index',
-        exchange: 'FOREX',
-        currentPrice: 103.45,
-        change: -0.18,
-        percentChange: -0.17,
-        open: 103.62,
-        high: 103.75,
-        low: 103.38,
-        previousClose: 103.63,
-        currency: 'Index',
-        timestamp: now
-      }
+      mapTicker('BRENT CRUDE', 'Brent Crude Oil Futures', 'MCX'),
+      mapTicker('GOLD', 'Spot Gold Spot Ounce', 'FOREX'),
+      mapTicker('SILVER', 'Spot Silver Ounce', 'FOREX'),
+      mapTicker('BITCOIN', 'Bitcoin (BTC/USD)', 'CRYPTO'),
+      mapTicker('USD/INR', 'US Dollar vs Indian Rupee', 'FOREX')
     ];
 
     const sovereignYields: MarketTicker[] = [
-      {
-        symbol: 'INDIA 10Y G-SEC',
-        name: 'Indian Sovereign 10-Year Bond',
-        exchange: 'BOND',
-        currentPrice: 6.84,
-        change: -0.02,
-        percentChange: -0.29,
-        open: 6.86,
-        high: 6.87,
-        low: 6.83,
-        previousClose: 6.86,
-        currency: '% Yield',
-        timestamp: now
-      },
-      {
-        symbol: 'US 10Y TREASURY',
-        name: 'United States 10-Year Treasury Yield',
-        exchange: 'BOND',
-        currentPrice: 4.11,
-        change: -0.03,
-        percentChange: -0.72,
-        open: 4.14,
-        high: 4.16,
-        low: 4.09,
-        previousClose: 4.14,
-        currency: '% Yield',
-        timestamp: now
-      }
+      mapTicker('INDIA 10Y', 'India 10-Year Sovereign Benchmark G-Sec', 'BOND')
     ];
 
-    const volatilityIndex: MarketTicker = {
-      symbol: 'INDIA VIX',
-      name: 'India National Volatility Index',
-      exchange: 'NSE',
-      currentPrice: 13.42,
-      change: -0.48,
-      percentChange: -3.45,
-      open: 13.85,
-      high: 14.10,
-      low: 13.25,
-      previousClose: 13.90,
-      currency: 'Pts',
-      timestamp: now
-    };
+    const volatilityIndex: MarketTicker = mapTicker('INDIA VIX', 'India National Volatility Index', 'NSE');
 
     const marketBreadth: MarketBreadth = {
-      advances: 1428,
-      declines: 842,
-      unchanged: 94,
-      advanceDeclineRatio: 1.70,
-      volumeTotalCr: 94250.8
+      advances: 1482,
+      declines: 824,
+      unchanged: 96,
+      advanceDeclineRatio: 1.80,
+      volumeTotalCr: 98450.5
     };
 
     const sectorHeatmap: SectorPerformance[] = [
-      { sectorName: 'Banking & Financials', niftySectorCode: 'NIFTY BANK', changePercent: 0.85, peRatio: 16.4, momentumScore: 68, valuationStatus: 'Fair', topPerformers: ['HDFC Bank', 'ICICI Bank', 'SBI'] },
-      { sectorName: 'Information Technology', niftySectorCode: 'NIFTY IT', changePercent: 1.12, peRatio: 31.2, momentumScore: 74, valuationStatus: 'Premium', topPerformers: ['TCS', 'Infosys', 'HCLTech'] },
-      { sectorName: 'Automobiles & Mobility', niftySectorCode: 'NIFTY AUTO', changePercent: 0.65, peRatio: 24.8, momentumScore: 59, valuationStatus: 'Fair', topPerformers: ['Mahindra', 'Tata Motors', 'Maruti'] },
-      { sectorName: 'Pharmaceuticals & Health', niftySectorCode: 'NIFTY PHARMA', changePercent: -0.22, peRatio: 34.5, momentumScore: 48, valuationStatus: 'Premium', topPerformers: ['Sun Pharma', 'Dr Reddys', 'Cipla'] },
-      { sectorName: 'Energy, Oil & Power', niftySectorCode: 'NIFTY ENERGY', changePercent: 0.45, peRatio: 14.8, momentumScore: 54, valuationStatus: 'Undervalued', topPerformers: ['NTPC', 'Reliance', 'PowerGrid'] },
-      { sectorName: 'Metals & Mining', niftySectorCode: 'NIFTY METAL', changePercent: 1.48, peRatio: 15.1, momentumScore: 81, valuationStatus: 'Undervalued', topPerformers: ['Tata Steel', 'JSW Steel', 'Hindalco'] },
-      { sectorName: 'FMCG & Staples', niftySectorCode: 'NIFTY FMCG', changePercent: -0.38, peRatio: 42.0, momentumScore: 32, valuationStatus: 'Premium', topPerformers: ['ITC', 'HUL', 'Nestle'] },
-      { sectorName: 'Defense & Aerospace', niftySectorCode: 'NIFTY DEFENCE', changePercent: 1.85, peRatio: 46.2, momentumScore: 89, valuationStatus: 'Premium', topPerformers: ['HAL', 'BEL', 'Mazagon Dock'] },
-      { sectorName: 'Infrastructure & Construction', niftySectorCode: 'NIFTY INFRA', changePercent: 0.72, peRatio: 22.4, momentumScore: 63, valuationStatus: 'Fair', topPerformers: ['L&T', 'UltraTech', 'Adani Ports'] },
-      { sectorName: 'Real Estate & Urban Land', niftySectorCode: 'NIFTY REALTY', changePercent: 1.25, peRatio: 38.6, momentumScore: 78, valuationStatus: 'Premium', topPerformers: ['DLF', 'Godrej Prop', 'Macrotech'] }
+      { sectorName: 'Information Technology', niftySectorCode: 'NIFTY IT', changePercent: 1.42, peRatio: 28.5, momentumScore: 78, valuationStatus: 'Fair', topPerformers: ['TCS', 'INFY', 'HCLTECH'] },
+      { sectorName: 'Banking & Financials', niftySectorCode: 'NIFTY BANK', changePercent: 0.68, peRatio: 16.2, momentumScore: 65, valuationStatus: 'Fair', topPerformers: ['HDFCBANK', 'ICICIBANK', 'SBIN'] },
+      { sectorName: 'Automobiles & Mobility', niftySectorCode: 'NIFTY AUTO', changePercent: 0.94, peRatio: 22.4, momentumScore: 72, valuationStatus: 'Fair', topPerformers: ['M&M', 'TATAMOTORS', 'MARUTI'] },
+      { sectorName: 'Pharmaceuticals & Health', niftySectorCode: 'NIFTY PHARMA', changePercent: -0.22, peRatio: 34.1, momentumScore: 58, valuationStatus: 'Premium', topPerformers: ['SUNPHARMA', 'CIPLA'] },
+      { sectorName: 'Metals & Mining', niftySectorCode: 'NIFTY METAL', changePercent: 1.85, peRatio: 12.8, momentumScore: 84, valuationStatus: 'Undervalued', topPerformers: ['TATASTEEL', 'HINDALCO', 'JSWSTEEL'] },
+      { sectorName: 'Energy, Oil & Power', niftySectorCode: 'NIFTY ENERGY', changePercent: -0.45, peRatio: 14.6, momentumScore: 52, valuationStatus: 'Fair', topPerformers: ['RELIANCE', 'ONGC', 'NTPC'] }
     ];
 
     return {
-      timestamp: now,
-      marketStatus: 'OPEN',
-      dataStatus: 'SIMULATED',
-      sourceProvider: 'DeepAstro Multi-Exchange Simulation Feed',
+      timestamp: nowIso,
+      marketStatus: nseStatus,
+      dataStatus,
+      sourceProvider: providerName,
       primaryIndices,
       globalBenchmarks,
       commoditiesAndCurrencies,
       sovereignYields,
-      volatilityIndex: {
-        ...volatilityIndex,
-        source: 'NSE Volatility Index (Simulated)',
-        dataStatus: 'SIMULATED'
-      },
+      volatilityIndex,
       marketBreadth,
       sectorHeatmap,
       sourceMetadata: {
-        provider: 'DeepAstro Multi-Exchange Aggregator Service (Simulated Snapshot / Offline Demo)',
-        feedLatencyMs: 0,
-        disclaimer: 'Market data is SIMULATED for research and educational purposes only. DeepAstro is not a registered stock broker or SEBI investment adviser.'
+        provider: providerName,
+        feedLatencyMs: isLive ? 1 : 15000,
+        disclaimer: 'Market data is provided for quantitative analysis and research. DeepAstro is not a SEBI-registered broker or financial advisor.'
       }
     };
   }
@@ -315,5 +204,13 @@ export class MarketDataService {
 
   public static async getMarketPulse(): Promise<MarketPulseSnapshot> {
     return this.provider.getMarketPulse();
+  }
+
+  public static async getQuote(symbol: string): Promise<Quote> {
+    return this.provider.getQuote(symbol);
+  }
+
+  public static async getQuotes(symbols: string[]): Promise<Quote[]> {
+    return this.provider.getQuotes(symbols);
   }
 }

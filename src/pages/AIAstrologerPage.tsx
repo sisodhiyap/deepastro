@@ -1,3 +1,4 @@
+import { DeepAstroAnswerCard, type DeepAstroAnswerCardSpec } from '../components/chatbot/DeepAstroAnswerCard.js';
 import React, { useState } from 'react';
 import {
   Sparkles,

@@ -35,6 +35,7 @@ import { governanceRouter } from './routes/governanceRoutes.js';
 import cosmicRoutes from './routes/cosmicRoutes.js';
 import westernRoutes from './routes/westernRoutes.js';
 import financialRoutes from './routes/financialRoutes.js';
+import weatherRoutes from './routes/weatherRoutes.js';
 import cosmosRoutes from './routes/cosmosRoutes.js';
 
 import { DeepAstroHealthEngine } from './services/DeepAstroHealthEngine.js';
@@ -99,6 +100,7 @@ app.use('/api/governance', governanceRouter);
 app.use('/api/cosmic', cosmicRoutes);
 app.use('/api/astrology/western', westernRoutes);
 app.use('/api/finance', financialRoutes);
+app.use('/api/weather', weatherRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/cosmos', cosmosRoutes);
 

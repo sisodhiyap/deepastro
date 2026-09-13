@@ -1045,6 +1045,10 @@ export class CosmicFeaturesEngine {
       signatures.push(`Saturn influences the primary axis: progress requires patience, meticulous documentation, and no hasty shortcuts.`);
     }
 
+    if (signatures.length === 0) {
+      signatures.push(`Prashna Lagna in ${prashnaAscSignName} with Moon in House ${moon.house} (${moon.signName}) provides the foundational astrological inquiry tone.`);
+    }
+
     siddhiScore = Math.min(95, Math.max(35, siddhiScore));
 
     let verdict: PrashnaResult['verdict'] = 'Favorable (Karya Siddhi Probable)';

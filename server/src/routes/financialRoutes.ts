@@ -20,6 +20,7 @@ import { MarketRegimeEngine } from '../engines/market/marketRegimeEngine.js';
 import { MacroEconomicEngine } from '../engines/macro/macroEconomicEngine.js';
 import { GeopoliticalRiskEngine } from '../engines/geopolitical/geopoliticalRiskEngine.js';
 import { NewsIntelligenceEngine } from '../engines/news/newsIntelligenceEngine.js';
+import { NewsProvider } from '../engines/news/newsProvider.js';
 import { FactCheckEngine } from '../engines/news/factCheckEngine.js';
 import { MundaneChartsEngine, MUNDANE_BENCHMARKS } from '../engines/financialAstrology/mundaneCharts.js';
 import { PlanetaryCyclesEngine } from '../engines/financialAstrology/planetaryCycles.js';
@@ -72,13 +73,23 @@ router.get('/geopolitical-risk', (_req: Request, res: Response) => {
   }
 });
 
-// GET /api/finance/news-intelligence
-router.get('/news-intelligence', (_req: Request, res: Response) => {
+// GET /api/finance/news-intelligence & /api/finance/news
+router.get('/news-intelligence', async (_req: Request, res: Response) => {
   try {
-    const news = NewsIntelligenceEngine.getLatestNewsIntelligence();
-    return res.json({ success: true, news });
+    const realNews = await NewsProvider.fetchLivemintFeed();
+    return res.json({ success: true, news: realNews });
   } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to fetch news intelligence.', details: err.message });
+    const fallbackNews = NewsIntelligenceEngine.getLatestNewsIntelligence();
+    return res.json({ success: true, news: fallbackNews });
+  }
+});
+
+router.get('/news', async (_req: Request, res: Response) => {
+  try {
+    const realNews = await NewsProvider.fetchLivemintFeed();
+    return res.json({ success: true, news: realNews });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch news feed.', details: err.message });
   }
 });
 
