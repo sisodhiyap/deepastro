@@ -76,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'CORE PLATFORM',
       items: [
         { id: 'home' as NavTabId, label: 'Cosmic Portal (Home)', icon: Compass },
-        { id: 'my-cosmos' as NavTabId, label: 'My Cosmos (Canonical)', icon: Sparkles, badge: '6.0.2' },
+        { id: 'my-cosmos' as NavTabId, label: 'My Cosmos (Canonical)', icon: Sparkles, badge: '6.0.3' },
         { id: 'dashboard' as NavTabId, label: 'My Dashboard', icon: LayoutDashboard },
         { id: 'intelligence' as NavTabId, label: 'Cosmic Intelligence', icon: Brain, badge: 'v6.0' },
         { id: 'cosmic-hub' as NavTabId, label: 'Cosmic Hub & Sky', icon: Sparkles, badge: 'LIVE' },

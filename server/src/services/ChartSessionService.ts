@@ -113,10 +113,10 @@ export class ChartSessionService {
       latitude: resolvedLat,
       longitude: resolvedLon,
       timezone: resolvedTz,
-      engineVersion: '6.0.2'
+      engineVersion: '6.0.3'
     });
 
-    const cacheKey = `deepastro:chart:${fingerprint}:v6.0.2`;
+    const cacheKey = `deepastro:chart:${fingerprint}:v6.0.3`;
     const cached = this.sessionCache.get(cacheKey);
     if (cached) {
       return cached;
@@ -347,13 +347,13 @@ export class ChartSessionService {
         siderealTimeHours: ascDeg / 15,
         ayanamsaName: 'Lahiri (Chitra Paksha)',
         ayanamsaValue: ayanamsaVal,
-        calculationVersion: '6.0.2'
+        calculationVersion: '6.0.3'
       },
       calculationMetadata: {
         ayanamsa: 'Lahiri',
         houseSystem: 'Placidus / Equal Hybrid',
-        calculationVersion: '6.0.2',
-        engineVersion: '6.0.2'
+        calculationVersion: '6.0.3',
+        engineVersion: '6.0.3'
       },
       birthDataFingerprint: fingerprint,
       calculatedAt: new Date().toISOString(),
@@ -398,7 +398,7 @@ export class ChartSessionService {
   }
 
   public static getSession(fingerprint: string): ChartSession | undefined {
-    const cacheKey = `deepastro:chart:${fingerprint}:v6.0.2`;
+    const cacheKey = `deepastro:chart:${fingerprint}:v6.0.3`;
     return this.sessionCache.get(cacheKey);
   }
 

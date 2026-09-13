@@ -21,7 +21,7 @@ export interface FingerprintInputs {
 }
 
 export class BirthFingerprintEngine {
-  public static readonly CURRENT_ENGINE_VERSION = '6.0.2';
+  public static readonly CURRENT_ENGINE_VERSION = '6.0.3';
   public static readonly DEFAULT_AYANAMSA = 'Lahiri (Chitra Paksha)';
   public static readonly DEFAULT_HOUSE_SYSTEM = 'Placidus / Sripati Hybrid';
 

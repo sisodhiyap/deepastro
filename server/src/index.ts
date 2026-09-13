@@ -58,7 +58,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
     system: 'DeepAstro Cosmic Engine',
     timestamp: health.timestamp,
     ayanamsha: 'Lahiri (Chitra Paksha)',
-    version: DeepAstroHealthEngine.VERSION,
+    version: '6.0.3', // 6.0.3 unified release
+    engineVersion: DeepAstroHealthEngine.VERSION,
     totalSubsystems: health.totalSubsystems,
     healthyCount: health.healthyCount,
     degradedCount: health.degradedCount,

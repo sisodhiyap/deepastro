@@ -534,7 +534,7 @@ Respond ONLY with a valid JSON object matching this schema:
         interp: 'Traditional sign of emotional diplomacy, warmth, and the rare ability to bridge contrasting viewpoints with grace.',
       },
     ];
-    const heart = heartCurves[(seed >> 2) % heartCurves.length];
+    // const heart defined below
 
     const headSlopes = [
       {
@@ -554,7 +554,7 @@ Respond ONLY with a valid JSON object matching this schema:
         interp: 'Deep philosophical contemplation, artistic sensibility, and heightened attunement to subconscious impressions.',
       },
     ];
-    const head = headSlopes[(seed >> 4) % headSlopes.length];
+    // const head defined below
 
     const lifeArcs = [
       {
@@ -570,7 +570,7 @@ Respond ONLY with a valid JSON object matching this schema:
         interp: 'High personal ambition, milestones achieved through continuous self-cultivation, and remarkable bounce-back capability.',
       },
     ];
-    const life = lifeArcs[(seed >> 6) % lifeArcs.length];
+    // const life defined below
 
     const fateTrajectories = [
       {
@@ -586,7 +586,12 @@ Respond ONLY with a valid JSON object matching this schema:
         interp: 'Major career manifestation blossoms through mature intellect and conscious professional pivots in middle years.',
       },
     ];
-    const fate = fateTrajectories[(seed >> 8) % fateTrajectories.length];
+    const heart = heartCurves[(seed >>> 2) % heartCurves.length] || heartCurves[0];
+    const head = headSlopes[(seed >>> 4) % headSlopes.length] || headSlopes[0];
+    const life = lifeArcs[(seed >>> 6) % lifeArcs.length] || lifeArcs[0];
+    const fate = fateTrajectories[(seed >>> 8) % fateTrajectories.length] || fateTrajectories[0];
+
+    const isLowQuality = qualityScore < 60;
 
     return {
       handType,
@@ -594,35 +599,35 @@ Respond ONLY with a valid JSON object matching this schema:
       imageQualityScore: qualityScore,
       handDetected: true,
       visionProvider: 'DeepAstro Biometric Chiromancy Engine',
-      visionModel: `biometric-v6.0.2-${hash.slice(0, 6)}`,
+      visionModel: `biometric-v6.0.3-${hash.slice(0, 6)}`,
       handElement,
       heartLine: {
-        status: 'VISIBLE',
-        clarity: heart.clarity,
+        status: isLowQuality ? 'LOW_CONFIDENCE' : 'VISIBLE',
+        clarity: isLowQuality ? 'Faint / Indistinct' : heart.clarity,
         direction: heart.clarity,
-        confidence: 0.89,
-        interpretation: heart.interp,
+        confidence: isLowQuality ? 0.45 : 0.89,
+        interpretation: isLowQuality ? 'Heart line detail unresolved due to low resolution.' : heart.interp,
       },
       headLine: {
-        status: 'VISIBLE',
-        clarity: head.clarity,
+        status: isLowQuality ? 'LOW_CONFIDENCE' : 'VISIBLE',
+        clarity: isLowQuality ? 'Faint / Indistinct' : head.clarity,
         direction: head.clarity,
-        confidence: 0.88,
-        interpretation: head.interp,
+        confidence: isLowQuality ? 0.42 : 0.88,
+        interpretation: isLowQuality ? 'Head line detail unresolved due to low resolution.' : head.interp,
       },
       lifeLine: {
         status: 'VISIBLE',
         clarity: life.clarity,
         arc: life.clarity,
-        confidence: 0.93,
+        confidence: isLowQuality ? 0.55 : 0.93,
         interpretation: life.interp,
       },
       fateLine: {
-        status: 'VISIBLE',
-        clarity: fate.clarity,
+        status: isLowQuality ? 'NOT_VISIBLE' : 'VISIBLE',
+        clarity: isLowQuality ? 'Unresolved at current resolution' : fate.clarity,
         visibility: fate.clarity,
-        confidence: 0.84,
-        interpretation: fate.interp,
+        confidence: isLowQuality ? 0.35 : 0.84,
+        interpretation: isLowQuality ? 'Fate line not discernible in current image quality.' : fate.interp,
       },
       prominentMounts: [
         {

@@ -114,7 +114,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
             <div className="flex items-center gap-2">
               <span className="font-bold tracking-tight text-sm text-white">MY COSMOS</span>
               <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/50">
-                CANONICAL SESSION 6.0.2
+                CANONICAL SESSION 6.0.3
               </span>
             </div>
             <div className="text-xs text-slate-400">Single Source of Truth Astronomical Model</div>
