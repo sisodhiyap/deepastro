@@ -40,38 +40,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary.js';
 import { getBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
 
 export const App: React.FC = () => {
-  // Security verification gate state (server verified via /api/security/verify)
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return Boolean(localStorage.getItem('deepastro_security_token'));
-    }
-    return false;
-  });
-  // Verify security gate token with server
-  useEffect(() => {
-    const secToken = typeof window !== 'undefined' ? localStorage.getItem('deepastro_security_token') : null;
-    if (secToken) {
-      fetch('/api/security/status', {
-        headers: { Authorization: `Bearer ${secToken}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.unlocked) {
-            setIsUnlocked(true);
-          } else {
-            localStorage.removeItem('deepastro_security_token');
-            localStorage.removeItem('deepastro_security_passed');
-            setIsUnlocked(false);
-          }
-        })
-        .catch(() => {
-          // If server is offline during initial check, retain unlocked if token exists
-          setIsUnlocked(Boolean(secToken));
-        });
-    } else {
-      setIsUnlocked(false);
-    }
-  }, []);
+
 
 
   const [activeTab, setActiveTab] = useState<NavTabId>(() => {
@@ -124,7 +93,12 @@ export const App: React.FC = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [cosmicSosOpen, setCosmicSosOpen] = useState(false);
-  const [showDedicatedLogin, setShowDedicatedLogin] = useState(false);
+  const [showDedicatedLogin, setShowDedicatedLogin] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname === '/login' || window.location.search.includes('login=true');
+    }
+    return false;
+  });
 
   // Verify and load authenticated user session on mount
   useEffect(() => {
@@ -208,25 +182,21 @@ export const App: React.FC = () => {
     }
   };
 
-  // 1. Enforce Server-Verified Security Gate
-  if (!isUnlocked) {
-    return (
-      <AuthProvider>
-        <LanguageProvider>
-          <SecurityGate onUnlock={() => setIsUnlocked(true)} />
-        </LanguageProvider>
-      </AuthProvider>
-    );
-  }
 
-  // 2. Full-Screen Split-Screen Authentication Page
+
+  // Full-Screen Split-Screen Authentication Page
   if (showDedicatedLogin) {
     return (
       <AuthProvider>
         <LanguageProvider>
           <LoginPage 
             onSuccess={handleAuthSuccess} 
-            onNavigateLanding={() => setShowDedicatedLogin(false)} 
+            onNavigateLanding={() => {
+              setShowDedicatedLogin(false);
+              if (typeof window !== 'undefined' && window.location.pathname === '/login') {
+                window.history.pushState({}, '', '/');
+              }
+            }} 
           />
         </LanguageProvider>
       </AuthProvider>
@@ -250,11 +220,15 @@ export const App: React.FC = () => {
       case 'western':
         return <WesternPage />;
       case 'investment-lab':
+        return <InvestmentLabPage initialTab="market" onNavigate={setActiveTab} />;
       case 'market-pulse':
+        return <InvestmentLabPage initialTab="market" onNavigate={setActiveTab} />;
       case 'financial-astrology':
+        return <InvestmentLabPage initialTab="synthesis" onNavigate={setActiveTab} />;
       case 'news-intelligence':
+        return <InvestmentLabPage initialTab="news" onNavigate={setActiveTab} />;
       case 'global-risk':
-        return <InvestmentLabPage />;
+        return <InvestmentLabPage initialTab="geopolitical" onNavigate={setActiveTab} />;
       case 'ai-astrologer':
         return <AIAstrologerPage profile={currentProfile} />;
       case 'predictions':
