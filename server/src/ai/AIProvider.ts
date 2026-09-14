@@ -1,6 +1,7 @@
 /**
  * DeepAstro AI Provider Abstraction
- * Defines common contracts, structured schemas, and token metrics across OpenAI, Gemini, and Grok.
+ * Defines common contracts, structured schemas, token metrics, and multi-tier
+ * fail-safe standards across Z 5.3 Flash, OpenAI, Gemini, Grok, and Ollama.
  */
 
 export interface AIResponsePayload {
@@ -18,10 +19,12 @@ export interface AIRequestOptions {
   userPrompt: string;
   temperature?: number;
   maxTokens?: number;
+  modelOverride?: string;
+  timeoutMs?: number;
 }
 
 export interface AIExecutionResult {
-  provider: 'OpenAI' | 'Gemini' | 'Grok' | 'Ollama';
+  provider: 'OpenAI' | 'Gemini' | 'Grok' | 'Ollama' | 'Z53Flash';
   model: string;
   content: AIResponsePayload;
   rawText: string;
@@ -30,10 +33,13 @@ export interface AIExecutionResult {
   completionTokens: number;
   totalTokens: number;
   latencyMs: number;
+  fallbackChain?: string[];
+  failoverReason?: string;
 }
 
 export interface IAIProvider {
-  readonly name: 'OpenAI' | 'Gemini' | 'Grok' | 'Ollama';
+  readonly name: 'OpenAI' | 'Gemini' | 'Grok' | 'Ollama' | 'Z53Flash';
   readonly isConfigured: boolean;
+  readonly contextCapacityTokens?: number;
   generateInterpretation(options: AIRequestOptions): Promise<AIExecutionResult>;
 }

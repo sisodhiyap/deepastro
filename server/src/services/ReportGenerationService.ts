@@ -239,9 +239,11 @@ export class ReportGenerationService {
       const aiResponse = await runner.runStage('AI_INTERPRETATION', async () => {
         return this.aiOrchestrator.orchestrate({
           userId: request.userId || undefined,
-          query: `Synthesize Vedic astrological destiny dossier for ${request.profile.name}.`,
+          query: `Synthesize comprehensive Vedic astrological destiny dossier for ${request.profile.name}. Include full divisional chart synthesis, Vimshottari Dasha trajectory, and life purpose alignments.`,
           kundli,
           feature: 'ReportSynthesis',
+          preferredProvider: 'Z53Flash',
+          enableCrossCheck: true,
         });
       });
 

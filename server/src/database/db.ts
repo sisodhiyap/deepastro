@@ -102,7 +102,7 @@ export interface AIUsageRecord {
   id: string;
   userId?: string;
   feature: string;
-  provider: 'OpenAI' | 'Gemini' | 'Grok' | 'Ollama';
+  provider: 'OpenAI' | 'Gemini' | 'Grok' | 'Ollama' | 'Z53Flash' | 'Deterministic';
   model: string;
   promptTokens: number;
   completionTokens: number;

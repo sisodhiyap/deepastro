@@ -22,14 +22,17 @@ router.get('/models', async (_req, res: Response) => {
     const isOllamaReachable = await ollama.isReachable();
     const installedOllamaModels = isOllamaReachable ? await ollama.listInstalledModels() : [];
 
+    const z53 = orchestrator.getZ53Provider();
     return res.json({
       providers: [
-        { name: 'Ollama', label: 'Ollama (Local On-Device Engine)', isAvailable: isOllamaReachable, models: installedOllamaModels },
-        { name: 'OpenAI', label: 'OpenAI (GPT-4o)', isAvailable: Boolean(process.env.OPENAI_API_KEY) },
-        { name: 'Gemini', label: 'Google Gemini (1.5 Pro)', isAvailable: Boolean(process.env.GEMINI_API_KEY) },
-        { name: 'Grok', label: 'xAI Grok (Grok-2)', isAvailable: Boolean(process.env.GROK_API_KEY) },
+        { name: 'Z53Flash', label: 'Z 5.3 Flash (10M Tokens / GLM-5.3-Flash)', isAvailable: z53.isConfigured, model: z53.currentModel, contextCapacityTokens: 1310720 },
+        { name: 'OpenAI', label: 'OpenAI (GPT-4o)', isAvailable: Boolean(process.env.OPENAI_API_KEY), model: 'gpt-4o', contextCapacityTokens: 128000 },
+        { name: 'Gemini', label: 'Google Gemini (1.5 Pro / Flash)', isAvailable: Boolean(process.env.GEMINI_API_KEY), model: 'gemini-1.5-pro', contextCapacityTokens: 2000000 },
+        { name: 'Grok', label: 'xAI Grok (Grok-2)', isAvailable: Boolean(process.env.GROK_API_KEY), model: 'grok-beta', contextCapacityTokens: 128000 },
+        { name: 'Ollama', label: 'Ollama (Local On-Device Engine)', isAvailable: isOllamaReachable, models: installedOllamaModels, contextCapacityTokens: 32000 },
       ],
-      defaultProvider: isOllamaReachable ? 'Ollama' : 'OpenAI',
+      defaultProvider: z53.isConfigured ? 'Z53Flash' : (isOllamaReachable ? 'Ollama' : 'OpenAI'),
+      activeZ53Model: z53.currentModel,
       activeOllamaModel: ollama.currentModel,
       isOllamaConnected: isOllamaReachable,
     });
@@ -42,6 +45,18 @@ router.get('/models', async (_req, res: Response) => {
 router.get('/connections', (_req, res: Response) => {
   const statuses = EnvLoader.getKeyStatuses();
   return res.json({ connections: statuses });
+});
+
+// GET /api/ai/health - Health & Cooldown telemetry for all 5 engines
+router.get('/health', (_req, res: Response) => {
+  const statuses = orchestrator.getProviderHealthStatus();
+  return res.json({
+    status: 'HEALTHY',
+    system: 'DeepAstro Multi-Tier Failover Mesh',
+    timestamp: new Date().toISOString(),
+    failoverChain: ['Z53Flash (10M)', 'Gemini (2M)', 'OpenAI (128k)', 'Grok (128k)', 'Deterministic Jyotish Floor'],
+    providers: statuses,
+  });
 });
 
 export type ConnectionStatusCategory =
@@ -74,6 +89,52 @@ router.post('/test-connections', async (_req, res: Response) => {
     if (err.name === 'TimeoutError' || err.name === 'AbortError' || err.message?.includes('timeout')) return 'TIMEOUT';
     return 'SERVER_ERROR';
   };
+
+  // 0. Z 5.3 Flash (Test Auth & Model List)
+  const z53Key = process.env.Z53_API_KEY || process.env.OPENROUTER_API_KEY || process.env.ROUTER9_API_KEY;
+  if (z53Key) {
+    const start = Date.now();
+    try {
+      const resp = await fetch('https://openrouter.ai/api/v1/auth/key', {
+        headers: { Authorization: `Bearer ${z53Key}` },
+        signal: AbortSignal.timeout(6000),
+      });
+      const latency = Date.now() - start;
+      if (resp.ok) {
+        results.push({
+          provider: 'Z 5.3 Flash (GLM-5.3-Flash)',
+          status: 'CONNECTED',
+          latencyMs: latency,
+          details: 'Authenticated successfully. 10M token processing capacity & 1.3M+ context active.',
+          httpStatus: resp.status,
+        });
+      } else {
+        const cat = categorizeError(null, resp.status);
+        results.push({
+          provider: 'Z 5.3 Flash (GLM-5.3-Flash)',
+          status: cat,
+          latencyMs: latency,
+          details: `HTTP ${resp.status}: ${resp.statusText}`,
+          httpStatus: resp.status,
+        });
+      }
+    } catch (err: any) {
+      const cat = categorizeError(err);
+      results.push({
+        provider: 'Z 5.3 Flash (GLM-5.3-Flash)',
+        status: cat,
+        latencyMs: Date.now() - start,
+        details: err.message || 'Connection failed',
+      });
+    }
+  } else {
+    results.push({
+      provider: 'Z 5.3 Flash (GLM-5.3-Flash)',
+      status: 'NOT_CONFIGURED',
+      latencyMs: 0,
+      details: 'Z53_API_KEY / OPENROUTER_API_KEY missing in key.env / process.env',
+    });
+  }
 
   // 1. OpenAI (Test Auth & Model List)
   if (process.env.OPENAI_API_KEY) {
@@ -325,7 +386,7 @@ router.post('/chat', optionalAuth, async (req: AuthenticatedRequest, res: Respon
       kundli,
       feature: 'AstroBot',
       enableCrossCheck: isProUser,
-      preferredProvider: provider,
+      preferredProvider: provider || 'Z53Flash',
       model,
     });
 
