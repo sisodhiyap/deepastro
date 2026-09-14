@@ -172,3 +172,81 @@ export interface UserFutureConsent {
   consentTimestamp: string;
   consentVersion: string;
 }
+
+
+export interface SystemConvergenceDetail {
+  system: string;
+  status: 'SUPPORTING' | 'NEUTRAL' | 'CONTRADICTING' | 'UNAVAILABLE';
+  strength: number; // 0 to 100
+  evidenceCount: number;
+  ruleVersion: string;
+}
+
+export interface FutureWindowItem {
+  id: string;
+  title: string;
+  timing: string;
+  description: string;
+  domain: string;
+  confidence: ConfidenceRating;
+  supportingSystems: string[];
+}
+
+export interface AwarenessPeriodItem {
+  id: string;
+  title: string;
+  timing: string;
+  description: string;
+  theme: string;
+  guidance: string;
+}
+
+export interface SoulJourneySummary {
+  pastInfluence: string;
+  presentLesson: string;
+  futureEvolution: string;
+  disclaimer: string;
+}
+
+export interface FutureMapData {
+  calculationFingerprint: string;
+  forecastFingerprint: string;
+  verificationId: string;
+  engineVersion: string;
+  generatedAt: string;
+  consentLevel: FutureRevealLevel;
+  horizon: ForecastHorizon;
+  currentLifePhase: string;
+  nextMajorWindow: {
+    title: string;
+    timing: string;
+    description: string;
+    domain: string;
+    confidence: ConfidenceRating;
+  };
+  confidence: number; // Dynamic percentage 0-100
+  convergence: {
+    systemsEvaluated: number;
+    systemsConverging: number;
+    overallConvergence: 'HIGH' | 'MODERATE' | 'LOW';
+    systemDetails: SystemConvergenceDetail[];
+  };
+  timeline: YearForecast[];
+  lifeAreas: Record<string, DomainForecast>;
+  strongestWindows: FutureWindowItem[];
+  awarenessPeriods: AwarenessPeriodItem[];
+  soulJourney: SoulJourneySummary;
+  evidence: string[];
+  contradictions: string[];
+  uncertainty: {
+    factors: string[];
+    alternativeScenarios: string[];
+  };
+  provenance: {
+    verificationId: string;
+    engineVersion: string;
+    calculationFingerprint: string;
+    forecastFingerprint: string;
+    issuedAt: string;
+  };
+}

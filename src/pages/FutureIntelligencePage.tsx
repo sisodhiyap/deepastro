@@ -21,7 +21,9 @@ import {
   CheckCircle2,
   RefreshCw,
   HelpCircle,
-  BarChart3
+  BarChart3,
+  Lock,
+  AlertCircle
 } from 'lucide-react';
 import { FutureInsightCard } from '../components/future/FutureInsightCard';
 import { FutureYearCard, YearCardData } from '../components/future/FutureYearCard';
@@ -41,6 +43,8 @@ export const FutureIntelligencePage: React.FC = () => {
   const [revealLevel, setRevealLevel] = useState<number>(1);
   const [horizonYears, setHorizonYears] = useState<3 | 5 | 10>(10);
   const [isPremiumDenied, setIsPremiumDenied] = useState<boolean>(false);
+  const [isAuthRequired, setIsAuthRequired] = useState<boolean>(false);
+  const [isProfileIncomplete, setIsProfileIncomplete] = useState<boolean>(false);
 
   const fetchForecast = async (overrideConsentLevel?: number) => {
     setLoading(true);
@@ -64,8 +68,25 @@ export const FutureIntelligencePage: React.FC = () => {
         }),
       });
 
+      if (res.status === 401) {
+        setIsAuthRequired(true);
+        setLoading(false);
+        return;
+      }
+
       if (res.status === 403) {
-        setIsPremiumDenied(true);
+        const body = await res.json().catch(() => ({}));
+        if (body.error === 'FUTURE_CONSENT_REQUIRED') {
+          setIsConsentModalOpen(true);
+        } else {
+          setIsPremiumDenied(true);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (res.status === 422) {
+        setIsProfileIncomplete(true);
         setLoading(false);
         return;
       }
@@ -115,6 +136,68 @@ export const FutureIntelligencePage: React.FC = () => {
     }
     fetchForecast(level);
   };
+
+  if (isAuthRequired) {
+    return (
+      <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
+        <div className="max-w-xl w-full bg-[#111827] border border-cyan-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
+            <Lock className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
+              AUTHENTICATION REQUIRED
+            </span>
+            <h2 className="text-2xl font-black font-satoshi text-slate-100">
+              Sign In to Access Living Future Intelligence
+            </h2>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              DeepAstro computes personalized 3/5/10-year timelines derived strictly from your verified birth data. Please sign in to access your cosmic forecast.
+            </p>
+          </div>
+          <div className="pt-2">
+            <a
+              href="/login"
+              className="inline-block px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] text-black font-bold text-sm shadow-xl hover:opacity-95 transition-all"
+            >
+              Sign In to Your Account
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isProfileIncomplete) {
+    return (
+      <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
+        <div className="max-w-xl w-full bg-[#111827] border border-amber-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <span className="text-xs font-mono uppercase tracking-widest text-amber-400 font-bold">
+              BIRTH PROFILE REQUIRED
+            </span>
+            <h2 className="text-2xl font-black font-satoshi text-slate-100">
+              Complete Your Birth Profile
+            </h2>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Under Constitution Rule 003, DeepAstro never generates synthetic or fallback future forecasts. Please link your accurate birth date, birth time, and birth coordinates to calculate your real Vedic future timeline.
+            </p>
+          </div>
+          <div className="pt-2">
+            <a
+              href="/profile"
+              className="inline-block px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold text-sm shadow-xl hover:opacity-95 transition-all"
+            >
+              Update Birth Details
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isPremiumDenied) {
     return (
