@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp, Activity, Globe, ShieldAlert,
   BarChart3, Clock, Zap, Shield, Sparkles, Newspaper, Compass
@@ -168,7 +168,7 @@ export const InvestmentLabPage: React.FC<InvestmentLabPageProps> = ({ initialTab
                 <span className="px-3 py-1 rounded text-xs font-extrabold bg-cyan-950 text-cyan-300 border border-cyan-700">
                   EXPANSION
                 </span>
-                <span className="text-xs font-mono text-slate-400">Confidence: 92%</span>
+                <span className="text-xs font-mono text-slate-400 italic">Regime: Model-Qualitative (no numeric confidence — see disclaimer)</span>
               </div>
               <p className="text-xs text-slate-300 mt-2 leading-relaxed max-w-3xl">
                 Macro economic indicators indicate steady manufacturing expansion, supportive yield spreads, and stable capital formation. Quantitative momentum supports disciplined systematic capital allocation with trailing stop-losses.
@@ -177,11 +177,11 @@ export const InvestmentLabPage: React.FC<InvestmentLabPageProps> = ({ initialTab
             <div className="flex items-center gap-5 text-xs font-mono">
               <div className="text-right">
                 <span className="text-slate-400 block text-[10px]">A/D Ratio</span>
-                <span className="text-emerald-400 font-bold text-base">1.70</span>
+                <span className="text-emerald-400 font-bold text-base">{marketPulse?.marketBreadth?.advanceDeclineRatio?.toFixed(2) ?? "—"}</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-400 block text-[10px]">India VIX</span>
-                <span className="text-cyan-400 font-bold text-base">13.42</span>
+                <span className="text-cyan-400 font-bold text-base">{marketPulse?.volatilityIndex?.currentPrice?.toFixed(2) ?? "—"}</span>
               </div>
             </div>
           </div>
@@ -306,3 +306,4 @@ export const InvestmentLabPage: React.FC<InvestmentLabPageProps> = ({ initialTab
 };
 
 export default InvestmentLabPage;
+

@@ -254,7 +254,7 @@ export class CosmicFeaturesEngine {
       id: 7,
       cardName: 'The Chariot',
       vedicGraha: 'Mars (Mangala)',
-      vedicDeity: 'Lord Skanda / Arjuna on Krishna’s Chariot',
+      vedicDeity: 'Lord Skanda / Arjuna on Krishnaâ€™s Chariot',
       archetype: 'Triumph through Willpower, Laser Focus',
       element: 'Fire',
       uprightMeaning: 'Overcoming obstacles, decisive victory, directional momentum, mastery over conflicting urges.',
@@ -460,7 +460,7 @@ export class CosmicFeaturesEngine {
     for (const p of planets) {
       const wholeDegrees = Math.floor(p.degreeInSign);
       const minutes = p.minutes;
-      const formatted = `${p.signName} ${wholeDegrees}° ${minutes.toString().padStart(2, '0')}'`;
+      const formatted = `${p.signName} ${wholeDegrees}Â° ${minutes.toString().padStart(2, '0')}'`;
 
       // Classical Vedic aspects cast by this planet
       const aspectsHouses: number[] = [7]; // 7th aspect invariant
@@ -728,7 +728,7 @@ export class CosmicFeaturesEngine {
       daySlots,
       nightSlots,
       isNight,
-      locationSummary: `${latitude.toFixed(2)}° N, ${longitude.toFixed(2)}° E`,
+      locationSummary: `${latitude.toFixed(2)}Â° N, ${longitude.toFixed(2)}Â° E`,
     };
   }
 
@@ -762,7 +762,7 @@ export class CosmicFeaturesEngine {
     let ritualGuide = {
       title: 'Waxing Moon Growth & Attraction Ritual',
       focus: 'Calling in expansion, creative projects, financial abundance, and new relationship seeds.',
-      mantra: 'Om Chandraya Namah — Om Shreem Mahalakshmiyei Namah',
+      mantra: 'Om Chandraya Namah â€” Om Shreem Mahalakshmiyei Namah',
       instructions: [
         'Write 3 intentions you want to manifest over the next 14 days on clean white paper.',
         'Place the paper under a clear quartz or silver coin near a window receiving lunar illumination.',
@@ -775,7 +775,7 @@ export class CosmicFeaturesEngine {
       ritualGuide = {
         title: 'Full Moon (Purnima) Peak Illumination & Gratitude Altar',
         focus: 'Celebrating full fruition, illuminating hidden subconscious truths, and releasing emotional clutter.',
-        mantra: 'Om Som Somaya Namah — Om Namah Shivaya',
+        mantra: 'Om Som Somaya Namah â€” Om Namah Shivaya',
         instructions: [
           'Charge your crystals, essential oils, and drinking water under the direct rays of the Full Moon.',
           'Take a cleansing salt bath or wash your face with cool water infused with rose petals.',
@@ -787,7 +787,7 @@ export class CosmicFeaturesEngine {
       ritualGuide = {
         title: 'New Moon (Amavasya) Deep Stillness & Ancestral Grounding',
         focus: 'Resetting the karmic slate, offering peace to ancestors (Pitrus), and resting in pure void potential.',
-        mantra: 'Om Kleem Krishnaya Namah — Om Pitribhyo Namah',
+        mantra: 'Om Kleem Krishnaya Namah â€” Om Pitribhyo Namah',
         instructions: [
           'Cleanse your home with camphor or sage smoke to dissolve residual stagnant ether.',
           'Practice 20 minutes of silent breath meditation in a darkened room.',
@@ -799,7 +799,7 @@ export class CosmicFeaturesEngine {
       ritualGuide = {
         title: 'Waning Moon (Krishna Paksha) Release & Cleansing Ritual',
         focus: 'Subduing debt, removing obstacles, breaking destructive habits, and spiritual detox.',
-        mantra: 'Om Sham Shanaishcharaya Namah — Om Dum Durgayei Namah',
+        mantra: 'Om Sham Shanaishcharaya Namah â€” Om Dum Durgayei Namah',
         instructions: [
           'Deep clean your physical surroundings and discard 3 things tied to past disappointment.',
           'Limit heavy foods and drink warm water infused with tulsi and lemon.',
@@ -921,10 +921,10 @@ export class CosmicFeaturesEngine {
 
     const dosAndDonts: CosmicDosAndDonts = {
       dos: [
-        { text: 'Confront difficult negotiations during the Jupiter or Mercury Hora', optimalTime: '10:30 AM – 12:45 PM', tag: 'High ROI' },
-        { text: 'Hydrate with copper-infused or silver-charged water before noon', optimalTime: '07:00 AM – 09:00 AM', tag: 'Vitality' },
-        { text: 'Document agreements in clear writing rather than verbal handshakes', optimalTime: '02:15 PM – 04:30 PM', tag: 'Strategy' },
-        { text: 'Conclude your evening with 10 minutes of digital disconnection', optimalTime: '09:30 PM – 10:30 PM', tag: 'Rest' },
+        { text: 'Confront difficult negotiations during the Jupiter or Mercury Hora', optimalTime: '10:30 AM â€“ 12:45 PM', tag: 'High ROI' },
+        { text: 'Hydrate with copper-infused or silver-charged water before noon', optimalTime: '07:00 AM â€“ 09:00 AM', tag: 'Vitality' },
+        { text: 'Document agreements in clear writing rather than verbal handshakes', optimalTime: '02:15 PM â€“ 04:30 PM', tag: 'Strategy' },
+        { text: 'Conclude your evening with 10 minutes of digital disconnection', optimalTime: '09:30 PM â€“ 10:30 PM', tag: 'Rest' },
       ],
       donts: [
         { text: 'Do NOT sign irreversible long-term contracts during Rahu Kaal', warningTime: 'Check local Rahu Kaal window', tag: 'Caution' },
@@ -952,7 +952,7 @@ export class CosmicFeaturesEngine {
       powerColorHex: pickedColor.hex,
       luckyDirection: directions[daySeed % directions.length],
       resonantGemstone: 'Yellow Sapphire (Pukhraj) or Emerald (Panna)',
-      auspiciousHourWindow: '10:15 AM – 11:45 AM (Labh / Shubh Choghadiya)',
+      auspiciousHourWindow: '10:15 AM â€“ 11:45 AM (Labh / Shubh Choghadiya)',
       dailyAffirmation: `I stand grounded in my divine sovereignty. Planetary currents work in effortless harmony with my highest dharma.`,
       deityAlignment: 'Lord Vishnu & Saraswati Devi',
     };
@@ -1065,7 +1065,7 @@ export class CosmicFeaturesEngine {
     return {
       question: cleanQuestion,
       timestamp: timestamp.toISOString(),
-      location: `${latitude.toFixed(2)}° N, ${longitude.toFixed(2)}° E`,
+      location: `${latitude.toFixed(2)}Â° N, ${longitude.toFixed(2)}Â° E`,
       prashnaLagna: prashnaAscSignName,
       prashnaLagnaDegree: Math.round((prashnaAscDeg % 30) * 100) / 100,
       moonSign: moon.signName,
@@ -1116,7 +1116,7 @@ export class CosmicFeaturesEngine {
     // Chapter 2: Antardasha Sub-Phase Real-Time Focus
     chapters.push({
       id: `cycle_antar_${antar}`,
-      title: `${dasha}–${antar} Sub-Phase: Relational & Material Realignment`,
+      title: `${dasha}â€“${antar} Sub-Phase: Relational & Material Realignment`,
       theme: 'Active 6-Month Intensive Focus Window',
       activePlanets: [antar],
       startDate: `${year}-01-10`,
@@ -1226,7 +1226,8 @@ export class CosmicFeaturesEngine {
         'Assuming the other person can read your unstated emotional needs.',
         'Compromising your sacred personal boundaries out of fear of relational disharmony.',
       ],
-      sacredContract: `You were drawn together not merely for comfort, but as conscious allies to accelerate each other’s spiritual sovereignty.`,
+      sacredContract: `You were drawn together not merely for comfort, but as conscious allies to accelerate each otherâ€™s spiritual sovereignty.`,
     };
   }
 }
+

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Shield, TrendingUp, RefreshCw, ExternalLink } from 'lucide-react';
 
 interface NewsItem {
@@ -16,6 +16,9 @@ interface NewsItem {
   cosmicCorrelate: string;
 }
 
+// FALLBACK_NEWS_ITEMS: Illustrative background items shown while live feed loads.
+// Timestamps are labeled [CACHED] to avoid false recency claims.
+// When live feed succeeds, these are merged only if not already present.
 const FALLBACK_NEWS_ITEMS: NewsItem[] = [
   {
     id: "news-1",
@@ -23,7 +26,7 @@ const FALLBACK_NEWS_ITEMS: NewsItem[] = [
     categoryLabel: "Central Banks & Policy",
     headline: "RBI Monetary Policy Committee Maintains Repo Rate at 6.50%; Projects Steady GDP Growth at 7.2%",
     source: "Livemint / Reserve Bank of India",
-    timestamp: "2 mins ago",
+    timestamp: "[CACHED]",
     summary: "Governor affirms resilient domestic macroeconomic fundamentals with inflation aligning toward target band. Liquidity management remains active to support credit growth across manufacturing and infrastructure sectors.",
     implication: "Yield curve stability supports sovereign borrowing programs and bank net interest margins.",
     sentiment: "BULLISH",
@@ -36,7 +39,7 @@ const FALLBACK_NEWS_ITEMS: NewsItem[] = [
     categoryLabel: "Geopolitics & Corridors",
     headline: "Global Maritime Freight Rates Adjust as Red Sea & Hormuz Security Protocols Enforce Strategic Rerouting",
     source: "Livemint / Lloyd's Maritime",
-    timestamp: "7 mins ago",
+    timestamp: "[CACHED]",
     summary: "Container traffic around Cape of Good Hope maintains extended delivery schedules. Indian and Asian refiners maintain diversified crude supply pipelines with long-term freight hedging.",
     implication: "Elevated tanker shipping tariffs; upstream exploration & production margins remain supported.",
     sentiment: "VOLATILE",
@@ -49,7 +52,7 @@ const FALLBACK_NEWS_ITEMS: NewsItem[] = [
     categoryLabel: "Tech & AI Supercycle",
     headline: "Global Sovereign AI Infrastructure Capex Reaches Record $200B Annualized Run Rate",
     source: "Livemint Tech Wire / Financial Times",
-    timestamp: "14 mins ago",
+    timestamp: "[CACHED]",
     summary: "Cloud hyperscalers and sovereign wealth funds accelerate deployments of advanced accelerator clusters, power generation micro-grids, and high-bandwidth optical networking.",
     implication: "High multi-year revenue visibility for enterprise technology, semiconductor foundries, and clean energy utilities.",
     sentiment: "BULLISH",
@@ -62,7 +65,7 @@ const FALLBACK_NEWS_ITEMS: NewsItem[] = [
     categoryLabel: "Central Banks & Policy",
     headline: "US Federal Reserve Signals Measured Monetary Easing as Core Inflation Softens Toward 2.2%",
     source: "Federal Reserve Board / WSJ",
-    timestamp: "22 mins ago",
+    timestamp: "[CACHED]",
     summary: "FOMC dot plot outlines progressive 25 bps adjustments. US labour market indicators demonstrate steady equilibrium without broad-based cooling.",
     implication: "Weakens US Dollar Index (DXY), stimulating foreign portfolio inflows into Emerging Market equities.",
     sentiment: "BULLISH",
@@ -75,7 +78,7 @@ const FALLBACK_NEWS_ITEMS: NewsItem[] = [
     categoryLabel: "Commodities & FX",
     headline: "Spot Gold Touches Historic Peaks on Sustained Sovereign Central Bank Reserve Diversification",
     source: "World Gold Council / Livemint Money",
-    timestamp: "31 mins ago",
+    timestamp: "[CACHED]",
     summary: "Global central banks added over 480 tonnes of physical bullion in sovereign reserves year-to-date. De-dollarization momentum among BRICS nations underpins long-term institutional demand floor.",
     implication: "Structural multi-year secular bull market in physical gold and silver reserves.",
     sentiment: "BULLISH",
@@ -110,7 +113,7 @@ export const NewsWire: React.FC = () => {
             headline: item.headline,
             source: item.source || 'Livemint RSS Feed',
             sourceUrl: item.sourceUrl,
-            timestamp: item.publishedAt ? new Date(item.publishedAt).toLocaleTimeString() : 'Recent',
+            timestamp: item.publishedAt ? new Date(item.publishedAt).toLocaleTimeString() : 'LIVE',
             summary: item.summary || item.headline,
             implication: 'Real-time policy and liquidity signals mapped to sector asset allocations.',
             sentiment: item.sentiment || 'NEUTRAL',
@@ -374,3 +377,4 @@ export const NewsWire: React.FC = () => {
     </div>
   );
 };
+

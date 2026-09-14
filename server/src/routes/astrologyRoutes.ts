@@ -1,5 +1,22 @@
-﻿
+
 import { KPCuspEngine } from '../engines/kp/kpCuspEngine.js';
+
+// === INPUT VALIDATION HELPERS ===
+function isValidDate(dateStr: string): boolean {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const d = new Date(dateStr);
+  return !isNaN(d.getTime()) && d.getFullYear() >= 1800 && d.getFullYear() <= 2100;
+}
+function isValidTime(timeStr: string): boolean {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(timeStr || '');
+}
+function isValidTimezone(tz: number): boolean {
+  return typeof tz === 'number' && tz >= -12 && tz <= 14;
+}
+function isValidLatLon(lat: number, lon: number): boolean {
+  return typeof lat === 'number' && lat >= -90 && lat <= 90 &&
+         typeof lon === 'number' && lon >= -180 && lon <= 180;
+}
 import { KPPlanetaryTableEngine } from '../engines/kp/kpPlanetaryTable.js';
 import { FourLevelSignificatorsEngine } from '../engines/significators/fourLevelSignificators.js';
 import { HouseSignificatorMatrixEngine } from '../engines/significators/houseSignificatorMatrix.js';
@@ -1184,3 +1201,4 @@ router.get('/evidence', optionalAuth, (req: Request, res: Response) => {
 });
 
 export default router;
+

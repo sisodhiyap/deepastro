@@ -33,6 +33,12 @@ interface SecurityVerifyPayload {
   timestamp: number;
 }
 
+// RATE LIMITING ARCHITECTURE NOTE (CF-007):
+// This implementation uses an in-memory Map which is per-process.
+// On serverless deployments (Vercel), each cold start creates a new Map instance.
+// This means rate limiting is NOT globally consistent across concurrent instances.
+// For globally consistent rate limiting, set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN.
+// Without Redis: rate limiting provides per-instance protection only (documented limitation).
 // In-memory brute force rate limiter: max 5 failed attempts per IP per 10 minutes
 interface RateLimitBucket {
   attempts: number;
@@ -147,3 +153,4 @@ router.post('/logout', (_req: Request, res: Response) => {
 });
 
 export default router;
+

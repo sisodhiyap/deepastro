@@ -1,142 +1,186 @@
-﻿import { MarketDataProvider, Quote, Candle, ProviderHealth } from '../marketTypes.js';
+/**
+ * PublicExchangeProvider — Live Market Data via Yahoo Finance (v8 API)
+ *
+ * TRUTH LOCK FIX: Removed all hardcoded BASE_QUOTES.
+ * Every quote is fetched from Yahoo Finance with a real HTTP call.
+ * Prices are never stored as compile-time constants.
+ *
+ * Data status labels:
+ *   OPEN  → "15-MIN DELAYED"  (Yahoo delayed feed)
+ *   CLOSED/WEEKEND → "EOD"   (last day closing price)
+ *   Fetch failure → "UNAVAILABLE" (honest, never fabricated)
+ */
+
+import { MarketDataProvider, Quote, Candle, ProviderHealth } from '../marketTypes.js';
+
+// Canonical symbol → Yahoo Finance ticker mapping
+const YAHOO_SYMBOL_MAP: Record<string, { yahoo: string; name: string; exchange: string; currency: string }> = {
+  'NIFTY 50':    { yahoo: '^NSEI',     name: 'NIFTY 50 Benchmark',        exchange: 'NSE',         currency: 'INR' },
+  'SENSEX':      { yahoo: '^BSESN',    name: 'BSE SENSEX 30',             exchange: 'BSE',         currency: 'INR' },
+  'BANK NIFTY':  { yahoo: '^NSEBANK',  name: 'NIFTY Bank Index',          exchange: 'NSE',         currency: 'INR' },
+  'S&P 500':     { yahoo: '^GSPC',     name: 'Standard & Poor 500',       exchange: 'NYSE',        currency: 'USD' },
+  'NASDAQ 100':  { yahoo: '^NDX',      name: 'Nasdaq 100 Index',          exchange: 'NASDAQ',      currency: 'USD' },
+  'DOW JONES':   { yahoo: '^DJI',      name: 'Dow Jones Industrial',      exchange: 'NYSE',        currency: 'USD' },
+  'BRENT CRUDE': { yahoo: 'BZ=F',      name: 'Brent Crude Oil',           exchange: 'MCX/ICE',     currency: 'USD' },
+  'GOLD':        { yahoo: 'GC=F',      name: 'Spot Gold (XAU/USD)',       exchange: 'FOREX/COMEX', currency: 'USD' },
+  'SILVER':      { yahoo: 'SI=F',      name: 'Spot Silver (XAG/USD)',     exchange: 'FOREX/COMEX', currency: 'USD' },
+  'BITCOIN':     { yahoo: 'BTC-USD',   name: 'Bitcoin (BTC/USD)',         exchange: 'CRYPTO',      currency: 'USD' },
+  'USD/INR':     { yahoo: 'USDINR=X',  name: 'US Dollar vs Rupee',       exchange: 'FOREX',       currency: 'INR' },
+  'INDIA 10Y':   { yahoo: '^IN10Y',    name: 'India 10Y Sovereign Yield', exchange: 'CCIL',        currency: '%'   },
+  'INDIA VIX':   { yahoo: '^INDIAVIX', name: 'National Volatility Index', exchange: 'NSE',         currency: 'Pts' },
+};
 
 export class PublicExchangeProvider implements MarketDataProvider {
-  private readonly providerName = 'PublicExchangeDataFeed';
+  private readonly providerName = 'Yahoo Finance (Public Feed)';
+  private readonly BASE_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
 
-  // Base snapshot prices for the 13 mandated assets
-  private static readonly BASE_QUOTES: Record<string, {
-    name: string;
-    exchange: string;
-    price: number;
-    change: number;
-    changePercent: number;
-    currency: string;
-    previousClose: number;
-    open: number;
-    high: number;
-    low: number;
-  }> = {
-    'NIFTY 50': { name: 'NIFTY 50 Benchmark', exchange: 'NSE', price: 25431.20, change: 148.60, changePercent: 0.59, currency: 'INR', previousClose: 25282.60, open: 25310.00, high: 25445.80, low: 25295.40 },
-    'SENSEX': { name: 'BSE SENSEX 30', exchange: 'BSE', price: 83120.40, change: 425.10, changePercent: 0.51, currency: 'INR', previousClose: 82695.30, open: 82750.00, high: 83180.20, low: 82710.00 },
-    'BANK NIFTY': { name: 'NIFTY Bank Index', exchange: 'NSE', price: 53180.50, change: 295.20, changePercent: 0.56, currency: 'INR', previousClose: 52885.30, open: 52920.00, high: 53240.00, low: 52890.00 },
-    'S&P 500': { name: 'Standard & Poor 500', exchange: 'NYSE', price: 5864.67, change: 28.40, changePercent: 0.49, currency: 'USD', previousClose: 5836.27, open: 5840.00, high: 5872.10, low: 5835.50 },
-    'NASDAQ 100': { name: 'Nasdaq 100 Index', exchange: 'NASDAQ', price: 18420.50, change: 122.80, changePercent: 0.67, currency: 'USD', previousClose: 18297.70, open: 18310.00, high: 18455.00, low: 18290.00 },
-    'DOW JONES': { name: 'Dow Jones Industrial', exchange: 'NYSE', price: 42580.15, change: 175.40, changePercent: 0.41, currency: 'USD', previousClose: 42404.75, open: 42420.00, high: 42610.00, low: 42390.00 },
-    'BRENT CRUDE': { name: 'Brent Crude Oil', exchange: 'MCX/ICE', price: 74.25, change: -0.65, changePercent: -0.87, currency: 'USD/bbl', previousClose: 74.90, open: 74.80, high: 75.10, low: 73.95 },
-    'GOLD': { name: 'Spot Gold (XAU/USD)', exchange: 'FOREX/COMEX', price: 2685.40, change: 14.20, changePercent: 0.53, currency: 'USD/oz', previousClose: 2671.20, open: 2672.00, high: 2689.50, low: 2670.00 },
-    'SILVER': { name: 'Spot Silver (XAG/USD)', exchange: 'FOREX/COMEX', price: 31.95, change: 0.45, changePercent: 1.43, currency: 'USD/oz', previousClose: 31.50, open: 31.55, high: 32.10, low: 31.40 },
-    'BITCOIN': { name: 'Bitcoin (BTC/USD)', exchange: 'CRYPTO', price: 64520.00, change: 1350.00, changePercent: 2.14, currency: 'USD', previousClose: 63170.00, open: 63200.00, high: 64800.00, low: 62900.00 },
-    'USD/INR': { name: 'US Dollar vs Rupee', exchange: 'FOREX', price: 84.18, change: 0.03, changePercent: 0.04, currency: 'INR', previousClose: 84.15, open: 84.15, high: 84.22, low: 84.14 },
-    'INDIA 10Y': { name: 'India 10Y Sovereign Yield', exchange: 'CCIL', price: 7.06, change: -0.02, changePercent: -0.28, currency: '%', previousClose: 7.08, open: 7.08, high: 7.09, low: 7.05 },
-    'INDIA VIX': { name: 'National Volatility Index', exchange: 'NSE', price: 13.15, change: -0.42, changePercent: -3.10, currency: 'Pts', previousClose: 13.57, open: 13.50, high: 13.65, low: 13.05 }
-  };
+  // In-memory TTL cache: 60s when OPEN, 600s when CLOSED
+  private cache: Map<string, { quote: Quote; expiresAt: number }> = new Map();
 
   public getMarketStatus(exchange: string, now: Date = new Date()): 'OPEN' | 'CLOSED' | 'PRE_OPEN' | 'WEEKEND' {
-    const day = now.getUTCDay(); // 0 is Sunday, 6 is Saturday
+    const day = now.getUTCDay();
     if (day === 0 || day === 6) return 'WEEKEND';
-
     if (exchange === 'CRYPTO') return 'OPEN';
-
     if (exchange === 'NSE' || exchange === 'BSE' || exchange === 'CCIL') {
-      // IST is UTC + 5:30
-      const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-      const istMinutes = utcMinutes + 330;
-      const normalizedIst = istMinutes % 1440;
-
-      // Pre-market 09:00 - 09:15 (540 to 555 mins)
-      if (normalizedIst >= 540 && normalizedIst < 555) return 'PRE_OPEN';
-      // Regular trading 09:15 - 15:30 (555 to 930 mins)
-      if (normalizedIst >= 555 && normalizedIst < 930) return 'OPEN';
+      const ist = (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % 1440;
+      if (ist >= 540 && ist < 555) return 'PRE_OPEN';
+      if (ist >= 555 && ist < 930) return 'OPEN';
       return 'CLOSED';
     }
-
     if (exchange === 'NYSE' || exchange === 'NASDAQ') {
-      // EST is UTC - 4 or -5 (EDT UTC-4: 13:30 to 20:00 UTC)
-      const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-      if (utcMinutes >= 810 && utcMinutes < 1200) return 'OPEN';
+      const utc = now.getUTCHours() * 60 + now.getUTCMinutes();
+      if (utc >= 810 && utc < 1200) return 'OPEN';
       return 'CLOSED';
     }
-
     return 'CLOSED';
+  }
+
+  private async fetchYahoo(yahooSymbol: string): Promise<{
+    price: number; previousClose: number; open: number; high: number; low: number;
+    retrievedAt: string; publishedAt: string;
+  } | null> {
+    try {
+      const url = `${this.BASE_URL}/${encodeURIComponent(yahooSymbol)}?interval=1d&range=1d`;
+      const resp = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (DeepAstro/6.0.4; +https://deepastro.vercel.app)' },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!resp.ok) return null;
+      const json = await resp.json() as any;
+      const meta = json?.chart?.result?.[0]?.meta;
+      if (!meta) return null;
+      const retrievedAt = new Date().toISOString();
+      const publishedAt = meta.regularMarketTime
+        ? new Date(meta.regularMarketTime * 1000).toISOString()
+        : retrievedAt;
+      return {
+        price:         meta.regularMarketPrice    ?? 0,
+        previousClose: meta.chartPreviousClose    ?? meta.previousClose ?? 0,
+        open:          meta.regularMarketDayOpen  ?? meta.regularMarketPrice ?? 0,
+        high:          meta.regularMarketDayHigh  ?? meta.regularMarketPrice ?? 0,
+        low:           meta.regularMarketDayLow   ?? meta.regularMarketPrice ?? 0,
+        retrievedAt,
+        publishedAt,
+      };
+    } catch { return null; }
   }
 
   public async getQuote(symbol: string): Promise<Quote> {
     const now = new Date();
-    const cleanKey = Object.keys(PublicExchangeProvider.BASE_QUOTES).find(
+    const key = Object.keys(YAHOO_SYMBOL_MAP).find(
       (k) => k.toLowerCase() === symbol.toLowerCase() || symbol.toLowerCase().includes(k.toLowerCase())
-    ) || 'NIFTY 50';
+    ) ?? 'NIFTY 50';
 
-    const base = PublicExchangeProvider.BASE_QUOTES[cleanKey];
-    const status = this.getMarketStatus(base.exchange, now);
+    const meta = YAHOO_SYMBOL_MAP[key];
+    const marketStatus = this.getMarketStatus(meta.exchange, now);
 
-    return {
-      symbol: cleanKey,
-      name: base.name,
-      exchange: base.exchange,
-      price: base.price,
-      change: base.change,
-      changePercent: base.changePercent,
-      open: base.open,
-      high: base.high,
-      low: base.low,
-      previousClose: base.previousClose,
-      currency: base.currency,
-      timestamp: now.toISOString(),
-      marketStatus: status,
+    // Serve from TTL cache if fresh
+    const cached = this.cache.get(key);
+    if (cached && Date.now() < cached.expiresAt) return cached.quote;
+
+    const live = await this.fetchYahoo(meta.yahoo);
+
+    if (!live || live.price === 0) {
+      // Honest UNAVAILABLE — never fabricate a fallback price
+      return {
+        symbol: key, name: meta.name, exchange: meta.exchange,
+        price: 0, change: 0, changePercent: 0,
+        open: 0, high: 0, low: 0, previousClose: 0,
+        currency: meta.currency, timestamp: now.toISOString(), marketStatus,
+        provenance: {
+          source: this.providerName, provider: this.providerName,
+          retrievedAt: now.toISOString(), publishedAt: now.toISOString(),
+          status: 'UNAVAILABLE', freshnessSeconds: 0, confidence: 0,
+        },
+      } as unknown as Quote;
+    }
+
+    const change = live.price - live.previousClose;
+    const pct = live.previousClose > 0 ? (change / live.previousClose) * 100 : 0;
+    const ttl = marketStatus === 'OPEN' ? 60_000 : 600_000;
+
+    const quote: Quote = {
+      symbol: key, name: meta.name, exchange: meta.exchange,
+      price: live.price,
+      change: Number(change.toFixed(2)),
+      changePercent: Number(pct.toFixed(2)),
+      open: live.open, high: live.high, low: live.low,
+      previousClose: live.previousClose,
+      currency: meta.currency, timestamp: live.retrievedAt, marketStatus,
       provenance: {
-        source: 'Public Exchange Composite Feed',
+        source: 'Yahoo Finance Public API',
         provider: this.providerName,
-        retrievedAt: now.toISOString(),
-        publishedAt: now.toISOString(),
-        status: status === 'OPEN' ? '15-MIN DELAYED' : 'EOD',
-        freshnessSeconds: 15,
-        confidence: 0.98
-      }
-    };
+        retrievedAt: live.retrievedAt,
+        publishedAt: live.publishedAt,
+        status: marketStatus === 'OPEN' ? '15-MIN DELAYED' : 'EOD',
+        freshnessSeconds: Math.floor((Date.now() - new Date(live.publishedAt).getTime()) / 1000),
+        confidence: 0.95,
+      },
+    } as unknown as Quote;
+
+    this.cache.set(key, { quote, expiresAt: Date.now() + ttl });
+    return quote;
   }
 
   public async getQuotes(symbols: string[]): Promise<Quote[]> {
-    return Promise.all(symbols.map((sym) => this.getQuote(sym)));
+    return Promise.all(symbols.map((s) => this.getQuote(s)));
   }
 
-  public async getHistorical(symbol: string, start: Date, end: Date, interval: string): Promise<Candle[]> {
-    const candles: Candle[] = [];
-    const base = PublicExchangeProvider.BASE_QUOTES[symbol] || PublicExchangeProvider.BASE_QUOTES['NIFTY 50'];
-    const daysCount = Math.min(365, Math.max(10, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))));
-
-    let currentPrice = base.price * 0.85;
-    const stepTime = (end.getTime() - start.getTime()) / daysCount;
-
-    for (let i = 0; i < daysCount; i++) {
-      const candleTime = new Date(start.getTime() + i * stepTime);
-      const dailyTrend = Math.sin(i / 15) * (currentPrice * 0.008);
-      const open = currentPrice;
-      const close = open + dailyTrend;
-      const high = Math.max(open, close) + Math.abs(dailyTrend * 0.5);
-      const low = Math.min(open, close) - Math.abs(dailyTrend * 0.5);
-      const volume = 150000 + (i % 20) * 10000;
-
-      candles.push({
-        timestamp: candleTime.toISOString(),
-        open: Number(open.toFixed(2)),
-        high: Number(high.toFixed(2)),
-        low: Number(low.toFixed(2)),
-        close: Number(close.toFixed(2)),
-        volume
+  public async getHistorical(symbol: string, start: Date, end: Date, _interval: string): Promise<Candle[]> {
+    const meta = YAHOO_SYMBOL_MAP[symbol] ?? YAHOO_SYMBOL_MAP['NIFTY 50'];
+    try {
+      const p1 = Math.floor(start.getTime() / 1000);
+      const p2 = Math.floor(end.getTime() / 1000);
+      const url = `${this.BASE_URL}/${encodeURIComponent(meta.yahoo)}?interval=1d&period1=${p1}&period2=${p2}`;
+      const resp = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (DeepAstro/6.0.4)' },
+        signal: AbortSignal.timeout(10000),
       });
-
-      currentPrice = close;
-    }
-
-    return candles;
+      if (!resp.ok) return [];
+      const json = await resp.json() as any;
+      const result = json?.chart?.result?.[0];
+      if (!result) return [];
+      const ts: number[] = result.timestamp ?? [];
+      const q = result.indicators?.quote?.[0] ?? {};
+      return ts.map((t, i) => ({
+        timestamp: new Date(t * 1000).toISOString(),
+        open:   Number((q.open?.[i]   ?? 0).toFixed(2)),
+        high:   Number((q.high?.[i]   ?? 0).toFixed(2)),
+        low:    Number((q.low?.[i]    ?? 0).toFixed(2)),
+        close:  Number((q.close?.[i]  ?? 0).toFixed(2)),
+        volume: q.volume?.[i] ?? 0,
+      })).filter(c => c.close > 0);
+    } catch { return []; }
   }
 
   public async health(): Promise<ProviderHealth> {
+    const t0 = Date.now();
+    const live = await this.fetchYahoo('^NSEI');
     return {
       provider: this.providerName,
-      isHealthy: true,
-      latencyMs: 12,
-      lastSuccessfulFetch: new Date().toISOString()
+      isHealthy: live !== null && live.price > 0,
+      latencyMs: Date.now() - t0,
+      lastSuccessfulFetch: live ? new Date().toISOString() : 'UNAVAILABLE',
     };
   }
 }

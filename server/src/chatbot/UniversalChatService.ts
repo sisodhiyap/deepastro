@@ -29,10 +29,10 @@ export class UniversalChatService {
     if (intent.primaryDomain === 'WEATHER' && toolResults.weather) {
       const w = toolResults.weather;
       primaryHeader = 'Meteorological Weather';
-      summaryText = `Current temperature is ${w.temperatureCelsius}°C with ${w.weatherDescription.toLowerCase()} in ${w.location.city || 'your area'}. Precipitation is ${w.precipitationMm} mm and relative humidity is ${w.relativeHumidityPercent}%.`;
+      summaryText = `Current temperature is ${w.temperatureCelsius}Â°C with ${w.weatherDescription.toLowerCase()} in ${w.location.city || 'your area'}. Precipitation is ${w.precipitationMm} mm and relative humidity is ${w.relativeHumidityPercent}%.`;
       directAnswer = `${summaryText} Sourced directly from Open-Meteo meteorological station telemetry with strict scientific physical separation.`;
       keySignals = [
-        { title: 'Temperature', description: `${w.temperatureCelsius}°C (Atmospheric reading)`, type: 'neutral' },
+        { title: 'Temperature', description: `${w.temperatureCelsius}Â°C (Atmospheric reading)`, type: 'neutral' },
         { title: 'Wind Velocity', description: `${w.windSpeedKmh} km/h`, type: 'neutral' },
         { title: 'Precipitation', description: `${w.precipitationMm} mm recorded`, type: w.precipitationMm > 0 ? 'caution' : 'growth' }
       ];
@@ -49,7 +49,7 @@ export class UniversalChatService {
       const nifty = quotes.find((x: any) => x.symbol === 'NIFTY 50') || quotes[0];
       primaryHeader = 'Market Intelligence';
       summaryText = nifty
-        ? `${nifty.symbol} is currently at ₹${nifty.price.toLocaleString()} (${nifty.changePercent >= 0 ? '+' : ''}${nifty.changePercent.toFixed(2)}%). Market Status: ${nifty.marketStatus}. Data feed: ${nifty.provenance?.status || 'SNAPSHOT'}.`
+        ? `${nifty.symbol} is currently at â‚¹${nifty.price.toLocaleString()} (${nifty.changePercent >= 0 ? '+' : ''}${nifty.changePercent.toFixed(2)}%). Market Status: ${nifty.marketStatus}. Data feed: ${nifty.provenance?.status || 'SNAPSHOT'}.`
         : 'Real-time market indices reflect current exchange trading hours.';
       directAnswer = `${summaryText} Backtested against verified historical candles with zero synthetic price drift. Always respect capital management and stop-losses.`;
       keySignals = [
@@ -95,7 +95,7 @@ export class UniversalChatService {
         { title: 'Avoid impulsive decisions', description: 'Take time to evaluate new opportunities carefully.', type: 'caution' }
       ];
       favourableWindow = {
-        windowLabel: 'October – December',
+        windowLabel: 'October â€“ December',
         description: 'Best time for growth & recognition'
       };
       deepAstroTip = "Don't chase recognition. Build evidence that makes recognition inevitable.";
@@ -190,3 +190,4 @@ export class UniversalChatService {
     };
   }
 }
+
