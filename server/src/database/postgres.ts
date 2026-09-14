@@ -218,3 +218,7 @@ export class PostgresService implements IDatabaseClient {
 }
 
 export const dbClient = new PostgresService();
+
+export const pool = {
+  query: (sql: string, params: any[] = []) => dbClient.query(sql, params)
+};

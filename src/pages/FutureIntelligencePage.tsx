@@ -52,7 +52,7 @@ export const FutureIntelligencePage: React.FC = () => {
     setIsPremiumDenied(false);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -119,7 +119,7 @@ export const FutureIntelligencePage: React.FC = () => {
     setIsConsentModalOpen(false);
     setRevealLevel(level);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 

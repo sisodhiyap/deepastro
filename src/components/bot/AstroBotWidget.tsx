@@ -38,6 +38,7 @@ interface AstroBotWidgetProps {
 
 export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<'Ollama' | 'OpenAI' | 'Gemini' | 'Grok'>('Ollama');
@@ -306,7 +307,7 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
 
       {/* AstroBot Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[420px] max-h-[600px] h-[80vh] flex flex-col rounded-3xl border border-cosmic-border bg-cosmic-surface/95 backdrop-blur-2xl shadow-2xl overflow-hidden animate-float">
+        <div className="fixed bottom-20 right-4 sm:right-6 z-50 ${isExpanded ? 'w-[calc(100vw-2rem)] sm:w-[720px] max-h-[85vh] h-[85vh]' : 'w-[calc(100vw-2rem)] sm:w-[420px] max-h-[600px] h-[80vh]'} flex flex-col rounded-3xl border border-cosmic-border bg-cosmic-surface/95 backdrop-blur-2xl shadow-2xl overflow-hidden transition-all duration-300 animate-float">
           {/* Header */}
           <div className="p-4 border-b border-cosmic-border flex items-center justify-between bg-cosmic-card/60">
             <div className="flex items-center gap-3">
@@ -331,6 +332,13 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
                 className="p-1.5 rounded-lg text-cosmic-muted hover:text-rose-400 hover:bg-cosmic-card transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                title={isExpanded ? "Minimize window" : "Expand window"}
+                className="p-1.5 rounded-lg text-cosmic-muted hover:text-cyan-400 hover:bg-cosmic-card transition-colors"
+              >
+                {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
@@ -467,7 +475,8 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
               return (
                 <div key={m.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   <div
-                    className={`max-w-[85%] p-3.5 rounded-2xl leading-relaxed ${
+                    className={`${!isUser && m.card ? 'w-full max-w-full' : 'max-w-[85%]'} p-3.5 rounded-2xl leading-relaxed ${
+
                       isUser
                         ? 'bg-cyan-500 text-black font-semibold rounded-br-none shadow-glow-cyan/20'
                         : 'bg-cosmic-card border border-cosmic-border text-cosmic-text rounded-bl-none'

@@ -20,6 +20,7 @@ import { FutureTimelineEngine } from '../intelligence/future/FutureTimelineEngin
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { db } from '../database/db.js';
 import { VedicAstroEngine, BirthProfileInput } from '../astrology/VedicAstroEngine.js';
+import { pool } from '../database/postgres.js';
 import { FutureRevealLevel, ForecastHorizon } from '../intelligence/future/CosmicFutureTypes.js';
 
 const router = Router();

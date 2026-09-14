@@ -75,7 +75,8 @@ const QUICK_TOPIC_CHIPS = [
   { label: '🔮 2026 Cosmic Forecast', query: 'Synthesize major planetary ingresses and Rahu-Ketu nodal axis shifts for 2026.' }
 ];
 
-export const AIAstrologerPage: React.FC<AIAstrologerPageProps> = ({ profile = { name: 'Cosmic Seeker', birthDate: '1995-05-15', birthTime: '14:30', birthPlace: 'New Delhi', latitude: '28.6139', longitude: '77.2090', timezone: '5.5', gender: 'other' } }) => {
+export const AIAstrologerPage: React.FC<AIAstrologerPageProps> = ({ profile }) => {
+  const activeProfile = profile || (typeof window !== 'undefined' && (window as any).getBirthProfile ? (window as any).getBirthProfile() : null);
   const [selectedSystem, setSelectedSystem] = useState<SystemQueryType>('ask-kundli');
   const [queryInput, setQueryInput] = useState(PRESET_QUERIES[0].query);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -94,7 +95,7 @@ export const AIAstrologerPage: React.FC<AIAstrologerPageProps> = ({ profile = { 
       evidence: [
         {
           system: 'DeepAstro Multi-Engine Protocol v6.0',
-          deterministicInputs: { profileName: profile.name, lat: profile.latitude, lon: profile.longitude, date: profile.birthDate },
+          deterministicInputs: { profileName: activeProfile?.name, lat: activeProfile?.latitude, lon: activeProfile?.longitude, date: activeProfile?.birthDate },
           calculationMethod: 'Deterministic Astronomical Core + Parashari & Placidus Algorithmic Pipeline',
           sourceTexts: ['Brihat Parasara Hora Sastra', 'Krishnamurti Padhdhati Readers I-VI', 'Tetrabiblos'],
           rulesTriggered: ['Axiom 0: Calculation First, Interpretation Second', 'Axiom 1: Transparent Uncertainty Quantification'],
@@ -153,7 +154,7 @@ export const AIAstrologerPage: React.FC<AIAstrologerPageProps> = ({ profile = { 
           const evidenceList: SystemEvidence[] = [
             {
               system: `${categoryName} Engine`,
-              deterministicInputs: { profile: profile.name, birthDate: profile.birthDate, query: userMsg },
+              deterministicInputs: { profile: activeProfile?.name, birthDate: activeProfile?.birthDate, query: userMsg },
               calculationMethod: 'Swiss Ephemeris Sidereal Lahiri / KP Placidus Algorithmic Pipeline',
               sourceTexts: ['Brihat Parasara Hora Sastra', 'Phaladeepika', 'KP Readers'],
               rulesTriggered: whyFactors.length > 0 ? whyFactors : ['Canonical Astrological Aspect & Dasha Synthesis'],
@@ -239,7 +240,7 @@ Conclusion: Fundamentals support systematic large-cap allocation. Planetary indi
         responseText = `Multi-system evidence synthesis completed. Your inquiry regarding "${userMsg}" has been analyzed across canonical Vedic, Western, KP, and Numerological frameworks. Planetary coordinates and astrological significations have been compiled into the verified evidence graph below.`;
         mockEvidence = [{
           system: 'Universal Evidence Synthesizer',
-          deterministicInputs: { profileData: profile.name, query: userMsg },
+          deterministicInputs: { profileData: activeProfile?.name, query: userMsg },
           calculationMethod: 'Cross-System Multi-Layer Algorithmic Resolution',
           sourceTexts: ['Standard Astrological and Numerological Canon'],
           rulesTriggered: ['Consensus Cross-Verification Matrix'],

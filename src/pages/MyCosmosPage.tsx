@@ -38,18 +38,39 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
     clearSession,
   } = useChartSession();
 
-  const [formInput, setFormInput] = useState<BirthInputState>({
-    name: 'Aria Sharma',
-    date: '1995-05-15',
-    time: '14:30',
-    latitude: 28.6139,
-    longitude: 77.2090,
-    timezone: 5.5,
-    city: 'New Delhi',
-    country: 'India',
-    gender: 'female',
-    ayanamsa: 'Lahiri',
-    houseSystem: 'Placidus',
+  const [formInput, setFormInput] = useState<BirthInputState>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('deepastro_birth_profile') : null;
+    if (saved) {
+      try {
+        const p = JSON.parse(saved);
+        return {
+          name: p.fullName || p.name || '',
+          date: p.birthDate || '',
+          time: p.birthTime || '',
+          latitude: Number(p.latitude) || 28.6139,
+          longitude: Number(p.longitude) || 77.2090,
+          timezone: Number(p.timezone) || 5.5,
+          city: p.birthPlace || '',
+          country: 'India',
+          gender: p.gender || 'other',
+          ayanamsa: 'Lahiri',
+          houseSystem: 'Placidus',
+        };
+      } catch (e) {}
+    }
+    return {
+      name: '',
+      date: '',
+      time: '',
+      latitude: 28.6139,
+      longitude: 77.2090,
+      timezone: 5.5,
+      city: '',
+      country: '',
+      gender: 'other',
+      ayanamsa: 'Lahiri',
+      houseSystem: 'Placidus',
+    };
   });
 
   const [selectedPlanetName, setSelectedPlanetName] = useState<string>('Sun');

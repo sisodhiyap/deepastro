@@ -1,5 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import {
+  BarChart3,
   Compass,
   LayoutDashboard,
   Sparkles,
@@ -58,6 +59,9 @@ export type NavTabId =
   | 'profile'
   | 'admin'
   | 'system-verification'
+  | 'qa'
+  | 'qa-test-lab'
+  | 'qa-war-room'
   | 'contact';
 
 interface SidebarProps {
@@ -121,6 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'reports' as NavTabId, label: 'PDF Dossier Reports', icon: FileText },
         { id: 'profile' as NavTabId, label: 'Profile & Privacy', icon: User },
         { id: 'admin' as NavTabId, label: 'Admin Command Center', icon: ShieldCheck },
+        { id: 'qa-war-room' as NavTabId, label: 'Accuracy War Room', icon: BarChart3, badge: 'QA' },
         { id: 'system-verification' as NavTabId, label: 'System Verification', icon: ShieldCheck, badge: 'Audit' },
         { id: 'contact' as NavTabId, label: 'Support & Partnership', icon: HelpCircle },
       ],
@@ -188,9 +193,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span className="text-emerald-400 font-semibold">100% PASS</span>
         </div>
         <div className="text-[10px] text-slate-600">
-          SEBI Disclaimers Active • Evidence 1st
+          SEBI Disclaimers Active â€¢ Evidence 1st
         </div>
       </div>
     </aside>
   );
 };
+

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
 
 export interface UserProfile {
   id: string;
@@ -29,8 +30,8 @@ export interface AuthContextType {
   login: (email: string, password: string, requiredRole?: 'user' | 'admin') => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   signInWithGoogle: () => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
-  signOut: () => void;
-  logout: () => void;
+  signOut: () => Promise<void>;
+  logout: () => Promise<void>;
   register: (fullName: string, email: string, password: string) => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; message: string; error?: string }>;
   refreshProfile: () => Promise<void>;
@@ -48,8 +49,8 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => ({ success: false }),
   signInWithGoogle: async () => ({ success: false }),
   loginWithGoogle: async () => ({ success: false }),
-  signOut: () => {},
-  logout: () => {},
+  signOut: async () => {},
+  logout: async () => {},
   register: async () => ({ success: false }),
   resetPassword: async () => ({ success: false, message: '' }),
   refreshProfile: async () => {},
@@ -59,16 +60,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('deepastro_token');
+      return localStorage.getItem('deepastro_token') || localStorage.getItem('token');
     }
     return null;
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Authenticate and verify role from server on mount
+  const syncSupabaseSession = async (sbSession: any) => {
+    if (!sbSession || !sbSession.user) return;
+    try {
+      const res = await fetch('/api/auth/sync-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: sbSession.access_token,
+          user: sbSession.user,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.token && data.user) {
+          setToken(data.token);
+          setUser(data.user);
+          localStorage.setItem('deepastro_token', data.token);
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('deepastro_user', JSON.stringify(data.user));
+        }
+      }
+    } catch (err) {
+      console.warn('[AuthContext] syncSupabaseSession error:', err);
+    }
+  };
+
+  // Authenticate and verify profile from server on mount
   const refreshProfile = async () => {
-    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('deepastro_token') : null);
+    const activeToken = token || (typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null);
     if (!activeToken) {
+      // Check if Supabase has an active OAuth session
+      try {
+        const { data: { session: sbSession } } = await supabase.auth.getSession();
+        if (sbSession?.user) {
+          await syncSupabaseSession(sbSession);
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('[AuthContext] Error reading Supabase session:', err);
+      }
       setUser(null);
       setIsLoading(false);
       return;
@@ -82,26 +121,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
-          // Strict server-side profile adoption
           setUser(data.user);
           localStorage.setItem('deepastro_user', JSON.stringify(data.user));
         } else {
           throw new Error('Invalid user profile');
         }
       } else {
-        // Token expired or invalid
         localStorage.removeItem('deepastro_token');
+        localStorage.removeItem('token');
         localStorage.removeItem('deepastro_user');
         setToken(null);
         setUser(null);
       }
     } catch {
-      // Server offline fallback: check cached user without elevating role
       const cached = localStorage.getItem('deepastro_user');
       if (cached) {
         try {
-          const parsed = JSON.parse(cached);
-          setUser(parsed);
+          setUser(JSON.parse(cached));
         } catch {
           setUser(null);
         }
@@ -113,6 +149,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshProfile();
+
+    // Listen to Supabase auth state changes (e.g. after Google OAuth redirect)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, sbSession) => {
+      if (event === 'SIGNED_IN' && sbSession?.user) {
+        await syncSupabaseSession(sbSession);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('deepastro_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('deepastro_user');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [token]);
 
   const signIn = async (
@@ -138,8 +191,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const receivedUser: UserProfile = data.user;
       const receivedToken: string = data.token;
 
-      // Server-Side Role Verification Gate:
-      // If Admin Access was selected, the database profile role MUST be ADMIN or SUPER_ADMIN
       if (requiredRole === 'admin') {
         const isDbAdmin = receivedUser.role === 'ADMIN' || receivedUser.role === 'SUPER_ADMIN';
         if (!isDbAdmin) {
@@ -154,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(receivedToken);
       setUser(receivedUser);
       localStorage.setItem('deepastro_token', receivedToken);
+      localStorage.setItem('token', receivedToken);
       localStorage.setItem('deepastro_user', JSON.stringify(receivedUser));
 
       setIsLoading(false);
@@ -171,7 +223,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
     setIsLoading(true);
     try {
-      // Public registrations are strictly created as CLIENT/USER. Never allow public ADMIN escalation.
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -195,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(receivedToken);
       setUser(receivedUser);
       localStorage.setItem('deepastro_token', receivedToken);
+      localStorage.setItem('token', receivedToken);
       localStorage.setItem('deepastro_user', JSON.stringify(receivedUser));
 
       setIsLoading(false);
@@ -207,45 +259,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async (): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
     setIsLoading(true);
-    // Genuine Google OAuth handshake simulation/integration
-    // Guaranteed rule: new Google accounts always receive role = USER, never ADMIN
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'cosmic.seeker@gmail.com',
-          password: 'google_oauth_verified_temp_2026',
-        }),
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
 
-      if (!res.ok) {
-        return await register('Cosmic Seeker', 'cosmic.seeker@gmail.com', 'Google_OAuth_Pass_2026!');
+      if (error) {
+        setIsLoading(false);
+        return { success: false, error: error.message };
       }
 
-      const data = await res.json();
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('deepastro_token', data.token);
-      localStorage.setItem('deepastro_user', JSON.stringify(data.user));
-
+      return { success: true };
+    } catch (err: any) {
       setIsLoading(false);
-      return { success: true, user: data.user };
-    } catch {
-      // Safe client identity fallback
-      const safeGoogleUser: UserProfile = {
-        id: 'google_usr_' + Date.now(),
-        email: 'cosmic.seeker@gmail.com',
-        fullName: 'Cosmic Seeker',
-        role: 'CLIENT',
-      };
-      const mockToken = 'mock_google_session_' + Date.now();
-      setToken(mockToken);
-      setUser(safeGoogleUser);
-      localStorage.setItem('deepastro_token', mockToken);
-      localStorage.setItem('deepastro_user', JSON.stringify(safeGoogleUser));
-      setIsLoading(false);
-      return { success: true, user: safeGoogleUser };
+      return { success: false, error: err.message || 'Google OAuth failed.' };
     }
   };
 
@@ -262,7 +292,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: data.message || "If an account exists for this email, you'll receive password reset instructions.",
       };
     } catch {
-      // Offline fallback: consistent message preventing enumeration
       return {
         success: true,
         message: "If an account exists for this email, you'll receive password reset instructions.",
@@ -270,10 +299,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = () => {
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('[AuthContext] Supabase signOut error:', err);
+    }
     setToken(null);
     setUser(null);
     localStorage.removeItem('deepastro_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('deepastro_user');
   };
 

@@ -1,4 +1,4 @@
-import verifyReportRoutes from './routes/verifyReportRoutes.js';
+﻿import verifyReportRoutes from './routes/verifyReportRoutes.js';
 import futureRoutes from './routes/futureRoutes.js';
 /**
  * DeepAstro Master API Server
@@ -22,6 +22,10 @@ import numerologyRoutes from './routes/numerologyRoutes.js';
 import palmistryRoutes from './routes/palmistryRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import adminQARoutes from './routes/adminQARoutes.js';
+import adminObservatoryRoutes from './routes/adminObservatoryRoutes.js';
+import adminAccuracyWarRoomRoutes from './routes/adminAccuracyWarRoomRoutes.js';
+import { AdminQAAccessGuard } from './security/AdminQAAccessGuard.js';
 import contactRoutes from './routes/contactRoutes.js';
 import privacyRoutes from './routes/privacyRoutes.js';
 import verificationRoutes from './routes/verificationRoutes.js';
@@ -51,10 +55,10 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));           // Reduced from 25mb — prevents oversized payload attacks
+app.use(express.json({ limit: '1mb' }));           // Reduced from 25mb â€” prevents oversized payload attacks
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Security Headers — Content-Security-Policy + hardened headers
+// Security Headers â€” Content-Security-Policy + hardened headers
 app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'"
@@ -67,7 +71,7 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Input size guard — reject obviously malicious payloads early
+// Input size guard â€” reject obviously malicious payloads early
 app.use((req: Request, res: Response, next: NextFunction) => {
   const bodySize = JSON.stringify(req.body || {}).length;
   if (bodySize > 512_000) {
@@ -75,6 +79,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
   next();
 });
+
+// Production & Anti-Bypass Firewall
+app.use(AdminQAAccessGuard.antiBypassFirewall);
 
 // Health Check
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -108,6 +115,14 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/numerology', numerologyRoutes);
 app.use('/api/palmistry', palmistryRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/admin/qa', adminQARoutes);
+app.use('/admin/qa', adminQARoutes);
+app.use('/api/admin/observatory', adminObservatoryRoutes);
+app.use('/admin/observatory', adminObservatoryRoutes);
+app.use('/api/admin/qa/war-room', adminAccuracyWarRoomRoutes);
+app.use('/admin/qa/war-room', adminAccuracyWarRoomRoutes);
+app.use('/api/admin/qa/accuracy-war-room', adminAccuracyWarRoomRoutes);
+app.use('/admin/qa/accuracy-war-room', adminAccuracyWarRoomRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/privacy', privacyRoutes);
@@ -184,7 +199,7 @@ import { ReportStoreMigrationService } from './database/ReportStoreMigrationServ
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, async () => {
-    console.log(`ðŸŒŒ DeepAstro API Server running on port ${PORT} [http://localhost:${PORT}]`);
+    console.log(`Ã°Å¸Å’Å’ DeepAstro API Server running on port ${PORT} [http://localhost:${PORT}]`);
 
     // Run PostgreSQL migrations
     try {
@@ -210,5 +225,6 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
 }
 
 export default app;
+
 
 

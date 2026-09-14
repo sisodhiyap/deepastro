@@ -3,6 +3,7 @@ import { UniversalChatService } from '../chatbot/UniversalChatService.js';
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { db } from '../database/db.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { pool } from '../database/postgres.js';
 
 export function registerUniversalChatRoutes(router: Router) {
   const handler = async (req: AuthenticatedRequest, res: Response) => {
@@ -28,6 +29,27 @@ export function registerUniversalChatRoutes(router: Router) {
         profile =
           (await birthProfileRepository.getProfileByUserId(req.user.userId)) ||
           db.getBirthProfile(req.user.userId);
+
+        if (!profile) {
+          try {
+            const bpRes = await pool.query('SELECT * FROM birth_profiles WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.user.userId]);
+            if (bpRes.rows.length > 0) {
+              const row = bpRes.rows[0];
+              profile = {
+                fullName: row.full_name,
+                birthDate: row.birth_date ? new Date(row.birth_date).toISOString().split('T')[0] : '',
+                birthTime: row.birth_time ? String(row.birth_time).substring(0, 5) : '',
+                birthPlace: row.birth_place,
+                latitude: Number(row.latitude),
+                longitude: Number(row.longitude),
+                timezone: Number(row.timezone),
+                gender: row.gender,
+              };
+            }
+          } catch (err) {
+            console.warn('[UniversalChatRoutes] Error querying birth_profiles:', err);
+          }
+        }
       }
 
       const response = await UniversalChatService.answerQuestion(message, profile, effectiveUserId);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   Sparkles,
   Sun,
@@ -67,7 +68,7 @@ const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
 
 const PRESET_PROFILES = [
   {
-    name: 'Aarav Sharma',
+    name: 'Sample Chart Alpha',
     birthDate: '1995-10-15',
     birthTime: '06:30',
     birthPlace: 'New Delhi, India',
@@ -160,6 +161,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   userName = 'Cosmic Seeker',
   chartContext,
 }) => {
+  const { user } = useAuth();
   const [kundli, setKundli] = useState<any>(() => {
     return chartContext || getCalculatedChart();
   });
@@ -203,8 +205,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     if (local && (local.ascendant || local.lagna || local.chart?.ascendant)) {
       setKundli(local.chart || local);
     } else {
-      // 2. Fetch user's calculated chart from backend in background
-      fetch('/api/astrology/chart')
+      // 2. Fetch user's authoritative calculated chart from backend in background
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const chartUrl = token ? '/api/astrology/current-kundli' : '/api/astrology/chart';
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      fetch(chartUrl, { headers })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data && (data.ascendant || data.chart?.ascendant)) {
@@ -377,6 +384,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const lalKitabRemedies = chart ? generateDynamicLalKitabRemedies(chart) : [];
 
   const effectiveUserName =
+    user?.fullName ||
     (formData.name && typeof formData.name === 'string' ? formData.name.trim() : '') ||
     chart?.birthData?.name ||
     chart?.profile?.name ||

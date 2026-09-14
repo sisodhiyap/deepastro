@@ -18,7 +18,7 @@ const router = Router();
 
 // Apply strict Role-Based Access Control: ADMIN or SUPER_ADMIN required for all admin routes
 router.use(requireAuth);
-router.use(requireRole(['ADMIN', 'SUPER_ADMIN']));
+router.use(requireRole(['ADMIN', 'SUPER_ADMIN', 'DEEPASTRO_QA_ADMIN']));
 
 // GET /api/admin/metrics
 router.get('/metrics', async (req: AuthenticatedRequest, res: Response) => {
@@ -118,7 +118,7 @@ router.get('/users', (_req, res: Response) => {
 
 // POST /api/admin/provision-admin
 // Secure server-side administrator provisioning (Admin privilege required)
-router.post('/provision-admin', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/provision-admin', requireRole(['ADMIN', 'SUPER_ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { email, password, fullName } = req.body;
     if (!email || !password || !fullName) {

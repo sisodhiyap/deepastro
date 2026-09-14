@@ -110,10 +110,25 @@ export class UniversalChatService {
           confidence = (schema.confidence.score_percent / 100);
         } else {
           // Fresh SoulTrace generation using user birth data
-          const birthDate = userProfile?.birthDate || '1990-05-15';
-          const birthTime = userProfile?.birthTime || '14:30';
-          const birthPlace = userProfile?.birthPlace || 'New Delhi';
-          const fullName = userProfile?.fullName || userProfile?.name || 'Cosmic Seeker';
+          if (!userProfile?.birthDate || !userProfile?.birthTime) {
+            return {
+              requestId,
+              intent: 'PAST_LIFE',
+              answer: 'DeepAstro calculates SoulTrace karmic lineages from your authentic astronomical birth coordinates. Please complete your birth profile to unlock your personalized past-life reading.',
+              card: null,
+              cardType: 'BIRTH_PROFILE_REQUIRED',
+              actions: ['Complete Birth Profile'],
+              sources: ['DeepAstro SoulTrace Engine'],
+              evidence: [],
+              confidence: 1.0,
+              enginesCalled,
+              latencyMs: Date.now() - startTime,
+            };
+          }
+          const birthDate = userProfile.birthDate;
+          const birthTime = userProfile.birthTime;
+          const birthPlace = userProfile.birthPlace || 'New Delhi';
+          const fullName = userProfile.fullName || userProfile.name || 'Cosmic Seeker';
 
           const pastLifeResult = PastLifeIntelligenceEngine.generate(userId, {
             fullName,
@@ -238,10 +253,25 @@ export class UniversalChatService {
       // 2. KARMA INTENT
       else if (intent === 'KARMA') {
         enginesCalled.push('PastLifeIntelligenceEngine', 'PastLifeKarmaEngine');
-        const birthDate = userProfile?.birthDate || '1990-05-15';
-        const birthTime = userProfile?.birthTime || '14:30';
-        const birthPlace = userProfile?.birthPlace || 'New Delhi';
-        const fullName = userProfile?.fullName || userProfile?.name || 'Seeker';
+        if (!userProfile?.birthDate || !userProfile?.birthTime) {
+          return {
+            requestId,
+            intent: 'KARMA',
+            answer: 'To examine your Vedic karmic patterns, DeepAstro requires your accurate birth date and time. Please provide your birth details in your profile.',
+            card: null,
+            cardType: 'BIRTH_PROFILE_REQUIRED',
+            actions: ['Complete Birth Profile'],
+            sources: ['DeepAstro Karma Engine'],
+            evidence: [],
+            confidence: 1.0,
+            enginesCalled,
+            latencyMs: Date.now() - startTime,
+          };
+        }
+        const birthDate = userProfile.birthDate;
+        const birthTime = userProfile.birthTime;
+        const birthPlace = userProfile.birthPlace || 'New Delhi';
+        const fullName = userProfile.fullName || userProfile.name || 'Seeker';
 
         const pastLifeResult = PastLifeIntelligenceEngine.generate(userId, {
           fullName,
@@ -379,14 +409,29 @@ export class UniversalChatService {
       // 6. KUNDLI INTENT
       else if (intent === 'KUNDLI' || intent === 'PLANETARY_ANALYSIS') {
         enginesCalled.push('VedicAstroEngine', 'UniversalCardOrchestrator');
+        if (!userProfile?.birthDate || !userProfile?.birthTime) {
+          return {
+            requestId,
+            intent: 'KUNDLI',
+            answer: 'To calculate your planetary chart and planetary positions, DeepAstro requires your actual date and time of birth. Please submit your birth details in onboarding or profile settings.',
+            card: null,
+            cardType: 'BIRTH_PROFILE_REQUIRED',
+            actions: ['Complete Birth Profile'],
+            sources: ['DeepAstro Vedic Astro Engine'],
+            evidence: [],
+            confidence: 1.0,
+            enginesCalled,
+            latencyMs: Date.now() - startTime,
+          };
+        }
         const profileInput: BirthProfileInput = {
-          name: userProfile?.fullName || 'User',
-          birthDate: userProfile?.birthDate || '1990-05-15',
-          birthTime: userProfile?.birthTime || '14:30',
-          birthPlace: userProfile?.birthPlace || 'New Delhi',
-          latitude: userProfile?.latitude || 28.6139,
-          longitude: userProfile?.longitude || 77.2090,
-          timezone: typeof userProfile?.timezone === 'number' ? userProfile.timezone : 5.5,
+          name: userProfile.fullName || userProfile.name || 'Cosmic Seeker',
+          birthDate: userProfile.birthDate,
+          birthTime: userProfile.birthTime,
+          birthPlace: userProfile.birthPlace || 'New Delhi',
+          latitude: userProfile.latitude || 28.6139,
+          longitude: userProfile.longitude || 77.2090,
+          timezone: typeof userProfile.timezone === 'number' ? userProfile.timezone : 5.5,
         };
 
         const kundli = VedicAstroEngine.calculateKundli(profileInput);
@@ -406,9 +451,24 @@ export class UniversalChatService {
       // 7. NUMEROLOGY INTENT
       else if (intent === 'NUMEROLOGY') {
         enginesCalled.push('calculateNumerology', 'UniversalCardOrchestrator');
-        const bdate = userProfile?.birthDate || '1990-05-15';
+        const bdate = userProfile?.birthDate;
+        if (!bdate) {
+          return {
+            requestId,
+            intent: 'NUMEROLOGY',
+            answer: 'To calculate your Life Path, Destiny, and Soul Urge numbers, DeepAstro requires your date of birth. Please enter your birth date in your profile.',
+            card: null,
+            cardType: 'BIRTH_PROFILE_REQUIRED',
+            actions: ['Complete Birth Profile'],
+            sources: ['DeepAstro Numerology Engine'],
+            evidence: [],
+            confidence: 1.0,
+            enginesCalled,
+            latencyMs: Date.now() - startTime,
+          };
+        }
         const [y, m, d] = bdate.split('-').map((v: string) => parseInt(v, 10));
-        const userName = userProfile?.fullName || 'User';
+        const userName = userProfile?.fullName || userProfile?.name || 'User';
         const numResult = calculateNumerology(userName, d || 15, m || 5, y || 1990);
 
         this.setSession(userId, { lastIntent: 'NUMEROLOGY' });

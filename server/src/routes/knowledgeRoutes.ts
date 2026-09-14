@@ -1,3 +1,4 @@
+import { db } from '../database/db.js';
 /**
  * DeepAstro Phase 6 — Classical Knowledge API Routes
  * Endpoints for Knowledge Graph Explorer, Classical Sources, Search,
@@ -121,15 +122,16 @@ router.post('/explain-rule', optionalAuth, (req: AuthenticatedRequest, res: Resp
       return res.status(400).json({ error: 'conceptName is required (e.g. "Gaja Kesari Yoga").' });
     }
 
-    const profileInput = birthProfile || {
-      name: 'Exploration Native',
-      birthDate: '1990-05-15',
-      birthTime: '14:30',
-      birthPlace: 'New Delhi',
-      latitude: 28.6139,
-      longitude: 77.2090,
-      timezone: 5.5,
-    };
+    let profileInput = birthProfile;
+    if (!profileInput && req.user) {
+      profileInput = db.getBirthProfile(req.user.userId);
+    }
+    if (!profileInput || !profileInput.birthDate || !profileInput.birthTime) {
+      return res.status(400).json({
+        error: 'BIRTH_PROFILE_REQUIRED',
+        message: 'Birth profile required to evaluate personalized concept explanation.',
+      });
+    }
 
     const factSet = VedicAstroEngine.createAstrologyFactSet(profileInput);
     const snapshot = CalculationSnapshotEngine.createSnapshot(factSet);

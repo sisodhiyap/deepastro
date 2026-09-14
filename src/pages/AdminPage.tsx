@@ -157,6 +157,12 @@ export const AdminPage: React.FC = () => {
 
           <div className="space-y-2">
             <h2 className="text-xl font-bold font-display text-white">Administrator Access Required</h2>
+          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-300 font-mono">
+            <span>Testing Observatory V2.0 or QA features? </span>
+            <a href="/admin/qa" className="underline font-bold text-cyan-400 hover:text-cyan-200">
+              Open QA Control Center (/admin/qa)
+            </a>
+          </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               Administrator access is required for this account. Only accounts with verified server-side privileges can access DeepAstro Command Center.
             </p>

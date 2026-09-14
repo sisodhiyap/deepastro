@@ -198,31 +198,23 @@ router.post('/decision/analyze', optionalAuth, (req: AuthenticatedRequest, res: 
     }
 
     // Produce deterministic snapshot from birthProfile if provided, else use canonical test reference
-    let snapshot;
-    if (birthProfile && birthProfile.birthDate && birthProfile.birthTime) {
-      const factSet = VedicAstroEngine.createAstrologyFactSet({
-        name: birthProfile.name || 'Decision Seeker',
-        birthDate: birthProfile.birthDate,
-        birthTime: birthProfile.birthTime,
-        birthPlace: birthProfile.birthPlace || 'New Delhi',
-        latitude: birthProfile.latitude || 28.6139,
-        longitude: birthProfile.longitude || 77.2090,
-        timezone: birthProfile.timezone || 5.5,
+    if (!birthProfile || !birthProfile.birthDate || !birthProfile.birthTime) {
+      return res.status(400).json({
+        error: 'BIRTH_PROFILE_REQUIRED',
+        message: 'A complete birth profile (birthDate and birthTime) is required for decision simulation.'
       });
-      snapshot = CalculationSnapshotEngine.createSnapshot(factSet);
-    } else {
-      // Fallback baseline reference
-      const factSet = VedicAstroEngine.createAstrologyFactSet({
-        name: 'Decision Baseline',
-        birthDate: '1990-05-15',
-        birthTime: '14:30',
-        birthPlace: 'New Delhi',
-        latitude: 28.6139,
-        longitude: 77.2090,
-        timezone: 5.5,
-      });
-      snapshot = CalculationSnapshotEngine.createSnapshot(factSet);
     }
+
+    const factSet = VedicAstroEngine.createAstrologyFactSet({
+      name: birthProfile.name || 'Decision Seeker',
+      birthDate: birthProfile.birthDate,
+      birthTime: birthProfile.birthTime,
+      birthPlace: birthProfile.birthPlace || 'New Delhi',
+      latitude: birthProfile.latitude || 28.6139,
+      longitude: birthProfile.longitude || 77.2090,
+      timezone: birthProfile.timezone || 5.5,
+    });
+    const snapshot = CalculationSnapshotEngine.createSnapshot(factSet);
 
     const analysis = DecisionSimulationEngine.simulateDecisionV2({
       query,

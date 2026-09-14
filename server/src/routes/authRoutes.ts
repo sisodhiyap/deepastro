@@ -1,6 +1,7 @@
 /**
  * Authentication Routes
- * Register, Login, Session Check, and Profile Updates.
+ * Supabase Auth synchronization, Email Registration, Login, Session Check, and Profile Updates.
+ * Zero Aarav Sharma or synthetic fallbacks.
  */
 
 import { Router, Request, Response } from 'express';
@@ -10,6 +11,9 @@ import { db, UserRecord, ProfileRecord } from '../database/db.js';
 import { userRepository } from '../database/repositories/UserRepository.js';
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { supabaseAdmin } from '../database/supabaseServer.js';
+import { AuthBootstrapService } from '../services/AuthBootstrapService.js';
+import { pool } from '../database/postgres.js';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'deepastro_cosmic_super_secret_jwt_key_2026';
@@ -17,47 +21,47 @@ const JWT_SECRET = process.env.JWT_SECRET || 'deepastro_cosmic_super_secret_jwt_
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, fullName, role } = req.body;
+    const { email, password, fullName } = req.body;
 
     if (!email || !password || !fullName) {
       return res.status(400).json({ error: 'Please provide email, password, and full name.' });
     }
 
-    const existing = (await userRepository.getUserByEmail(email)) || db.getUserByEmail(email);
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanName = fullName.trim();
+
+    if (cleanName.length < 2) {
+      return res.status(400).json({ error: 'Full name must be at least 2 characters.' });
+    }
+
+    const existing = (await userRepository.getUserByEmail(cleanEmail)) || db.getUserByEmail(cleanEmail);
     if (existing) {
-      return res.status(409).json({ error: 'An account with this cosmic email already exists.' });
+      return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-    const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     const newUser: UserRecord = {
       id: userId,
-      email: email.toLowerCase().trim(),
+      email: cleanEmail,
       passwordHash,
-      // Public registrations are strictly CLIENT. Admin elevation is barred.
       role: 'CLIENT',
       isVerified: true,
       createdAt: new Date().toISOString(),
     };
 
     await userRepository.createUser(newUser);
-
-    const newProfile: ProfileRecord = {
-      userId,
-      fullName: fullName.trim(),
-      languagePreference: 'en',
-      themePreference: 'dark',
-      chartStylePreference: 'north',
-      notificationPreferences: { daily_prediction: true, transits: true, consultations: true },
-    };
-
     db.users.set(userId, newUser);
-    db.profiles.set(userId, newProfile);
 
-    // Default FREE subscription
-    db.getSubscription(userId);
+    // Bootstrap user and profile row in PostgreSQL
+    const { profile } = await AuthBootstrapService.ensureUserProfile({
+      authUserId: userId,
+      email: cleanEmail,
+      fullName: cleanName,
+      role: 'CLIENT',
+    });
 
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email, role: newUser.role },
@@ -72,9 +76,9 @@ router.post('/register', async (req: Request, res: Response) => {
         id: newUser.id,
         email: newUser.email,
         role: newUser.role,
-        fullName: newProfile.fullName,
-        themePreference: newProfile.themePreference,
-        chartStylePreference: newProfile.chartStylePreference,
+        fullName: profile.fullName || cleanName,
+        themePreference: profile.themePreference || 'dark',
+        chartStylePreference: profile.chartStylePreference || 'north',
       },
     });
   } catch (err: any) {
@@ -91,9 +95,32 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const user = (await userRepository.getUserByEmail(email)) || db.getUserByEmail(email);
+    const cleanEmail = email.toLowerCase().trim();
+    let user = (await userRepository.getUserByEmail(cleanEmail)) || db.getUserByEmail(cleanEmail);
+
     if (!user) {
-      return res.status(401).json({ error: 'Invalid cosmic credentials.' });
+      // Check PostgreSQL directly
+      try {
+        const pgUser = await pool.query('SELECT * FROM users WHERE email = $1', [cleanEmail]);
+        if (pgUser.rows.length > 0) {
+          const row = pgUser.rows[0];
+          user = {
+            id: row.id,
+            email: row.email,
+            passwordHash: row.password_hash,
+            role: row.role as any,
+            isVerified: row.is_verified,
+            createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+          };
+          db.users.set(user.id, user);
+        }
+      } catch (pgErr) {
+        console.warn('[Login] PostgreSQL query fallback error:', pgErr);
+      }
+    }
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
@@ -101,10 +128,10 @@ router.post('/login', async (req: Request, res: Response) => {
       if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
         db.logAdminAction('ADMIN_ACCESS_DENIED', user.id, user.email, { reason: 'Password mismatch', ip: req.ip });
       }
-      return res.status(401).json({ error: 'Invalid cosmic credentials.' });
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const profile = db.getProfile(user.id);
+    const profile = await AuthBootstrapService.getProfile(user.id);
 
     // Audit log admin login
     if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
@@ -124,7 +151,7 @@ router.post('/login', async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        fullName: profile?.fullName || 'Cosmic Seeker',
+        fullName: profile?.fullName || user.email.split('@')[0],
         themePreference: profile?.themePreference || 'dark',
         chartStylePreference: profile?.chartStylePreference || 'north',
       },
@@ -134,24 +161,136 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/auth/sync-session
+// Synchronizes Supabase OAuth / Google OAuth authenticated session with DeepAstro database
+router.post('/sync-session', async (req: Request, res: Response) => {
+  try {
+    const { accessToken, user: clientUser } = req.body;
+
+    let authUserId = '';
+    let email = '';
+    let fullName = '';
+    let avatarUrl = '';
+
+    // 1. Verify token with Supabase Admin if available
+    if (accessToken && supabaseAdmin) {
+      try {
+        const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
+        if (!error && data?.user) {
+          authUserId = data.user.id;
+          email = data.user.email || '';
+          fullName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || '';
+          avatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || '';
+        }
+      } catch (authErr) {
+        console.warn('[SyncSession] Supabase getUser error:', authErr);
+      }
+    }
+
+    // 2. Fallback to client user identity if token verification passed or clientUser provided with valid id
+    if (!authUserId && clientUser?.id) {
+      authUserId = clientUser.id;
+      email = clientUser.email || '';
+      fullName = clientUser.user_metadata?.full_name || clientUser.user_metadata?.name || clientUser.name || '';
+      avatarUrl = clientUser.user_metadata?.avatar_url || clientUser.avatar_url || '';
+    }
+
+    if (!authUserId || !email) {
+      return res.status(401).json({ error: 'AUTH_REQUIRED', message: 'Unable to verify OAuth session credentials.' });
+    }
+
+    // 3. Ensure User and Profile rows in PostgreSQL
+    const { user, profile } = await AuthBootstrapService.ensureUserProfile({
+      authUserId,
+      email,
+      fullName,
+      avatarUrl,
+      role: 'CLIENT',
+    });
+
+    // 4. Issue DeepAstro JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'OAuth session synchronized successfully.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        fullName: profile.fullName || fullName || email.split('@')[0],
+        avatarUrl: profile.avatarUrl || avatarUrl,
+        themePreference: profile.themePreference || 'dark',
+        chartStylePreference: profile.chartStylePreference || 'north',
+      },
+      profile,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'PROFILE_BOOTSTRAP_FAILED', details: err.message });
+  }
+});
+
 // GET /api/auth/me
 router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
   const user = (await userRepository.getUserById(userId)) || db.getUserById(userId);
-  const profile = db.getProfile(userId);
-  const birthProfile = (await birthProfileRepository.getProfileByUserId(userId)) || db.getBirthProfile(userId);
+  const profile = await AuthBootstrapService.getProfile(userId);
+
+  let birthProfile = (await birthProfileRepository.getProfileByUserId(userId)) || db.getBirthProfile(userId);
+
+  if (!birthProfile) {
+    try {
+      const bpRes = await pool.query('SELECT * FROM birth_profiles WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [userId]);
+      if (bpRes.rows.length > 0) {
+        const row = bpRes.rows[0];
+        birthProfile = {
+          id: row.id,
+          userId: row.user_id,
+          fullName: row.full_name,
+          birthDate: row.birth_date,
+          birthTime: row.birth_time,
+          birthPlace: row.birth_place,
+          latitude: Number(row.latitude),
+          longitude: Number(row.longitude),
+          timezone: Number(row.timezone),
+          gender: row.gender,
+          isApproximateTime: row.is_approximate_time,
+          ascendantSign: row.ascendant_sign,
+          moonSign: row.moon_sign,
+          sunSign: row.sun_sign,
+          nakshatra: row.nakshatra,
+          nakshatraPada: row.nakshatra_pada,
+          currentMahadasha: row.current_mahadasha,
+          currentAntardasha: row.current_antardasha,
+          createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+        };
+        db.birthProfiles.set(userId, birthProfile);
+      }
+    } catch (bpErr) {
+      console.warn('[Me] Error loading birthProfile from pg:', bpErr);
+    }
+  }
+
   const sub = db.getSubscription(userId);
 
-  if (!user) {
+  if (!user && !profile) {
     return res.status(404).json({ error: 'User not found.' });
   }
 
+  const resolvedName = profile?.fullName || user?.email.split('@')[0] || 'Cosmic Seeker';
+
   return res.json({
     user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      fullName: profile?.fullName || 'Cosmic Seeker',
+      id: userId,
+      email: user?.email || profile?.userId,
+      role: user?.role || 'CLIENT',
+      fullName: resolvedName,
+      avatarUrl: profile?.avatarUrl || '',
       phone: profile?.phone,
       city: profile?.city,
       country: profile?.country,
@@ -166,40 +305,28 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) 
 });
 
 // PATCH /api/auth/profile
-router.patch('/profile', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+router.patch('/profile', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
-  const profile = db.getProfile(userId);
-
-  if (!profile) {
-    return res.status(404).json({ error: 'Profile not found.' });
-  }
-
-  const { fullName, phone, city, country, themePreference, chartStylePreference, notificationPreferences } = req.body;
-
-  if (fullName !== undefined) profile.fullName = fullName;
-  if (phone !== undefined) profile.phone = phone;
-  if (city !== undefined) profile.city = city;
-  if (country !== undefined) profile.country = country;
-  if (themePreference !== undefined) profile.themePreference = themePreference;
-  if (chartStylePreference !== undefined) profile.chartStylePreference = chartStylePreference;
-  if (notificationPreferences !== undefined) profile.notificationPreferences = notificationPreferences;
+  const updated = await AuthBootstrapService.updateProfile(userId, req.body);
 
   return res.json({
     message: 'Profile updated successfully.',
-    profile,
+    profile: updated,
   });
 });
 
+// POST /api/auth/logout
+router.post('/logout', (req: Request, res: Response) => {
+  return res.json({ success: true, message: 'Logged out successfully.' });
+});
 
 // POST /api/auth/forgot-password
-// Enumeration-safe password reset link dispatcher
 router.post('/forgot-password', async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email || typeof email !== 'string') {
     return res.status(400).json({ error: 'Please provide a valid email address.' });
   }
 
-  // Consistent message whether user exists or not to prevent email enumeration
   return res.json({
     success: true,
     message: "If an account exists for this email, you'll receive password reset instructions.",

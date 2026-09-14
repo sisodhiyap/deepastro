@@ -53,6 +53,8 @@ import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { db, BirthProfileRecord } from '../database/db.js';
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import { NormalizationEngine } from '../reports/ReportIntelligenceEngine/NormalizationEngine.js';
+import { CalculationSnapshotService } from '../services/CalculationSnapshotService.js';
+import { pool } from '../database/postgres.js';
 
 const router = Router();
 const uploadKundli = multer({ limits: { fileSize: 15 * 1024 * 1024 } });
@@ -154,6 +156,87 @@ router.post('/calculate-kundli', optionalAuth, (req: AuthenticatedRequest, res: 
   }
 });
 
+// GET /api/astrology/current-kundli (Authoritative Authenticated User Kundli Retrieval)
+router.get('/current-kundli', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'AUTH_REQUIRED', message: 'Authentication required to retrieve saved cosmic kundli.' });
+    }
+    const userId = req.user.userId;
+    let saved = (await birthProfileRepository.getProfileByUserId(userId)) || db.getBirthProfile(userId);
+
+    if (!saved) {
+      try {
+        const bpRes = await pool.query('SELECT * FROM birth_profiles WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [userId]);
+        if (bpRes.rows.length > 0) {
+          const row = bpRes.rows[0];
+          saved = {
+            id: row.id,
+            userId: row.user_id,
+            fullName: row.full_name,
+            birthDate: row.birth_date ? new Date(row.birth_date).toISOString().split('T')[0] : '',
+            birthTime: row.birth_time ? String(row.birth_time).substring(0, 5) : '',
+            birthPlace: row.birth_place,
+            latitude: Number(row.latitude),
+            longitude: Number(row.longitude),
+            timezone: Number(row.timezone),
+            gender: row.gender,
+            isApproximateTime: Boolean(row.is_approximate_time),
+            ascendantSign: row.ascendant_sign,
+            moonSign: row.moon_sign,
+            sunSign: row.sun_sign,
+            nakshatra: row.nakshatra,
+            nakshatraPada: row.nakshatra_pada,
+            currentMahadasha: row.current_mahadasha,
+            currentAntardasha: row.current_antardasha,
+            createdAt: row.created_at?.toISOString() || new Date().toISOString(),
+          };
+          db.birthProfiles.set(userId, saved);
+        }
+      } catch (bpErr) {
+        console.warn('[CurrentKundli] Error querying pg birth_profiles:', bpErr);
+      }
+    }
+
+    if (!saved || !saved.birthDate || !saved.birthTime) {
+      return res.status(404).json({
+        error: 'BIRTH_PROFILE_REQUIRED',
+        message: 'No birth profile found for authenticated user. Please submit birth details in onboarding or profile settings.',
+      });
+    }
+
+    const input: BirthProfileInput = {
+      name: saved.fullName || 'Cosmic Seeker',
+      birthDate: saved.birthDate,
+      birthTime: saved.birthTime,
+      birthPlace: saved.birthPlace,
+      latitude: saved.latitude,
+      longitude: saved.longitude,
+      timezone: saved.timezone,
+      gender: saved.gender || 'Other',
+      isApproximateTime: Boolean(saved.isApproximateTime),
+    };
+
+    const fingerprint = CalculationSnapshotService.generateFingerprint(input);
+    const cached = await CalculationSnapshotService.getSnapshot(userId, fingerprint);
+    if (cached) {
+      return res.json({ ...cached, calculationFingerprint: fingerprint, cached: true });
+    }
+
+    const kundli = VedicAstroEngine.calculateKundli(input);
+    await CalculationSnapshotService.saveSnapshot({
+      authUserId: userId,
+      birthProfileId: saved.id,
+      fingerprint,
+      payload: kundli,
+    });
+
+    return res.json({ ...kundli, calculationFingerprint: fingerprint });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to retrieve current Kundli.', details: err.message });
+  }
+});
+
 // POST /api/astrology/kundli
 router.post('/kundli', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -204,9 +287,19 @@ router.post('/kundli', optionalAuth, async (req: AuthenticatedRequest, res: Resp
     }
 
     const input = profile;
+    const fingerprint = CalculationSnapshotService.generateFingerprint(input);
+
+    // If authenticated, check calculation snapshot cache
+    if (req.user) {
+      const cached = await CalculationSnapshotService.getSnapshot(req.user.userId, fingerprint);
+      if (cached) {
+        return res.json({ ...cached, calculationFingerprint: fingerprint, cached: true });
+      }
+    }
+
     const kundli = VedicAstroEngine.calculateKundli(input);
 
-    // If user is logged in, link/save to database repository
+    // If user is logged in, link/save to database repository and PostgreSQL
     if (req.user) {
       const birthRecord: BirthProfileRecord = {
         id: `bp_${req.user.userId}`,
@@ -229,11 +322,75 @@ router.post('/kundli', optionalAuth, async (req: AuthenticatedRequest, res: Resp
         currentAntardasha: kundli.dashas.currentAntardasha.planet,
         createdAt: new Date().toISOString(),
       };
-      await birthProfileRepository.saveProfile(birthRecord);
+
+      try {
+        await birthProfileRepository.saveProfile(birthRecord);
+      } catch (err) {
+        console.warn('[KundliRoute] birthProfileRepository error:', err);
+      }
       db.birthProfiles.set(req.user.userId, birthRecord);
+
+      // Persist into PostgreSQL birth_profiles table
+      try {
+        await pool.query(
+          `INSERT INTO birth_profiles (
+            id, user_id, full_name, birth_date, birth_time, birth_place,
+            latitude, longitude, timezone, gender, is_approximate_time,
+            ascendant_sign, moon_sign, sun_sign, nakshatra, nakshatra_pada,
+            current_mahadasha, current_antardasha, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
+          ON CONFLICT (id) DO UPDATE SET
+            full_name = EXCLUDED.full_name,
+            birth_date = EXCLUDED.birth_date,
+            birth_time = EXCLUDED.birth_time,
+            birth_place = EXCLUDED.birth_place,
+            latitude = EXCLUDED.latitude,
+            longitude = EXCLUDED.longitude,
+            timezone = EXCLUDED.timezone,
+            gender = EXCLUDED.gender,
+            is_approximate_time = EXCLUDED.is_approximate_time,
+            ascendant_sign = EXCLUDED.ascendant_sign,
+            moon_sign = EXCLUDED.moon_sign,
+            sun_sign = EXCLUDED.sun_sign,
+            nakshatra = EXCLUDED.nakshatra,
+            nakshatra_pada = EXCLUDED.nakshatra_pada,
+            current_mahadasha = EXCLUDED.current_mahadasha,
+            current_antardasha = EXCLUDED.current_antardasha`,
+          [
+            birthRecord.id,
+            birthRecord.userId,
+            birthRecord.fullName,
+            birthRecord.birthDate,
+            birthRecord.birthTime,
+            birthRecord.birthPlace,
+            birthRecord.latitude,
+            birthRecord.longitude,
+            birthRecord.timezone,
+            birthRecord.gender,
+            birthRecord.isApproximateTime,
+            birthRecord.ascendantSign,
+            birthRecord.moonSign,
+            birthRecord.sunSign,
+            birthRecord.nakshatra,
+            birthRecord.nakshatraPada,
+            birthRecord.currentMahadasha,
+            birthRecord.currentAntardasha,
+          ]
+        );
+      } catch (pgErr) {
+        console.warn('[KundliRoute] PostgreSQL birth_profiles save error:', pgErr);
+      }
+
+      // Save calculation snapshot
+      await CalculationSnapshotService.saveSnapshot({
+        authUserId: req.user.userId,
+        birthProfileId: birthRecord.id,
+        fingerprint,
+        payload: kundli,
+      });
     }
 
-    return res.json(kundli);
+    return res.json({ ...kundli, calculationFingerprint: fingerprint });
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to calculate Vedic Kundli.', details: err.message });
   }

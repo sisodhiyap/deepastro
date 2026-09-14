@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { AppShell } from './components/layout/AppShell.js';
 import { NavTabId } from './components/layout/Sidebar.js';
 import { PastLifePage } from './pages/PastLifePage';
@@ -19,6 +19,8 @@ import { SubscriptionPage } from './pages/SubscriptionPage.js';
 import { ReportsPage } from './pages/ReportsPage.js';
 import { ProfilePage } from './pages/ProfilePage.js';
 import { AdminPage } from './pages/AdminPage.js';
+import { QAControlCenterPage } from './pages/QAControlCenterPage.js';
+import { AccuracyWarRoomPage } from './pages/AccuracyWarRoomPage.js';
 import { SystemVerificationPage } from './pages/SystemVerificationPage.js';
 import { ContactPage } from './pages/ContactPage.js';
 import { CosmicHubPage } from './pages/CosmicHubPage.js';
@@ -48,6 +50,12 @@ export const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<NavTabId>(() => {
     if (typeof window !== 'undefined') {
+      if (window.location.pathname.startsWith('/admin/qa/accuracy-war-room') || window.location.pathname.startsWith('/admin/qa/war-room')) {
+        return 'qa-war-room';
+      }
+      if (window.location.pathname.startsWith('/admin/qa')) {
+        return 'qa';
+      }
       if (window.location.pathname.includes('/admin/system-verification')) {
         return 'system-verification';
       }
@@ -76,16 +84,7 @@ export const App: React.FC = () => {
 
   const [currentProfile, setCurrentProfile] = useState<any>(() => {
     const saved = getBirthProfile();
-    return saved || {
-      name: 'Cosmic Seeker',
-      birthDate: '1995-05-15',
-      birthTime: '14:30',
-      birthPlace: 'New Delhi, India',
-      latitude: 28.6139,
-      longitude: 77.2090,
-      timezone: 5.5,
-      gender: 'other'
-    };
+    return saved || null;
   });
 
   const [chartContext, setChartContext] = useState<any>(() => {
@@ -277,6 +276,8 @@ export const App: React.FC = () => {
         );
       case 'admin':
         return <AdminPage />;
+      case 'qa':      case 'qa-test-lab':        return <QAControlCenterPage onNavigate={setActiveTab} />;
+      case 'qa-war-room':        return <AccuracyWarRoomPage />;
       case 'system-verification':
         return <SystemVerificationPage />;
       case 'contact':
@@ -324,3 +325,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
