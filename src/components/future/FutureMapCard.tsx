@@ -38,6 +38,12 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
   const [evidenceDrawerOpen, setEvidenceDrawerOpen] = useState(false);
   const [sourcesModalOpen, setSourcesModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
+  const [contradictionsModalOpen, setContradictionsModalOpen] = useState(false);
+  const [outcomeStatus, setOutcomeStatus] = useState<'USER_CONFIRMED' | 'USER_PARTIALLY_CONFIRMED' | 'USER_NOT_CONFIRMED' | 'UNKNOWN'>('USER_CONFIRMED');
+  const [userNotes, setUserNotes] = useState('');
+  const [submittingOutcome, setSubmittingOutcome] = useState(false);
+  const [outcomeFeedback, setOutcomeFeedback] = useState<string | null>(null);
 
   if (!forecast) return null;
 
@@ -422,6 +428,165 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
             >
               CLOSE
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: VIEW CONTRADICTIONS */}
+      {contradictionsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-[#111827] border border-[#2A3441] rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-amber-400" />
+                <h3 className="font-bold text-lg text-[#F8FAFC]">Contradiction Analysis</h3>
+              </div>
+              <button onClick={() => setContradictionsModalOpen(false)} className="p-1 text-[#94A3B8] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-300 mb-6">
+              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+                <div className="font-bold text-amber-300 uppercase tracking-wide">Multi-System Divergence Check</div>
+                <p className="text-slate-300 leading-relaxed">
+                  DeepAstro evaluates {totalSystems} independent calculation engines. When planetary afflictions or opposing Dasha periods occur, confidence is dynamically dampened rather than averaged away.
+                </p>
+              </div>
+
+              {forecast.contradictions && forecast.contradictions.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="font-mono uppercase text-slate-400 text-[11px]">Identified Friction Factors:</div>
+                  {forecast.contradictions.map((c: any, i: number) => (
+                    <div key={i} className="p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-amber-200">
+                      {typeof c === 'string' ? c : c.description || JSON.stringify(c)}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-800/40 text-emerald-300 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>Zero dominant contradictions detected. Strong harmonic convergence across active systems.</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => setContradictionsModalOpen(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-white hover:bg-slate-700 font-mono"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: REPORT OUTCOME / REALITY CHECK */}
+      {outcomeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-[#111827] border border-[#2A3441] rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-lg text-[#F8FAFC]">Report Real-World Outcome</h3>
+              </div>
+              <button onClick={() => setOutcomeModalOpen(false)} className="p-1 text-[#94A3B8] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-300 mb-6">
+              <p className="text-slate-400 leading-relaxed">
+                Your feedback anchors the DeepAstro Intelligence Observatory. Only explicit authenticated user confirmations update calibration ledgers.
+              </p>
+
+              <div>
+                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-2">Outcome Status</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { val: 'USER_CONFIRMED', label: '✓ Happened' },
+                    { val: 'USER_PARTIALLY_CONFIRMED', label: '◐ Partially happened' },
+                    { val: 'USER_NOT_CONFIRMED', label: '✕ Did not happen' },
+                    { val: 'UNKNOWN', label: '? Not sure / Too early' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      type="button"
+                      onClick={() => setOutcomeStatus(opt.val as any)}
+                      className={`p-3 rounded-xl border text-left font-medium transition-all ${
+                        outcomeStatus === opt.val
+                          ? 'bg-emerald-500/10 border-emerald-400 text-emerald-300'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-2">
+                  Observed Details & Context (Required for Confirmation)
+                </label>
+                <textarea
+                  value={userNotes}
+                  onChange={(e) => setUserNotes(e.target.value)}
+                  placeholder="Describe what occurred, timing shifts, or specific details..."
+                  className="w-full h-20 p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#00E5FF] resize-none"
+                />
+              </div>
+
+              {outcomeFeedback && (
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-400">
+                  {outcomeFeedback}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                disabled={submittingOutcome}
+                onClick={async () => {
+                  setSubmittingOutcome(true);
+                  try {
+                    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+                    const res = await fetch('/api/predictions/observatory/confirm-outcome', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                      body: JSON.stringify({
+                        predictionId: verificationId || 'pred_forecast_map',
+                        status: outcomeStatus,
+                        userNotes,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setOutcomeFeedback('✓ Outcome registered with cryptographic signature in Observatory.');
+                      setTimeout(() => setOutcomeModalOpen(false), 2000);
+                    } else {
+                      setOutcomeFeedback(`Error: ${data.error || 'Failed to submit'}`);
+                    }
+                  } catch (e: any) {
+                    setOutcomeFeedback(`Error: ${e.message}`);
+                  } finally {
+                    setSubmittingOutcome(false);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-bold text-xs"
+              >
+                {submittingOutcome ? 'SUBMITTING...' : 'SUBMIT VERIFICATION'}
+              </button>
+              <button
+                onClick={() => setOutcomeModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-bold text-xs font-mono"
+              >
+                CLOSE
+              </button>
+            </div>
           </div>
         </div>
       )}

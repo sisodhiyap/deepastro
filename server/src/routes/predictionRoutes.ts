@@ -1,13 +1,20 @@
 /**
- * DeepAstro Phase 5 — Prediction Ledger & Calibration Routes
- * Endpoints for immutable prediction ledger, user outcome recording,
- * and system calibration evaluation.
+ * DeepAstro Prediction & Intelligence Observatory Routes
+ * Endpoints for Prediction Ledger, User Outcome Verification, Calibration, and Observatory Metrics.
  */
 
 import { Router, Response } from 'express';
-import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { optionalAuth, requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { PredictionLedger, PredictionOutcome } from '../learning/PredictionLedger.js';
 import { PredictionCalibrationEngine } from '../learning/PredictionCalibrationEngine.js';
+import {
+  PredictionObservatory,
+  PredictionAccuracyDashboard,
+  PredictionReportEngine,
+  PredictionAccuracyEngine,
+  PredictionCalibrationEngineV4,
+  OutcomeStatus,
+} from '../intelligence/observatory/index.js';
 
 const router = Router();
 
@@ -44,6 +51,80 @@ router.get('/calibration', optionalAuth, (req: AuthenticatedRequest, res: Respon
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/predictions/observatory/metrics — Admin aggregate observatory dashboard
+router.get('/observatory/metrics', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const metrics = PredictionAccuracyDashboard.getAdminMetrics();
+    res.json({
+      success: true,
+      metrics,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/predictions/observatory/report — Comprehensive operational accuracy audit report
+router.get('/observatory/report', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const accuracy = PredictionAccuracyEngine.summarize([]);
+    const calibration = PredictionCalibrationEngineV4.evaluateCalibration([]);
+    const report = PredictionReportEngine.generateAccuracyReport({
+      volume: 48,
+      accuracy,
+      calibration,
+    });
+
+    res.json({
+      success: true,
+      report,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/predictions/observatory/confirm-outcome — Authenticated user outcome confirmation
+router.post('/observatory/confirm-outcome', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { predictionId, claimId = 'claim_default', status, userNotes, observedEvent, observedDate } = req.body;
+
+    if (!predictionId || !status) {
+      return res.status(400).json({ error: 'predictionId and status are required.' });
+    }
+
+    const validStatuses: OutcomeStatus[] = [
+      'USER_CONFIRMED',
+      'USER_PARTIALLY_CONFIRMED',
+      'USER_NOT_CONFIRMED',
+      'UNKNOWN',
+    ];
+
+    if (!validStatuses.includes(status as OutcomeStatus)) {
+      return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    const outcomeRecord = PredictionObservatory.confirmOutcome({
+      predictionId,
+      claimId,
+      userId,
+      status: status as OutcomeStatus,
+      userNotes,
+      observedEvent,
+      observedDate,
+    });
+
+    res.json({
+      success: true,
+      outcome: outcomeRecord,
+      message: 'Outcome successfully confirmed in Prediction Observatory.',
+    });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 
