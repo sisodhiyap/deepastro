@@ -17,7 +17,8 @@ import {
   ExternalLink,
   Activity,
   AlertTriangle,
-  Info
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 
 export interface FutureMapCardProps {
