@@ -1,3 +1,5 @@
+import { UniversalInsightCardEngine } from '../chatbot/UniversalInsightCardEngine.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, X, Sparkles, MessageSquare, Trash2, ShieldCheck, ChevronRight, Cpu, Check, ChevronDown, ChevronUp, AlertTriangle, Compass, HelpCircle, Bookmark } from 'lucide-react';
 
@@ -25,6 +27,9 @@ interface ChatMessage {
   answerabilityStatus?: string;
   memoryProposal?: { content: string; type: string };
   memorySaved?: boolean;
+  card?: { type: string; data: any };
+  card_type?: string;
+  actions?: string[];
 }
 
 interface AstroBotWidgetProps {
@@ -41,6 +46,8 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
   const [isOllamaConnected, setIsOllamaConnected] = useState<boolean>(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [expandedWhyId, setExpandedWhyId] = useState<string | null>(null);
+  const { user, token } = useAuth();
+  const [loadingStage, setLoadingStage] = useState<string>('Analyzing your query...');
 
   const handleConfirmMemory = async (msgId: string, proposal: { content: string; type: string }) => {
     try {
@@ -139,7 +146,49 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
     setIsLoading(true);
 
     try {
-      // First attempt DeepAstro Master Intelligence Analyze endpoint
+      // Section 1: Invoke Universal Chat Service Gateway (v4.2.1)
+      setLoadingStage('Connecting to DeepAstro Universal Intelligence...');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      let universalRes: Response | null = null;
+      try {
+        universalRes = await fetch('/api/ai/universal-chat', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            message: messageText,
+            query: messageText,
+            birthProfile: chartContext || undefined,
+            userId: user?.id,
+          }),
+        });
+      } catch {
+        // Universal chat network fallback
+      }
+
+      if (universalRes && universalRes.ok) {
+        const resJson = await universalRes.json();
+        const botMsg: ChatMessage = {
+          id: `bot_${Date.now()}`,
+          sender: 'bot',
+          text: resJson.answer || resJson.directAnswer || 'DeepAstro intelligence synthesized.',
+          card: resJson.card || undefined,
+          card_type: resJson.card_type,
+          actions: resJson.actions || [],
+          evidence: Array.isArray(resJson.evidence) ? resJson.evidence.map((e: any) => typeof e === 'string' ? e : JSON.stringify(e)) : undefined,
+          confidence: resJson.confidence >= 0.9 ? 'HIGH' : 'MODERATE',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setMessages((prev) => [...prev, botMsg]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Fallback attempt DeepAstro Master Intelligence Analyze endpoint
       const intelRes = await fetch('/api/intelligence/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -147,7 +196,7 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
           query: messageText,
           question: messageText,
           message: messageText,
-          userId: 'user_default',
+          userId: user?.id || 'user_default',
         }),
       });
 
@@ -425,6 +474,26 @@ export const AstroBotWidget: React.FC<AstroBotWidgetProps> = ({ chartContext }) 
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{m.text}</p>
+
+                    {/* Universal Insight Card */}
+                    {!isUser && m.card && (
+                      <div className="mt-3 w-full">
+                        <UniversalInsightCardEngine
+                          card={m.card}
+                          actions={m.actions}
+                          onActionClick={(action) => {
+                            if (action === 'Why this reading?') {
+                              setExpandedWhyId((prev) => (prev === m.id ? null : m.id));
+                            } else if (action === 'Save Reading') {
+                              handleConfirmMemory(m.id, {
+                                type: 'SAVED_INTERPRETATION',
+                                content: m.text,
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
 
                     {/* Grounded Evidence Chunks */}
                     {m.evidence && m.evidence.length > 0 && (

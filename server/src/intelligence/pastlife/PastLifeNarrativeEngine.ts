@@ -77,7 +77,7 @@ export class PastLifeNarrativeEngine {
 
     const title = `The Journey of the ${archetype.primary.replace(/_/g, ' ')}: Wisdom Carried Across Lifetimes`;
 
-    const summary = `Traditional Jyotish analysis of your natal chart indicates a strong karmic resonance with the ${archetype.primary.replace(/_/g, ' ')} archetype. In previous cycles of experience, your soul engaged deeply in ${environment.toLowerCase()}, cultivating distinctive capacities in ${archetype.description.toLowerCase()} Today, this heritage surfaces as an instinctive discernment, an aversion to superficiality, and a persistent drive toward meaningful, principled living.`;
+    const summary = `Traditional Jyotish analysis for ${fullName} indicates a strong karmic resonance with the ${archetype.primary.replace(/_/g, ' ')} archetype guided by Atmakaraka ${akPlanet}. In previous cycles of experience, your soul engaged deeply in ${environment.toLowerCase()}, cultivating distinctive capacities in ${archetype.description.toLowerCase()} Today, this heritage surfaces as an instinctive discernment, an aversion to superficiality, and a persistent drive toward meaningful, principled living.`;
 
     const story = `Across the tapestry of time, every soul weaves a unique thread of consciousness. In your astrological geometry, the convergence of Ketu in House ${ketuHouse} alongside Atmakaraka ${akPlanet} reflects an individual who was deeply immersed in purposeful duty.
 

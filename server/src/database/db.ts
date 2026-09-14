@@ -494,6 +494,7 @@ class DatabaseStore {
         'numerology',
         'reports',
         'astrobot',
+        'FUTURE_INTELLIGENCE_PREMIUM',
       ];
       if (premiumFeatures.includes(featureKey)) return true;
     }

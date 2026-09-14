@@ -1,3 +1,4 @@
+import futureRoutes from './routes/futureRoutes.js';
 /**
  * DeepAstro Master API Server
  * High-performance, production-grade Express server powering the Vedic astrology
@@ -113,6 +114,8 @@ app.use('/api/learning', learningRoutes);
 app.use('/api/admin/self-learning-lab', adminLearningRoutes);
 app.use('/api/brain', brainRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
+app.use('/api/future', futureRoutes);
+app.use('/future', futureRoutes);
 app.use('/api/intelligence/past-life', pastLifeRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/decision', intelligenceRoutes);

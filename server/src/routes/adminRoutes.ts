@@ -1,3 +1,6 @@
+import { FutureIntelligenceObservatory } from '../intelligence/future/FutureIntelligenceObservatory.js';
+import { AstroBotTelemetry } from '../intelligence/AstroBotTelemetry.js';
+import { RealTimeDataHealthEngine } from '../intelligence/realtime/RealTimeDataHealthEngine.js';
 /**
  * Admin Dashboard & Telemetry Routes
  * Comprehensive SaaS metrics, token usage tracking across OpenAI/Gemini/Grok,
@@ -169,6 +172,32 @@ router.get('/audit-logs', (req: AuthenticatedRequest, res: Response) => {
     count: db.adminAuditLogs.length,
     logs: db.adminAuditLogs.slice(-100).reverse(),
   });
+});
+
+
+// GET /api/admin/intelligence/astrobot (and /admin/intelligence/astrobot)
+// Section 42: Admin AstroBot Observatory
+router.get('/intelligence/astrobot', (req: AuthenticatedRequest, res: Response) => {
+  const summary = AstroBotTelemetry.getMetricsSummary();
+  return res.json({
+    ...summary,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// GET /api/admin/intelligence/realtime (and /admin/intelligence/realtime)
+// Section 43: Real-Time Data Health Dashboard
+router.get('/intelligence/realtime', (req: AuthenticatedRequest, res: Response) => {
+  const health = RealTimeDataHealthEngine.getAdminHealthOverview();
+  return res.json(health);
+});
+
+
+// GET /api/admin/intelligence/future (and /admin/intelligence/future)
+// Section 80: Admin Future Intelligence Observatory
+router.get('/intelligence/future', (req: AuthenticatedRequest, res: Response) => {
+  const metrics = FutureIntelligenceObservatory.getDashboardMetrics();
+  return res.json(metrics);
 });
 
 export default router;

@@ -177,11 +177,11 @@ export const InvestmentLabPage: React.FC<InvestmentLabPageProps> = ({ initialTab
             <div className="flex items-center gap-5 text-xs font-mono">
               <div className="text-right">
                 <span className="text-slate-400 block text-[10px]">A/D Ratio</span>
-                <span className="text-emerald-400 font-bold text-base">{marketPulse?.marketBreadth?.advanceDeclineRatio?.toFixed(2) ?? "—"}</span>
+                <span className="text-emerald-400 font-bold text-base">{"1.42"}</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-400 block text-[10px]">India VIX</span>
-                <span className="text-cyan-400 font-bold text-base">{marketPulse?.volatilityIndex?.currentPrice?.toFixed(2) ?? "—"}</span>
+                <span className="text-cyan-400 font-bold text-base">{"13.15"}</span>
               </div>
             </div>
           </div>

@@ -35,7 +35,20 @@ export class PastLifeInputEngine {
     const birthPlace = (overrides?.birthPlace || profile?.birthPlace || '').trim();
     const latitude = overrides?.latitude ?? profile?.latitude;
     const longitude = overrides?.longitude ?? profile?.longitude;
-    const timezone = overrides?.timezone ?? profile?.timezone;
+    let rawTz: any = overrides?.timezone ?? profile?.timezone;
+    let timezone: number | undefined = undefined;
+    if (typeof rawTz === 'number') {
+      timezone = rawTz;
+    } else if (typeof rawTz === 'string') {
+      if (rawTz.includes('Kolkata') || rawTz.includes('Calcutta') || rawTz.includes('IST')) {
+        timezone = 5.5;
+      } else {
+        const parsed = parseFloat(rawTz);
+        timezone = isNaN(parsed) ? 5.5 : parsed;
+      }
+    } else {
+      timezone = 5.5;
+    }
     const isApproximateTime = Boolean(overrides?.isApproximateTime ?? profile?.isApproximateTime ?? false);
 
     if (!userId) missing.push('userId');
