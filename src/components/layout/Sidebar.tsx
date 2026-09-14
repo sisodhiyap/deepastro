@@ -42,6 +42,7 @@ export type NavTabId =
   | 'numerology'
   | 'palmistry'
   | 'ai-astrologer'
+  | 'past-life'
   | 'market-pulse'
   | 'financial-astrology'
   | 'investment-lab'
@@ -101,6 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'ANCIENT DIVINATION & AI REASONING',
       items: [
         { id: 'ai-astrologer' as NavTabId, label: 'DeepAstro AI Astrologer', icon: Brain, badge: 'WHY?' },
+        { id: 'past-life' as NavTabId, label: 'Past Life (SoulTrace)', icon: Sparkles, badge: 'SOUL' },
         { id: 'tarot' as NavTabId, label: 'DeepAstro Tarot Engine', icon: Sparkles, badge: 'CRYPTO' },
         { id: 'numerology' as NavTabId, label: 'Numerology Vibrations', icon: Hash },
         { id: 'palmistry' as NavTabId, label: 'Palmistry Vision AI', icon: Hand },

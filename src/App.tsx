@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppShell } from './components/layout/AppShell.js';
 import { NavTabId } from './components/layout/Sidebar.js';
+import { PastLifePage } from './pages/PastLifePage';
 import { LandingPage } from './pages/LandingPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { KundliPage } from './pages/KundliPage.js';
@@ -231,6 +232,8 @@ export const App: React.FC = () => {
         return <InvestmentLabPage initialTab="geopolitical" onNavigate={setActiveTab} />;
       case 'ai-astrologer':
         return <AIAstrologerPage profile={currentProfile} />;
+      case 'past-life':
+        return <PastLifePage />;
       case 'predictions':
         return <DailyPredictionsPage />;
       case 'matching':
