@@ -23,6 +23,19 @@ export interface AuditResult {
 }
 
 export class AIAuditor {
+  public static auditSafety(text: string): { passed: boolean; violations: string[] } {
+    const violations: string[] = [];
+    for (const pattern of this.DANGEROUS_PATTERNS) {
+      if (pattern.test(text)) {
+        violations.push(`Violation of safe interpretation: matches ${pattern}`);
+      }
+    }
+    return {
+      passed: violations.length === 0,
+      violations,
+    };
+  }
+
   private static DANGEROUS_PATTERNS = [
     /guaranteed (profit|returns|wealth|cure|outcome)/i,
     /will definitely (die|fail|divorce|cure|contract)/i,
@@ -30,8 +43,8 @@ export class AIAuditor {
     /replace medical (advice|diagnosis)/i,
     /100% certainty/i,
     /death (date|guarantee|prediction)/i,
-    /ignore (your|all|previous) (system|instructions|rules)/i,
-    /reveal (api key|system prompt|credentials|hidden prompt)/i,
+    /ignore (?:all|previous|system|your|the|any|instructions|rules|safety|\s)+ (?:system|instructions|rules|safety|prompt)/i,
+    /reveal (?:your|the|all)?\s*(?:api key|system prompt|credentials|hidden prompt|instructions)/i,
     /change (my|the) birth (chart|data|coordinates)/i,
     /use (this|a) fake (planetary|planet|position)/i,
     /ignore (the)? calculation passport/i,

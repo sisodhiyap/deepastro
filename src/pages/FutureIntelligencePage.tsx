@@ -1,3 +1,4 @@
+import { FutureMapCard } from '../components/future/FutureMapCard';
 import React, { useState, useEffect } from 'react';
 import {
   Compass,
@@ -264,6 +265,30 @@ export const FutureIntelligencePage: React.FC = () => {
             {/* VIEW 1: OVERVIEW HERO */}
             {activeView === 'overview' && (
               <div className="space-y-8 animate-fadeIn">
+                <FutureMapCard
+                  forecast={{
+                    ...forecastData,
+                    lifePhase: forecastData?.currentLifePhase,
+                    nextMajorWindow: forecastData?.nextMajorWindow?.period,
+                    timeline: yearlyTimeline.map((y: any) => ({
+                      year: y.year,
+                      theme: y.overallTheme,
+                      intensity: y.intensityScore ? y.intensityScore / 100 : 0.75,
+                    })),
+                    provenance: forecastData?.provenance,
+                  }}
+                  onViewYearDetail={(yr) => {
+                    setSelectedYear(yr);
+                    setActiveView('years');
+                  }}
+                  onExploreSoulJourney={() => {
+                    window.location.hash = '#/past-life';
+                  }}
+                  onAskAstroBot={(prompt) => {
+                    const evt = new CustomEvent('astrobot:open', { detail: { prompt } });
+                    window.dispatchEvent(evt);
+                  }}
+                />
                 <FutureInsightCard
                   data={{
                     currentPhase: forecastData?.currentLifePhase || 'Consolidation & Intentionality Phase',

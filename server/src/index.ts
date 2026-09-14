@@ -1,3 +1,4 @@
+import verifyReportRoutes from './routes/verifyReportRoutes.js';
 import futureRoutes from './routes/futureRoutes.js';
 /**
  * DeepAstro Master API Server
@@ -61,6 +62,8 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
   next();
 });
 
@@ -115,7 +118,9 @@ app.use('/api/admin/self-learning-lab', adminLearningRoutes);
 app.use('/api/brain', brainRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/future', futureRoutes);
+app.use('/api/verify', verifyReportRoutes);
 app.use('/future', futureRoutes);
+app.use('/verify', verifyReportRoutes);
 app.use('/api/intelligence/past-life', pastLifeRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/decision', intelligenceRoutes);

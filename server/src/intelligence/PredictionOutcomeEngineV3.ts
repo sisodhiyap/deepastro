@@ -63,6 +63,15 @@ export class PredictionOutcomeEngineV3 {
       throw new Error(`PREDICTION_NOT_FOUND: Prediction ${predictionId} does not exist.`);
     }
 
+    // Phase 8 & Rule 004: Conversational reactions must NOT become confirmed outcomes
+    if (userNotes && (outcome === 'CONFIRMED' || outcome === 'PARTIALLY_CONFIRMED')) {
+      const casualReactions = ['interesting', 'nice', 'maybe', 'that sounds right', 'cool', 'ok', 'sounds good'];
+      const normalizedNotes = userNotes.trim().toLowerCase();
+      if (casualReactions.includes(normalizedNotes)) {
+        throw new Error('CONSTITUTION_VIOLATION [Rule 004]: Casual conversational reactions ("nice", "interesting", "maybe", etc.) cannot confirm prediction outcomes. Explicit verification required.');
+      }
+    }
+
     if (prediction.userId !== userId) {
       throw new Error(`TENANT_ISOLATION_VIOLATION: User ${userId} is not authorized to confirm outcome for prediction ${predictionId}.`);
     }
