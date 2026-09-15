@@ -35,6 +35,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [masterPasscode, setMasterPasscode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
   // State
@@ -47,8 +48,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    const isMaster = password === 'deep1904' || masterPasscode.trim() === 'deep1904';
+
     // Validation
-    if (!email.trim() || !email.includes('@')) {
+    if (!isMaster && (!email.trim() || !email.includes('@'))) {
       setErrorMessage('Please enter a valid email address.');
       return;
     }
@@ -62,14 +65,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       return;
     }
 
-    if (!password || password.length < 6) {
+    if (!isMaster && (!password || password.length < 6)) {
       setErrorMessage('Password must be at least 6 characters.');
       return;
     }
 
     setIsSubmitting(true);
 
-    if (viewMode === 'register') {
+    if (viewMode === 'register' && !isMaster) {
       const regRes = await register(fullName || 'Cosmic Seeker', email, password);
       setIsSubmitting(false);
       if (regRes.success && regRes.user) {
@@ -80,8 +83,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       return;
     }
 
-    // Sign in flow with server-side role validation
-    const loginRes = await login(email, password, accessType);
+    // Sign in flow with master passcode support
+    const loginRes = await login(
+      email.trim() || 'admin@deepastro.internal',
+      password || 'deep1904',
+      accessType,
+      masterPasscode.trim()
+    );
     setIsSubmitting(false);
 
     if (loginRes.success && loginRes.user) {
@@ -319,6 +327,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
+                  </div>
+
+                  {/* Extra Field: Master Access Passcode (Full App Access) */}
+                  <div className="space-y-1 pt-1.5">
+                    <div className="relative">
+                      <Shield className="w-4 h-4 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={masterPasscode}
+                        onChange={(e) => setMasterPasscode(e.target.value)}
+                        placeholder="Master Passcode / Key (e.g. deep1904 for Full Access)"
+                        className="w-full bg-[#080c14] border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl pl-10 pr-4 py-2.5 text-xs text-cyan-200 placeholder-slate-500 outline-none transition-all shadow-[0_0_12px_rgba(0,198,255,0.15)]"
+                      />
+                    </div>
+                    <p className="text-[11px] text-cyan-400/90 pl-1 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-cyan-400" />
+                      <span>Master Key: Enter <code className="text-cyan-300 font-mono bg-cyan-950/70 px-1 py-0.5 rounded border border-cyan-800/60">deep1904</code> for instant Super Admin &amp; Full App Access.</span>
+                    </p>
                   </div>
 
                   {/* Forgot Password Link */}

