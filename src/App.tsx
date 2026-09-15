@@ -97,9 +97,15 @@ export const App: React.FC = () => {
   const [cosmicSosOpen, setCosmicSosOpen] = useState(false);
   const [showDedicatedLogin, setShowDedicatedLogin] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('deepastro_user');
+      const savedToken = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      // If user is not authenticated, open login page by default
+      if (!savedUser && !savedToken) {
+        return true;
+      }
       return window.location.pathname === '/login' || window.location.search.includes('login=true');
     }
-    return false;
+    return true;
   });
 
   // Verify and load authenticated user session on mount
@@ -164,30 +170,29 @@ export const App: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('deepastro_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('deepastro_user');
     setCurrentUser(null);
     setUserName('Cosmic Seeker');
     setUserPlan('FREE');
-    setShowDedicatedLogin(false);
+    setShowDedicatedLogin(true);
+    setActiveTab('home');
   };
 
   const handleAuthSuccess = (user: any) => {
     setCurrentUser(user);
-    setUserName(user.name || 'Cosmic Seeker');
+    setUserName(user.fullName || user.name || 'Cosmic Seeker');
     setUserPlan(user.plan || 'FREE');
     setAuthModalOpen(false);
     setShowDedicatedLogin(false);
-    if (user.role === 'admin') {
-      setActiveTab('admin');
-    } else {
-      setActiveTab('dashboard');
-    }
+    // After registering or logging in, open main home page
+    setActiveTab('home');
   };
 
 
 
-  // Full-Screen Split-Screen Authentication Page
-  if (showDedicatedLogin) {
+  // Full-Screen Split-Screen Authentication Page (opens login page if unauthenticated)
+  if (showDedicatedLogin && !currentUser) {
     return (
       <AuthProvider>
         <LanguageProvider>
@@ -195,6 +200,7 @@ export const App: React.FC = () => {
             onSuccess={handleAuthSuccess} 
             onNavigateLanding={() => {
               setShowDedicatedLogin(false);
+              setActiveTab('home');
               if (typeof window !== 'undefined' && window.location.pathname === '/login') {
                 window.history.pushState({}, '', '/');
               }
@@ -278,8 +284,11 @@ export const App: React.FC = () => {
         );
       case 'admin':
         return <AdminPage />;
-      case 'qa':      case 'qa-test-lab':        return <QAControlCenterPage onNavigate={setActiveTab} />;
-      case 'qa-war-room':        return <AccuracyWarRoomPage />;
+      case 'qa':
+      case 'qa-test-lab':
+        return <QAControlCenterPage onNavigate={setActiveTab} />;
+      case 'qa-war-room':
+        return <AccuracyWarRoomPage />;
       case 'system-verification':
         return <SystemVerificationPage />;
       case 'contact':
