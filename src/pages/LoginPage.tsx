@@ -26,7 +26,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
   const { login, register, loginWithGoogle } = useAuth();
   
   // Access mode: user vs admin
-  const [accessType, setAccessType] = useState<'user' | 'admin'>('user');
   
   // View modes: 'signin' | 'register' | 'forgot'
   const [viewMode, setViewMode] = useState<'signin' | 'register' | 'forgot'>('signin');
@@ -35,7 +34,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [masterPasscode, setMasterPasscode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
   // State
@@ -48,10 +46,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const isMaster = password === 'deep1904' || masterPasscode.trim() === 'deep1904';
-
     // Validation
-    if (!isMaster && (!email.trim() || !email.includes('@'))) {
+    if (!email.trim() || !email.includes('@')) {
       setErrorMessage('Please enter a valid email address.');
       return;
     }
@@ -65,14 +61,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       return;
     }
 
-    if (!isMaster && (!password || password.length < 6)) {
+    if (!password || password.length < 6) {
       setErrorMessage('Password must be at least 6 characters.');
       return;
     }
 
     setIsSubmitting(true);
 
-    if (viewMode === 'register' && !isMaster) {
+    if (viewMode === 'register') {
       const regRes = await register(fullName || 'Cosmic Seeker', email, password);
       setIsSubmitting(false);
       if (regRes.success && regRes.user) {
@@ -83,12 +79,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       return;
     }
 
-    // Sign in flow with master passcode support
+    // Standard sign in flow
     const loginRes = await login(
-      email.trim() || 'admin@deepastro.internal',
-      password || 'deep1904',
-      accessType,
-      masterPasscode.trim()
+      email.trim(),
+      password,
+      'user',
+      ''
     );
     setIsSubmitting(false);
 
@@ -227,41 +223,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
                   : 'Enter your email to receive recovery instructions'}
               </p>
             </div>
-
-            {/* Access Mode Selector: User Access vs Admin Access */}
-            <div className="flex rounded-xl bg-[#080c14] p-1 border border-[#1a2333] mb-5">
-              <button
-                type="button"
-                onClick={() => {
-                  setAccessType('user');
-                  setErrorMessage(null);
-                }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  accessType === 'user'
-                    ? 'bg-[#152033] text-white border border-[#233550] shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <User className="w-4 h-4 text-cyan-400" />
-                <span>User Access</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAccessType('admin');
-                  setErrorMessage(null);
-                }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  accessType === 'admin'
-                    ? 'bg-[#152033] text-white border border-[#233550] shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Shield className="w-4 h-4 text-cyan-400" />
-                <span>Admin Access</span>
-              </button>
-            </div>
-
             {/* Error Message */}
             {errorMessage && (
               <div className="mb-4 p-3 rounded-xl bg-red-950/40 border border-red-800/60 flex items-start gap-2.5 text-xs text-red-300">
@@ -329,23 +290,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
                     </button>
                   </div>
 
-                  {/* Extra Field: Master Access Passcode (Full App Access) */}
-                  <div className="space-y-1 pt-1.5">
-                    <div className="relative">
-                      <Shield className="w-4 h-4 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="password"
-                        value={masterPasscode}
-                        onChange={(e) => setMasterPasscode(e.target.value)}
-                        placeholder="Master Passcode / Key (e.g. deep1904 for Full Access)"
-                        className="w-full bg-[#080c14] border border-cyan-500/40 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 rounded-xl pl-10 pr-4 py-2.5 text-xs text-cyan-200 placeholder-slate-500 outline-none transition-all shadow-[0_0_12px_rgba(0,198,255,0.15)]"
-                      />
-                    </div>
-                    <p className="text-[11px] text-cyan-400/90 pl-1 font-medium flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-cyan-400" />
-                      <span>Master Key: Enter <code className="text-cyan-300 font-mono bg-cyan-950/70 px-1 py-0.5 rounded border border-cyan-800/60">deep1904</code> for instant Super Admin &amp; Full App Access.</span>
-                    </p>
-                  </div>
 
                   {/* Forgot Password Link */}
                   {viewMode === 'signin' && (
@@ -388,7 +332,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
             </form>
 
             {/* OR Divider & Google Login (for User Access) */}
-            {accessType === 'user' && viewMode === 'signin' && (
+            {viewMode === 'signin' && (
               <div className="space-y-4 pt-3">
                 <div className="flex items-center gap-3">
                   <div className="h-[1px] flex-1 bg-[#1a2333]" />
@@ -425,12 +369,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
               </div>
             )}
 
-            {/* Admin Notice */}
-            {accessType === 'admin' && (
-              <div className="pt-3 text-center text-[11px] text-slate-500 font-mono">
-                Administrative credentials are authenticated directly against database records.
-              </div>
-            )}
+
           </div>
         </div>
 

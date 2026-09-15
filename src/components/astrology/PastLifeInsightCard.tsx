@@ -1,300 +1,318 @@
-import React from 'react';
-import { Sparkles, Moon, Compass, Sun, Shield, BookOpen, Heart, Eye, Award, Feather } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Sparkles,
+  Compass,
+  Layers,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Share2,
+  Download,
+  BookOpen,
+  Eye,
+  Shield,
+  Star,
+  Users,
+  Feather,
+  Flower2,
+  HelpCircle,
+  Clock,
+  Heart,
+  Target
+} from 'lucide-react';
 
 export interface PastLifeInsightCardProps {
   data: {
-    userProfile: {
-      name: string;
-      dob: string;
-      tob: string;
-      pob: string;
+    userProfile?: {
+      name?: string;
+      dob?: string;
+      tob?: string;
+      pob?: string;
     };
-    summary: string;
+    summary?: string;
     archetype?: string;
     visualTheme?: string;
-    astrologicalHighlights: { label: string; value: string }[];
-    numerologyHighlights: { label: string; value: number | string }[];
-    vedicWisdomQuote: { source: string; theme: string };
-    keyThemes: string[];
-    karmicConnections: { pattern: string; currentLife: string }[];
-    currentLifeInfluence: { area: string; guidance: string }[];
-    soulMessage: string;
-    disclaimer: string;
+    astrologicalHighlights?: { label: string; value: string }[];
+    numerologyHighlights?: { label: string; value: number | string }[];
+    vedicWisdomQuote?: { source: string; theme: string };
+    keyThemes?: string[];
+    karmicConnections?: { pattern: string; currentLife: string }[];
+    currentLifeInfluence?: { area: string; guidance: string }[];
+    soulMessage?: string;
+    disclaimer?: string;
+    rawSchema?: any;
   };
   onExportPdf?: () => void;
   onShare?: () => void;
 }
 
 export const PastLifeInsightCard: React.FC<PastLifeInsightCardProps> = ({ data, onExportPdf, onShare }) => {
+  const [expanded, setExpanded] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'astrology' | 'karma' | 'wisdom'>('astrology');
+
+  if (!data) return null;
+
+  const archetype = data.archetype || data.rawSchema?.archetype?.primary || 'Seeker of Sacred Truth';
+  const soulLesson = data.rawSchema?.archetype?.soulLesson || data.soulMessage || 'Awakening transcendent consciousness across cycles of time.';
+  const karmicPattern = data.karmicConnections?.[0]?.pattern || data.rawSchema?.karmicPatterns?.[0]?.pattern || 'Ketu 12th House / Moksha Axis Orientation';
+  const karmicCurrent = data.karmicConnections?.[0]?.currentLife || 'Intuitive detachment and seeking inner spiritual equilibrium.';
+  const quoteText = data.vedicWisdomQuote?.theme || 'You are not just this life, You are a timeless soul...';
+  const quoteSource = data.vedicWisdomQuote?.source || 'Vishnu Purana & Vedic Wisdom';
+
   return (
-    <div id="past-life-card-a" className="relative w-full max-w-4xl mx-auto rounded-3xl p-6 md:p-10 bg-gradient-to-b from-[#0B0F1C] via-[#080B14] to-[#04060A] border-2 border-amber-400/40 shadow-[0_0_60px_rgba(245,158,11,0.18)] text-slate-100 font-sans select-none overflow-hidden">
-      {/* Background Starry Aura & Subtle Cosmic Mandala */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,0.12),transparent_70%)] pointer-events-none" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+    <div id="past-soul-journey-card-root" className="w-full max-w-5xl mx-auto rounded-3xl bg-gradient-to-b from-[#090E1C] via-[#060813] to-[#030409] border-2 border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.18)] text-slate-100 font-sans relative overflow-hidden p-6 sm:p-10 select-none">
+      {/* Background Cosmic Radiance */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Outer Golden Border Filigree */}
-      <div className="absolute top-3 left-3 right-3 bottom-3 border border-amber-400/20 rounded-2xl pointer-events-none" />
-
-      {/* Top Header Section */}
-      <div className="relative z-10 text-center space-y-2 mb-8">
-        <div className="flex items-center justify-between px-2 text-xs font-mono text-amber-300/80">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="tracking-widest uppercase font-bold text-amber-300">DeepAstro</span>
-          </div>
-          <div className="italic text-amber-200/70 text-[11px] hidden sm:block">
-            "Not just who you are, but where you have been, and why you are here."
-          </div>
-          <div className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">
-            SOULTRACE v1.0
-          </div>
+      {/* TOP PILLS: Discover Your Stories & Powered by Vedic Wisdom */}
+      <div className="relative z-10 flex items-center justify-between gap-4 mb-6">
+        <div className="px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/40 text-amber-300 text-xs font-semibold tracking-wide flex items-center gap-1.5 shadow-md shadow-amber-500/10">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>Discover Your Stories</span>
         </div>
 
-        <div className="pt-2">
-          <div className="inline-block p-2 rounded-full bg-amber-500/10 border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.3)] mb-1">
-            <span className="text-xl">🕉️</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-100 uppercase">
-            PAST LIFE INSIGHT
-          </h1>
-          <p className="text-xs sm:text-sm font-medium tracking-widest text-amber-300/80 uppercase">
-            A GLIMPSE INTO YOUR SOUL'S JOURNEY
-          </p>
+        <div className="px-4 py-1.5 rounded-full bg-purple-600/20 border border-purple-400/40 text-purple-300 text-xs font-semibold tracking-wide flex items-center gap-1.5 shadow-md shadow-purple-500/10">
+          <Flower2 className="w-3.5 h-3.5 text-purple-400" />
+          <span>Powered by Vedic Wisdom</span>
         </div>
       </div>
 
-      {/* Row 1: Profile + Central Visual + Summary */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-        {/* Box 1: Your Soul Profile */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md flex flex-col justify-between space-y-3">
-          <div>
-            <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider mb-3">
-              <Compass className="w-4 h-4 text-amber-400" />
-              <span>YOUR SOUL PROFILE</span>
-            </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex items-start gap-2">
-                <span className="text-amber-400 font-semibold w-12 shrink-0">Name:</span>
-                <span className="text-slate-100 font-bold truncate">{data.userProfile.name}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-amber-400 font-semibold w-12 shrink-0">DOB:</span>
-                <span className="text-slate-300">{data.userProfile.dob}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-amber-400 font-semibold w-12 shrink-0">Time:</span>
-                <span className="text-slate-300">{data.userProfile.tob}</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="text-amber-400 font-semibold w-12 shrink-0">Place:</span>
-                <span className="text-slate-300 truncate">{data.userProfile.pob}</span>
-              </div>
-            </div>
-          </div>
-          <div className="text-[11px] italic text-amber-300/70 border-t border-amber-500/20 pt-2 text-center">
-            "Every soul carries a story written in the stars."
-          </div>
-        </div>
-
-        {/* Box 2: Central Visual (Generated Dynamic Cosmic Artwork) */}
-        <div className="relative rounded-xl overflow-hidden border border-amber-400/40 bg-gradient-to-b from-amber-950/20 to-slate-950 flex flex-col items-center justify-center p-4 text-center min-h-[190px]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.25),transparent_75%)] pointer-events-none" />
-          <div className="relative z-10 space-y-2">
-            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-tr from-amber-500/30 to-amber-200/20 border border-amber-400/50 flex items-center justify-center shadow-[0_0_25px_rgba(245,158,11,0.4)]">
-              <Sparkles className="w-8 h-8 text-amber-300 animate-pulse" />
-            </div>
-            <div className="text-xs font-mono font-bold tracking-wider text-amber-200 uppercase">
-              {data.visualTheme || 'TEMPLE SANCTUM'}
-            </div>
-            <div className="text-[11px] text-slate-400 max-w-[200px] mx-auto leading-tight">
-              Luminous sanctuary of contemplation under starry celestial coordinates
-            </div>
-          </div>
-        </div>
-
-        {/* Box 3: Past Life Summary */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md flex flex-col justify-between space-y-3">
-          <div>
-            <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider mb-2">
-              <BookOpen className="w-4 h-4 text-amber-400" />
-              <span>PAST LIFE SUMMARY</span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed line-clamp-6">
-              {data.summary}
-            </p>
-          </div>
-          <div className="text-[11px] italic text-amber-300/70 border-t border-amber-500/20 pt-2 text-center">
-            "The soul never forgets what the mind cannot remember."
-          </div>
-        </div>
+      {/* MAIN TITLE & SUBTITLE */}
+      <div className="relative z-10 space-y-2 mb-8">
+        <h1 className="text-3xl sm:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-purple-100 to-amber-200 tracking-tight">
+          Past Soul Journey
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+          Explore your past lives, karmic patterns and soul evolution through the ancient wisdom of Vedic Astrology.
+        </p>
       </div>
 
-      {/* Row 2: Astrological Insights + Numerology Insights + Wisdom from Vedas & Puranas */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-        {/* Astrological Insights */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md space-y-2.5">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
-            <Moon className="w-4 h-4 text-amber-400" />
-            <span>ASTROLOGICAL INSIGHTS</span>
-          </div>
-          <div className="space-y-1.5 text-[11px]">
-            {data.astrologicalHighlights.map((item, idx) => (
-              <div key={idx} className="flex justify-between border-b border-slate-800/80 pb-1">
-                <span className="text-slate-400 truncate max-w-[140px]">{item.label}</span>
-                <span className="text-amber-200 font-medium text-right">{item.value}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-slate-400 italic pt-1">
-            Planetary placements reveal strong karmic patterns carried across births.
-          </p>
-        </div>
-
-        {/* Numerology Insights */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md space-y-2.5">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
-            <Award className="w-4 h-4 text-amber-400" />
-            <span>NUMEROLOGY INSIGHTS</span>
-          </div>
-          <div className="space-y-1.5 text-[11px]">
-            {data.numerologyHighlights.map((num, idx) => (
-              <div key={idx} className="flex justify-between border-b border-slate-800/80 pb-1">
-                <span className="text-slate-400">{num.label}</span>
-                <span className="text-amber-300 font-bold font-mono">#{num.value}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-slate-400 italic pt-1">
-            Numbers carry the vibrational signature of your soul's prior experience.
-          </p>
-        </div>
-
-        {/* Wisdom from Vedas & Puranas */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md space-y-2.5">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
-            <Feather className="w-4 h-4 text-amber-400" />
-            <span>WISDOM FROM VEDAS & PURANAS</span>
-          </div>
-          <div className="space-y-2 text-[11px]">
-            <div>
-              <div className="text-amber-300 font-semibold">{data.vedicWisdomQuote.source}</div>
-              <div className="text-slate-300 leading-snug text-[10px] mt-0.5">{data.vedicWisdomQuote.theme}</div>
+      {/* HERO SECTION: CELESTIAL CIRCULAR PORTAL & 4 FEATURE PILLARS */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-8">
+        {/* LEFT / CENTER: 4 FEATURE PILLARS */}
+        <div className="lg:col-span-6 space-y-4">
+          {/* Pillar 1: Past Life Insights */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-purple-500/30 hover:border-purple-400/60 transition-all flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20">
+              <Flower2 className="w-5 h-5 text-purple-300" />
             </div>
-            <div className="border-t border-slate-800/80 pt-1.5">
-              <div className="text-amber-300 font-semibold">Vishnu Purana Insight</div>
-              <div className="text-slate-400 text-[10px] leading-snug mt-0.5">
-                Continuity of dharmic duty and non-attachment to transient physical identities.
-              </div>
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Past Life Insights</h3>
+              <p className="text-xs text-purple-300/90 font-medium">Traditional Archetypal Resonance</p>
+              <p className="text-[11px] text-slate-400">{archetype}</p>
             </div>
           </div>
-          <p className="text-[10px] text-amber-300/70 italic pt-1">
-            Ancient wisdom illuminates the path of your soul's evolution.
-          </p>
-        </div>
-      </div>
 
-      {/* Row 3: Key Themes + Karmic Connections + How It Influences Current Life */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        {/* Key Themes */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md space-y-2">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
-            <Eye className="w-4 h-4 text-amber-400" />
-            <span>KEY THEMES FROM PAST LIFE</span>
+          {/* Pillar 2: Karmic Patterns */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/30 hover:border-cyan-400/60 transition-all flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/20">
+              <Compass className="w-5 h-5 text-cyan-300" />
+            </div>
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Karmic Patterns</h3>
+              <p className="text-xs text-cyan-300/90 font-medium">Karmic Axis Interpretation</p>
+              <p className="text-[11px] text-slate-400 truncate">{karmicPattern}</p>
+            </div>
           </div>
-          <div className="space-y-1.5 text-[11px] text-slate-300">
-            {data.keyThemes.slice(0, 4).map((th, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>{th}</span>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Karmic Connections */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md space-y-2">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
-            <Heart className="w-4 h-4 text-amber-400" />
-            <span>KARMIC CONNECTIONS</span>
+          {/* Pillar 3: Soul Evolution */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 hover:border-amber-400/60 transition-all flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+              <Sparkles className="w-5 h-5 text-amber-300" />
+            </div>
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Soul Evolution</h3>
+              <p className="text-xs text-amber-300/90 font-medium">Spiritual Trajectory & Lessons</p>
+              <p className="text-[11px] text-slate-400 truncate">{soulLesson}</p>
+            </div>
           </div>
-          <div className="space-y-1.5 text-[11px] text-slate-300">
-            {data.karmicConnections.slice(0, 3).map((kc, i) => (
-              <div key={i} className="border-b border-slate-800/80 pb-1">
-                <div className="text-amber-200 font-semibold">{kc.pattern}</div>
-                <div className="text-slate-400 text-[10px] leading-tight mt-0.5">{kc.currentLife}</div>
-              </div>
-            ))}
+
+          {/* Pillar 4: Life Purpose */}
+          <div className="p-4 rounded-2xl bg-slate-900/80 border border-emerald-500/30 hover:border-emerald-400/60 transition-all flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+              <Feather className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div className="space-y-0.5">
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Life Purpose</h3>
+              <p className="text-xs text-emerald-300/90 font-medium">Present Life Dharma Alignment</p>
+              <p className="text-[11px] text-slate-400">{karmicCurrent}</p>
+            </div>
           </div>
         </div>
 
-        {/* How It Influences Current Life */}
-        <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-400/25 backdrop-blur-md space-y-2">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider">
-            <Sun className="w-4 h-4 text-amber-400" />
-            <span>CURRENT LIFE INFLUENCE</span>
-          </div>
-          <div className="space-y-1.5 text-[11px]">
-            {data.currentLifeInfluence.slice(0, 3).map((inf, i) => (
-              <div key={i} className="text-[10px] text-slate-300">
-                <span className="text-amber-300 font-semibold">{inf.area}: </span>
-                <span className="text-slate-400">{inf.guidance}</span>
-              </div>
-            ))}
+        {/* RIGHT: CELESTIAL CIRCULAR WHEEL PORTAL ARTWORK WITH MEDITATING SEEKER */}
+        <div className="lg:col-span-6 flex items-center justify-center">
+          <div className="relative w-72 h-72 sm:w-88 sm:h-88 rounded-full border-2 border-amber-400/30 bg-gradient-to-b from-[#131b38] via-[#0c1228] to-[#070b18] flex items-center justify-center shadow-2xl shadow-purple-900/40 p-4">
+            {/* Outer Zodiac & Portal Rings */}
+            <div className="absolute inset-2 rounded-full border border-purple-400/20 animate-spin-slow pointer-events-none" />
+            <div className="absolute inset-8 rounded-full border border-amber-400/20 pointer-events-none" />
+            
+            {/* Vignette Nodes Around Circle (representing archetypal epochs) */}
+            <div className="absolute top-2 w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 flex items-center justify-center text-[10px] text-amber-300">🏛️</div>
+            <div className="absolute bottom-2 w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400/60 flex items-center justify-center text-[10px] text-cyan-300">⛵</div>
+            <div className="absolute left-2 w-7 h-7 rounded-full bg-purple-500/20 border border-purple-400/60 flex items-center justify-center text-[10px] text-purple-300">⚔️</div>
+            <div className="absolute right-2 w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-[10px] text-emerald-300">🪷</div>
+
+            {/* Central Portal Glow */}
+            <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-amber-500/20 via-purple-500/20 to-cyan-500/20 border border-amber-400/50 flex flex-col items-center justify-center text-center p-3 shadow-inner">
+              <div className="text-2xl mb-1">🧘‍♂️</div>
+              <div className="text-[11px] font-mono uppercase tracking-widest text-amber-300 font-bold">SOULTRACE</div>
+              <div className="text-[9px] text-slate-400 font-mono">D60 Shashtiamsha</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Row 4: Soul's Message Banner */}
-      <div className="relative z-10 p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-amber-600/15 border-2 border-amber-400/50 text-center shadow-[0_0_30px_rgba(245,158,11,0.15)] mb-6">
-        <div className="flex items-center justify-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-widest mb-1.5">
-          <span>✨</span>
-          <span>YOUR SOUL'S MESSAGE</span>
-          <span>✨</span>
+      {/* SOUL QUOTE BLOCK */}
+      <div className="relative z-10 p-5 rounded-2xl bg-black/40 backdrop-blur-md border-l-4 border-l-amber-400 border border-slate-800/80 mb-8 space-y-1">
+        <p className="text-sm sm:text-base font-serif italic text-amber-200">
+          “{quoteText}”
+        </p>
+        <p className="text-[11px] font-mono tracking-wider text-amber-400/80">
+          — {quoteSource}
+        </p>
+      </div>
+
+      {/* GENUINE VEDIC & ASTRONOMICAL PROVENANCE TELEMETRY */}
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-b border-slate-800/80 py-4 mb-8 text-center text-xs">
+        <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+          <div className="font-mono font-bold text-amber-300 text-xs flex items-center justify-center gap-1.5">
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            <span>D60 Shashtiamsha</span>
+          </div>
+          <div className="text-[10px] text-slate-400 uppercase font-mono">CALCULATED HARMONIC</div>
         </div>
-        <div className="text-base sm:text-lg font-serif italic text-amber-100 max-w-2xl mx-auto leading-snug">
-          {data.soulMessage}
+
+        <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+          <div className="font-mono font-bold text-purple-300 text-xs flex items-center justify-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-purple-400" />
+            <span>Ketu & Atmakaraka Axis</span>
+          </div>
+          <div className="text-[10px] text-slate-400 uppercase font-mono">VERIFIED ASTRONOMICAL</div>
         </div>
-        <div className="text-[11px] text-amber-300/80 mt-2">
-          You have carried wisdom across lifetimes. Now it is time to live it, heal it, and share it.
+
+        <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+          <div className="font-mono font-bold text-cyan-300 text-xs flex items-center justify-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Interpretive Framework</span>
+          </div>
+          <div className="text-[10px] text-slate-400 uppercase font-mono">TRADITIONAL SYMBOLIC</div>
         </div>
       </div>
 
-      {/* Footer Badges & Logo */}
-      <div className="relative z-10 border-t border-amber-500/20 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[10px] text-slate-400">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <span className="flex items-center gap-1 text-amber-300/90 font-mono">
-            <Shield className="w-3 h-3 text-amber-400" /> REAL DATA
-          </span>
-          <span>•</span>
-          <span className="text-slate-300">DEEP ASTROLOGY (Your chart, your story)</span>
-          <span>•</span>
-          <span className="text-slate-300">ANCIENT WISDOM (Vedas • Puranas • Karma)</span>
-        </div>
+      {/* PRIMARY CTA: EXPLORE YOUR PAST LIFE */}
+      <div className="relative z-10 flex flex-col items-center justify-center gap-2 mb-4">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full sm:w-auto px-10 py-4 rounded-full bg-gradient-to-r from-purple-600 via-purple-500 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white font-bold text-sm sm:text-base tracking-wide transition-all shadow-xl shadow-purple-900/40 flex items-center justify-center gap-3 cursor-pointer transform hover:scale-105 active:scale-95"
+        >
+          <Sparkles className="w-5 h-5 text-amber-200" />
+          <span>{expanded ? 'Collapse Soul Journey' : 'Explore Your Past Life'}</span>
+          {expanded ? <ChevronUp className="w-5 h-5 text-white" /> : <ChevronDown className="w-5 h-5 text-white" />}
+        </button>
+        <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">
+          UNLOCK THE WISDOM WITHIN
+        </span>
+      </div>
 
-        <div className="flex items-center gap-3">
-          {onExportPdf && (
-            <button
-              onClick={onExportPdf}
-              className="px-3 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-semibold hover:bg-amber-500/30 transition-all cursor-pointer"
-            >
-              Export PDF
-            </button>
+      {/* EXPANDED DEEP DOSSIER SECTION */}
+      {expanded && (
+        <div className="relative z-10 mt-8 pt-8 border-t border-slate-800 space-y-6 animate-fadeIn">
+          {/* Sub Navigation */}
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+            {[
+              { key: 'astrology', label: 'Astrological Indicators' },
+              { key: 'karma', label: 'Karmic Connections' },
+              { key: 'wisdom', label: 'Vedic Guidance' },
+            ].map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key as any)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === t.key
+                    ? 'bg-amber-500 text-black font-bold'
+                    : 'bg-slate-900 text-slate-400 hover:text-white'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab 1: Astrological Indicators */}
+          {activeTab === 'astrology' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {Array.isArray(data.astrologicalHighlights) && data.astrologicalHighlights.length > 0 ? (
+                data.astrologicalHighlights.map((h, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                    <div className="text-amber-300 font-mono font-bold">{h.label}</div>
+                    <div className="text-slate-300">{h.value}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-slate-400">
+                  Evaluated via Ketu 12th House, D60 Shashtiamsha, Atmakaraka and Purva Punya 5th House.
+                </div>
+              )}
+            </div>
           )}
-          {onShare && (
-            <button
-              onClick={onShare}
-              className="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold hover:bg-slate-700 transition-all cursor-pointer"
-            >
-              Share Card
-            </button>
-          )}
-        </div>
-      </div>
 
-      <div className="text-[9px] text-center text-slate-500 mt-3 italic">
-        {data.disclaimer}
-      </div>
+          {/* Tab 2: Karmic Connections */}
+          {activeTab === 'karma' && (
+            <div className="space-y-3 text-xs">
+              {Array.isArray(data.karmicConnections) && data.karmicConnections.length > 0 ? (
+                data.karmicConnections.map((kc, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
+                    <div className="text-cyan-300 font-mono font-bold">Karmic Root: {kc.pattern}</div>
+                    <div className="text-slate-300">Present Life Reflection: {kc.currentLife}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-slate-400">
+                  No lingering contradictory karmic debts identified.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 3: Vedic Guidance */}
+          {activeTab === 'wisdom' && (
+            <div className="space-y-4 text-xs">
+              <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/30 space-y-2">
+                <div className="text-purple-300 font-bold font-serif text-sm">Soul Directive</div>
+                <p className="text-slate-300 leading-relaxed">{soulLesson}</p>
+              </div>
+              <div className="text-[11px] text-slate-500 italic">
+                {data.disclaimer || 'Vedic SoulTrace interpretations provide philosophical perspectives for spiritual contemplation.'}
+              </div>
+            </div>
+          )}
+
+          {/* Export & Share buttons */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            {onExportPdf && (
+              <button
+                onClick={onExportPdf}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export Dossier</span>
+              </button>
+            )}
+            {onShare && (
+              <button
+                onClick={onShare}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share Insight</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

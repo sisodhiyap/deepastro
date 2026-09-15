@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { useAuth } from '../../context/AuthContext.js';
 import {
   BarChart3,
   Compass,
@@ -78,7 +79,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userPlan = 'FREE',
   className = '',
 }) => {
-  const sections = [
+  const { isAdmin } = useAuth();
+  const allSections = [
     {
       title: 'CORE PLATFORM',
       items: [
@@ -125,13 +127,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'subscription' as NavTabId, label: 'Subscriptions & Tiers', icon: CreditCard, badge: userPlan },
         { id: 'reports' as NavTabId, label: 'PDF Dossier Reports', icon: FileText },
         { id: 'profile' as NavTabId, label: 'Profile & Privacy', icon: User },
-        { id: 'admin' as NavTabId, label: 'Admin Command Center', icon: ShieldCheck },
-        { id: 'qa-war-room' as NavTabId, label: 'Accuracy War Room', icon: BarChart3, badge: 'QA' },
-        { id: 'system-verification' as NavTabId, label: 'System Verification', icon: ShieldCheck, badge: 'Audit' },
+        ...(isAdmin ? [
+          { id: 'admin' as NavTabId, label: 'Admin Command Center', icon: ShieldCheck },
+          { id: 'qa-war-room' as NavTabId, label: 'Accuracy War Room', icon: BarChart3, badge: 'QA' },
+          { id: 'system-verification' as NavTabId, label: 'System Verification', icon: ShieldCheck, badge: 'Audit' },
+        ] : []),
         { id: 'contact' as NavTabId, label: 'Support & Partnership', icon: HelpCircle },
       ],
     },
   ];
+
+  // Filter out empty sections
+  const sections = allSections.filter(s => s.items.length > 0);
 
   return (
     <aside

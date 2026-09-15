@@ -31,6 +31,127 @@ import { FutureMonthCard, MonthCardData } from '../components/future/FutureMonth
 import { FutureLongevityCard, LongevityCardData } from '../components/future/FutureLongevityCard';
 import { FutureConsentModal } from '../components/future/FutureConsentModal';
 
+
+// --- Inline Birth Profile Form ---
+const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
+  const [form, setForm] = React.useState({
+    fullName: '', birthDate: '', birthTime: '', birthPlace: '',
+    latitude: '', longitude: '', timezone: 'Asia/Kolkata', gender: 'Male',
+  });
+  const [saving, setSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+
+  const geocode = async (place: string) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1`);
+      const data = await res.json();
+      if (data[0]) {
+        setForm(f => ({ ...f, latitude: parseFloat(data[0].lat).toFixed(4), longitude: parseFloat(data[0].lon).toFixed(4) }));
+      }
+    } catch {}
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true); setSaveError(null);
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const res = await fetch('/api/auth/birth-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          fullName: form.fullName, birthDate: form.birthDate, birthTime: form.birthTime,
+          birthPlace: form.birthPlace, latitude: parseFloat(form.latitude) || 0,
+          longitude: parseFloat(form.longitude) || 0, timezone: form.timezone, gender: form.gender,
+        }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || d.details || `HTTP ${res.status}`); }
+      setSaveSuccess(true);
+      setTimeout(() => onSaved(), 900);
+    } catch (err: any) { setSaveError(err.message || 'Failed to save profile'); }
+    finally { setSaving(false); }
+  };
+
+  const inp = "w-full bg-[#0d1117] border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all";
+  const lbl = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider";
+
+  return (
+    <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-start justify-center p-6 pt-12">
+      <div className="max-w-2xl w-full">
+        <div className="rounded-2xl bg-gradient-to-b from-[#0a1020]/80 to-[#0a0c14] border border-cyan-500/30 p-6 shadow-2xl shadow-cyan-900/20">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest">BIRTH PROFILE REQUIRED</div>
+              <h3 className="text-lg font-bold text-slate-100">Enter Your Birth Details</h3>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+            The Cosmic Future Intelligence Engine calculates personalized 3/5/10-year timelines strictly from your real birth data.
+          </p>
+          {saveSuccess ? (
+            <div className="py-6 text-center space-y-2">
+              <div className="text-4xl">🌟</div>
+              <div className="text-sm font-bold text-cyan-400">Birth profile saved! Generating your future timeline...</div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={lbl}>Full Name</label>
+                  <input className={inp} placeholder="Your full name" value={form.fullName} onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className={lbl}>Gender</label>
+                  <select className={inp} value={form.gender} onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}>
+                    {['Male', 'Female', 'Other'].map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={lbl}>Birth Date</label>
+                  <input type="date" className={inp} value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className={lbl}>Birth Time</label>
+                  <input type="time" className={inp} value={form.birthTime} onChange={e => setForm(f => ({ ...f, birthTime: e.target.value }))} required />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={lbl}>Birth Place</label>
+                  <input className={inp} placeholder="City, Country (e.g. Delhi, India)" value={form.birthPlace}
+                    onChange={e => setForm(f => ({ ...f, birthPlace: e.target.value }))}
+                    onBlur={e => { if (e.target.value.length > 3) geocode(e.target.value); }} required />
+                  {form.latitude && <p className="text-[11px] text-cyan-400 mt-1 font-mono">📍 {form.latitude}, {form.longitude}</p>}
+                </div>
+                <div>
+                  <label className={lbl}>Latitude</label>
+                  <input type="number" step="0.0001" className={inp} placeholder="e.g. 28.6139" value={form.latitude} onChange={e => setForm(f => ({ ...f, latitude: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className={lbl}>Longitude</label>
+                  <input type="number" step="0.0001" className={inp} placeholder="e.g. 77.2090" value={form.longitude} onChange={e => setForm(f => ({ ...f, longitude: e.target.value }))} required />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={lbl}>Timezone</label>
+                  <select className={inp} value={form.timezone} onChange={e => setForm(f => ({ ...f, timezone: e.target.value }))}>
+                    {['Asia/Kolkata','Asia/Dubai','Asia/Singapore','America/New_York','America/Los_Angeles','America/Chicago','Europe/London','Europe/Paris','Australia/Sydney','Pacific/Auckland'].map(tz => <option key={tz} value={tz}>{tz}</option>)}
+                  </select>
+                </div>
+              </div>
+              {saveError && <div className="text-xs text-rose-400 bg-rose-950/30 border border-rose-500/30 rounded-xl px-3 py-2">{saveError}</div>}
+              <button type="submit" disabled={saving} className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-sm transition-all shadow-lg disabled:opacity-60">
+                {saving ? '⟳ Saving...' : '🌟 Save & Generate My Future Timeline'}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const FutureIntelligencePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [forecastData, setForecastData] = useState<any>(null);
@@ -45,6 +166,18 @@ export const FutureIntelligencePage: React.FC = () => {
   const [isPremiumDenied, setIsPremiumDenied] = useState<boolean>(false);
   const [isAuthRequired, setIsAuthRequired] = useState<boolean>(false);
   const [isProfileIncomplete, setIsProfileIncomplete] = useState<boolean>(false);
+
+  const grantConsent = async (level: number) => {
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      if (!token) return;
+      await fetch('/api/future/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ consentGranted: true, level: `LEVEL_${level}` }),
+      });
+    } catch {}
+  };
 
   const fetchForecast = async (overrideConsentLevel?: number) => {
     setLoading(true);
@@ -77,7 +210,10 @@ export const FutureIntelligencePage: React.FC = () => {
       if (res.status === 403) {
         const body = await res.json().catch(() => ({}));
         if (body.error === 'FUTURE_CONSENT_REQUIRED') {
+          // Explicit consent required: prompt the user with FutureConsentModal
           setIsConsentModalOpen(true);
+          setLoading(false);
+          return;
         } else {
           setIsPremiumDenied(true);
         }
@@ -170,32 +306,10 @@ export const FutureIntelligencePage: React.FC = () => {
 
   if (isProfileIncomplete) {
     return (
-      <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-[#111827] border border-amber-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
-            <AlertCircle className="w-8 h-8" />
-          </div>
-          <div className="space-y-2">
-            <span className="text-xs font-mono uppercase tracking-widest text-amber-400 font-bold">
-              BIRTH PROFILE REQUIRED
-            </span>
-            <h2 className="text-2xl font-black font-satoshi text-slate-100">
-              Complete Your Birth Profile
-            </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Under Constitution Rule 003, DeepAstro never generates synthetic or fallback future forecasts. Please link your accurate birth date, birth time, and birth coordinates to calculate your real Vedic future timeline.
-            </p>
-          </div>
-          <div className="pt-2">
-            <a
-              href="/profile"
-              className="inline-block px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold text-sm shadow-xl hover:opacity-95 transition-all"
-            >
-              Update Birth Details
-            </a>
-          </div>
-        </div>
-      </div>
+      <BirthProfileForm onSaved={() => {
+        setIsProfileIncomplete(false);
+        fetchForecast();
+      }} />
     );
   }
 

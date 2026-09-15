@@ -82,21 +82,24 @@ export async function getAuthenticatedUser(req: Request): Promise<AuthenticatedU
   }
 
   // 3. Fallback to DeepAstro custom JWT
+  // NOTE: On serverless (Vercel), the in-memory db is empty on cold starts.
+  // Trust the JWT claims directly after cryptographic verification.
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string; role: string };
-    const user = db.getUserById(decoded.userId);
-    if (user) {
-      const profile = db.getProfile(user.id);
+    if (decoded?.userId && decoded?.email && decoded?.role) {
+      // Try to enrich with in-memory profile if available
+      const user = db.getUserById(decoded.userId);
+      const profile = user ? db.getProfile(user.id) : null;
       return {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role as AuthenticatedUser['role'],
         fullName: profile?.fullName,
         provider: 'local_jwt',
       };
     }
   } catch (err) {
-    // Token invalid
+    // Token invalid or expired
   }
 
   return null;

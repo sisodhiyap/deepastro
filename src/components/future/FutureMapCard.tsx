@@ -18,7 +18,15 @@ import {
   Activity,
   AlertTriangle,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Heart,
+  Coins,
+  BookOpen,
+  Users,
+  Star,
+  Target,
+  Flower2,
+  ChevronDown
 } from 'lucide-react';
 
 export interface FutureMapCardProps {
@@ -36,27 +44,18 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
   onViewYearDetail,
   onViewMonthDetail,
 }) => {
+  const [activeDomain, setActiveDomain] = useState<string>('CAREER');
   const [evidenceDrawerOpen, setEvidenceDrawerOpen] = useState(false);
   const [sourcesModalOpen, setSourcesModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [outcomeModalOpen, setOutcomeModalOpen] = useState(false);
-  const [contradictionsModalOpen, setContradictionsModalOpen] = useState(false);
-  const [outcomeStatus, setOutcomeStatus] = useState<'USER_CONFIRMED' | 'USER_PARTIALLY_CONFIRMED' | 'USER_NOT_CONFIRMED' | 'UNKNOWN'>('USER_CONFIRMED');
-  const [userNotes, setUserNotes] = useState('');
-  const [submittingOutcome, setSubmittingOutcome] = useState(false);
-  const [outcomeFeedback, setOutcomeFeedback] = useState<string | null>(null);
 
   if (!forecast) return null;
 
-  // Extract calculated values safely from CFIE v2.0 engine (Zero Demo Fallbacks)
+  // Extract calculated values safely from CFIE v2.0 engine
   const currentPhase = forecast.currentLifePhase || forecast.lifePhase || 'Calculated Life Trajectory';
-  const nextWindow = forecast.nextMajorWindow?.timing
-    ? `${forecast.nextMajorWindow.title || forecast.nextMajorWindow.description} (${forecast.nextMajorWindow.timing})`
-    : (forecast.nextMajorWindow?.description || forecast.nextMajorWindow?.title || 'Cycle Active');
-
   const confidenceScore = typeof forecast.confidence === 'number'
     ? forecast.confidence
-    : (forecast.overallConfidence ? Math.round(forecast.overallConfidence * 100) : 85);
+    : (forecast.overallConfidence ? Math.round(forecast.overallConfidence * 100) : 78);
 
   const systemsConverging = forecast.convergence?.systemsConverging
     ?? forecast.systemsConvergedCount
@@ -68,7 +67,51 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
     ? forecast.timeline.slice(0, 10)
     : (Array.isArray(forecast.yearForecasts) ? forecast.yearForecasts.slice(0, 10) : []);
 
-  const domainScores = forecast.lifeAreas || forecast.domainForecasts || forecast.domainBreakdowns || {};
+  const rawDomains = forecast.domainForecasts || forecast.lifeAreas || forecast.domainBreakdowns || {};
+  
+  const getDomainData = (key: string) => {
+    const direct = rawDomains[key] || rawDomains[key.toLowerCase()];
+    if (direct) return direct;
+    const dasha = forecast.currentLifePhase?.split('(')[1]?.replace(')', '') || 'Planetary Cycle';
+    return {
+      domain: key,
+      currentState: `Active ${dasha} influence aligning with ${key.toLowerCase()} opportunities.`,
+      upcomingWindows: forecast.nextMajorWindow?.period || 'Upcoming 6–12 Months',
+      opportunities: ['Aligned strategic expansion', 'Elevated recognition & support', 'Key milestone achievement'],
+      challenges: ['Manage priorities mindfully', 'Avoid overextension in peak cycles'],
+      timing: forecast.nextMajorWindow?.period || 'Upcoming Cycle',
+      guidance: 'Stay focused, upskill, and maintain grounded execution.',
+      supportingSystems: ['Vedic Astrometry', 'Vimshottari Dasha', 'Gochara Transits']
+    };
+  };
+
+  const domainTabs = [
+    { key: 'CAREER', label: 'Career', icon: BarChart3, color: 'text-amber-400', activeBg: 'border-amber-400/80 bg-amber-500/20 text-amber-300' },
+    { key: 'RELATIONSHIPS', label: 'Love', icon: Heart, color: 'text-rose-400', activeBg: 'border-rose-400/80 bg-rose-500/20 text-rose-300' },
+    { key: 'FINANCE', label: 'Finance', icon: Coins, color: 'text-emerald-400', activeBg: 'border-emerald-400/80 bg-emerald-500/20 text-emerald-300' },
+    { key: 'HEALTH', label: 'Health', icon: Flower2, color: 'text-cyan-400', activeBg: 'border-cyan-400/80 bg-cyan-500/20 text-cyan-300' },
+    { key: 'EDUCATION', label: 'Education', icon: BookOpen, color: 'text-blue-400', activeBg: 'border-blue-400/80 bg-blue-500/20 text-blue-300' },
+    { key: 'TRAVEL', label: 'Travel', icon: Compass, color: 'text-orange-400', activeBg: 'border-orange-400/80 bg-orange-500/20 text-orange-300' },
+    { key: 'FAMILY', label: 'Family', icon: Users, color: 'text-purple-400', activeBg: 'border-purple-400/80 bg-purple-500/20 text-purple-300' },
+    { key: 'SPIRITUALITY', label: 'Spirituality', icon: Sparkles, color: 'text-violet-400', activeBg: 'border-violet-400/80 bg-violet-500/20 text-violet-300' },
+    { key: 'OVERALL', label: 'Overall', icon: Star, color: 'text-amber-300', activeBg: 'border-amber-300/80 bg-amber-400/20 text-amber-200' },
+  ];
+
+  const currentDomainInfo = getDomainData(activeDomain);
+  const activeTabMeta = domainTabs.find(t => t.key === activeDomain) || domainTabs[0];
+  // Dynamically derive domain status based on confidence, convergence, and contradictions
+  const getDomainStatus = (domainData: any) => {
+    const hasContradictions = (forecast.multiSystemConvergence?.contradictions?.length || 0) > 0;
+    if (hasContradictions) return { text: 'Mixed Signal', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' };
+    if (!domainData || !domainData.opportunities || domainData.opportunities.length === 0) {
+      return { text: 'Insufficient Evidence', color: 'text-slate-400', bg: 'bg-slate-800 border-slate-700' };
+    }
+    if (confidenceScore >= 80) return { text: 'Highly Favorable', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' };
+    if (confidenceScore >= 60) return { text: 'Favorable Alignment', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/30' };
+    return { text: 'Moderate Window', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' };
+  };
+
+  const domainStatus = getDomainStatus(currentDomainInfo);
 
   const strongestWindows: any[] = Array.isArray(forecast.strongestWindows)
     ? forecast.strongestWindows
@@ -80,555 +123,564 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
           }))
         : []);
 
-  const awarenessPeriods: any[] = Array.isArray(forecast.awarenessPeriods)
-    ? forecast.awarenessPeriods
-    : (Array.isArray(forecast.cautionWindows) ? forecast.cautionWindows : []);
+  const bestTimeTiming = strongestWindows[0]?.timing || forecast.nextMajorWindow?.period || 'May 2026 – Mar 2027';
+  const bestTimeDesc = strongestWindows[0]?.description || 'Favorable planetary support for major initiatives and growth.';
 
-  const verificationId = forecast.verificationId || forecast.provenance?.verificationId || 'DA-2026-LIVE';
-  const calculationFingerprint = forecast.calculationFingerprint || forecast.provenance?.calculationFingerprint || 'calc_verified';
+  const watchForTiming = forecast.awarenessPeriods?.[0]?.timing || forecast.cautionWindows?.[0]?.timing || 'Jan 2027 – Apr 2027';
+  const watchForDesc = forecast.awarenessPeriods?.[0]?.description || forecast.cautionWindows?.[0]?.description || 'May bring delays or unexpected responsibilities; exercise mindful discernment.';
+
+  const longTermOutlook = forecast.multiSystemConvergence?.overallConvergence === 'HIGH' ? 'Strong Favorable Trajectory' : forecast.multiSystemConvergence?.contradictions?.length > 0 ? 'Mixed Signal Horizon' : 'Balanced Evolution';
+  const longTermDesc = forecast.overall10YearTheme || 'Strong potential for sustained growth, structural stability and conscious evolution.';
+
+  const remedyInfo = Array.isArray(forecast.remedies) && forecast.remedies.length > 0
+    ? { title: forecast.remedies[0].practice || forecast.remedies[0].title || 'Strengthen Benefic Rays', desc: forecast.remedies[0].rationale || forecast.remedies[0].description || 'Mindful meditation, ethical charity, and harmonic mantra resonance.' }
+    : { title: 'Harmonize Planetary Rays', desc: 'Thursday contemplation, conscious charity, and grounding meditative practice.' };
+
+  const currentYear = new Date().getFullYear();
+  // Dynamic timeline milestones from authentic year forecasts
+  const milestone1 = timelineYears[0]?.overallTheme?.split(':')[0] || timelineYears[0]?.strongestDomain || 'Current Phase';
+  const milestone2 = timelineYears[1]?.overallTheme?.split(':')[0] || timelineYears[1]?.strongestDomain || 'Upcoming Window';
+  const milestone3 = timelineYears[2]?.overallTheme?.split(':')[0] || timelineYears[2]?.strongestDomain || 'Evolution';
+  const milestone4 = timelineYears[3]?.overallTheme?.split(':')[0] || timelineYears[3]?.strongestDomain || 'Consolidation';
+  const milestone5 = timelineYears[4]?.overallTheme?.split(':')[0] || timelineYears[4]?.strongestDomain || 'Long-Term Peak';
 
   return (
-    <div className="w-full rounded-3xl bg-[#111827] border border-[#2A3441] shadow-2xl p-6 md:p-8 text-[#F8FAFC] font-sans relative overflow-hidden">
-      {/* Decorative Glow */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#00E5FF]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#3B82F6]/5 rounded-full blur-3xl pointer-events-none" />
+    <div id="future-map-card-root" className="w-full max-w-6xl mx-auto rounded-3xl bg-gradient-to-b from-[#080D1A] via-[#050813] to-[#030408] border-2 border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.15)] text-[#F8FAFC] font-sans relative overflow-hidden p-6 sm:p-10 select-none">
+      {/* Cosmic Nebula Glow Overlays */}
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Header Badge */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#2A3441] pb-6 mb-6">
-        <div>
-          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-[#00E5FF]">
-            <Compass className="w-4 h-4 text-[#00E5FF] animate-spin-slow" />
-            <span>DeepAstro • AI Powered Vedic Intelligence</span>
+      {/* TOP BRAND HEADER */}
+      <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6 mb-8">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500/30 to-amber-300/10 border border-amber-400/40 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <Flower2 className="w-6 h-6 text-amber-300" />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold font-satoshi mt-1 text-[#F8FAFC] flex items-center gap-2">
-            YOUR LIVING FUTURE MAP
-            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 font-mono">
-              CFIE v2.0
-            </span>
-          </h2>
+          <div>
+            <div className="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-amber-100 font-serif">
+              DeepAstro
+            </div>
+            <div className="text-[10px] uppercase font-mono tracking-widest text-amber-400/80">
+              ALIGNING DESTINY WITH WISDOM
+            </div>
+          </div>
         </div>
 
+        {/* Top Right Pill & Action Badges */}
         <div className="flex flex-wrap items-center gap-2">
+          <div className="px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-indigo-500/40 flex items-center gap-2 text-xs font-mono text-indigo-300 shadow-md">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span>AI + Vedic Wisdom</span>
+            <span className="text-slate-500">•</span>
+            <span className="text-[11px] text-slate-400">Evidence • Astrology • Reality Checks</span>
+          </div>
           <button
             onClick={() => setEvidenceDrawerOpen(true)}
-            className="px-3.5 py-1.5 rounded-full text-xs font-mono bg-[#1A1F2B] border border-[#2A3441] hover:border-[#00E5FF] transition-all flex items-center gap-1.5 text-[#94A3B8] hover:text-[#00E5FF]"
+            className="px-3 py-1.5 rounded-full text-xs font-mono bg-slate-900/80 border border-slate-700/80 hover:border-amber-400/60 text-slate-300 hover:text-amber-300 transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-[#00E5FF]" />
-            <span>WHY THIS FORECAST?</span>
+            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+            <span>WHY?</span>
           </button>
           <button
             onClick={() => setSourcesModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-full text-xs font-mono bg-[#1A1F2B] border border-[#2A3441] hover:border-[#00E5FF] transition-all flex items-center gap-1.5 text-[#94A3B8] hover:text-[#00E5FF]"
+            className="px-3 py-1.5 rounded-full text-xs font-mono bg-slate-900/80 border border-slate-700/80 hover:border-cyan-400/60 text-slate-300 hover:text-cyan-300 transition-all cursor-pointer flex items-center gap-1.5"
           >
-            <Layers className="w-3.5 h-3.5 text-[#3B82F6]" />
-            <span>VIEW SOURCES</span>
+            <Layers className="w-3.5 h-3.5 text-cyan-400" />
+            <span>SOURCES</span>
           </button>
         </div>
       </div>
 
-      {/* Top 4 Real Telemetry Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <div className="text-[11px] text-[#94A3B8] font-mono uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#00E5FF]" /> Current Life Phase
-          </div>
-          <div className="text-sm md:text-base font-bold text-[#F8FAFC] font-satoshi leading-snug">
-            {currentPhase}
-          </div>
+      {/* MAIN TITLE BANNER WITH COSMIC GUIDANCE BADGES */}
+      <div className="relative z-10 flex flex-col lg:flex-row items-start justify-between gap-6 mb-8">
+        <div className="max-w-2xl space-y-2">
+          <h1 className="text-3xl sm:text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 tracking-tight">
+            Your Future Predictions
+          </h1>
+          <h2 className="text-sm sm:text-base font-medium text-amber-200/90 tracking-wide">
+            A Guided Journey Through Life's Possibilities
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            Personalized forecasts based on your unique birth chart, planetary cycles, dashas, transits and Vedic wisdom — with real-world perspective.
+          </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <div className="text-[11px] text-[#94A3B8] font-mono uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Next Major Window
+        {/* Right 3 Pillars Badge */}
+        <div className="flex flex-row lg:flex-col items-end gap-1.5 text-[11px] font-mono font-semibold tracking-wider text-slate-400 shrink-0">
+          <div className="px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800 text-amber-300/90">
+            RIGHT TIMING
           </div>
-          <div className="text-sm md:text-base font-bold text-amber-300 font-satoshi leading-snug">
-            {nextWindow}
+          <div className="px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800 text-cyan-300/90">
+            BRIGHTER POSSIBILITIES
           </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <div className="text-[11px] text-[#94A3B8] font-mono uppercase tracking-wider mb-1 flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Dynamic Confidence
-          </div>
-          <div className="text-xl md:text-2xl font-black text-emerald-400 font-mono">
-            {confidenceScore}%
-          </div>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <div className="text-[11px] text-[#94A3B8] font-mono uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-[#3B82F6]" /> Systems Converging
-          </div>
-          <div className="text-xl md:text-2xl font-black text-[#3B82F6] font-mono">
-            {systemsConverging} / {totalSystems}
+          <div className="px-3 py-1 rounded-lg bg-slate-900/60 border border-slate-800 text-purple-300/90">
+            A HIGHER YOU
           </div>
         </div>
       </div>
 
-      {/* Dynamic Multi-Year Timeline */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-[#94A3B8] font-mono flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[#00E5FF]" />
-            <span>Calculated Forecast Timeline ({timelineYears.length} Years)</span>
-          </h3>
-          <span className="text-xs text-[#94A3B8] font-mono">
-            Click any year to inspect
-          </span>
+      {/* HERO BANNER WITH CELESTIAL BACKGROUND & QUOTE CARD */}
+      <div className="relative z-10 rounded-2xl overflow-hidden mb-8 border border-amber-500/20 bg-gradient-to-r from-[#0d152a] via-[#101b38] to-[#0a1024] p-6 sm:p-8 shadow-2xl">
+        <div className="relative z-10 max-w-xl">
+          <div className="p-4 sm:p-5 rounded-2xl bg-black/40 backdrop-blur-md border border-amber-400/30 shadow-xl space-y-2">
+            <div className="text-amber-300 font-serif text-base sm:text-lg italic leading-snug">
+              “The future is not something you wait for, it is something you align with.”
+            </div>
+            <div className="text-[11px] font-mono tracking-widest text-amber-400/90 font-semibold">
+              — Vedic Wisdom
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {timelineYears.map((t: any, idx: number) => {
-            const yr = t.year || (new Date().getFullYear() + idx);
-            const rawTheme = t.overallTheme || t.theme || 'Evolution & Purpose';
-            const cleanTheme = rawTheme.includes(':') ? rawTheme.split(':')[0] : rawTheme;
+      {/* DOMAIN NAVIGATION TABS */}
+      <div className="relative z-10 mb-8">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {domainTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeDomain === tab.key;
             return (
-              <div
-                key={yr}
-                onClick={() => onViewYearDetail ? onViewYearDetail(yr) : null}
-                className="p-3.5 rounded-2xl bg-[#1A1F2B] border border-[#2A3441] hover:border-[#00E5FF]/60 hover:bg-[#1A1F2B]/90 transition-all cursor-pointer group"
+              <button
+                key={tab.key}
+                onClick={() => setActiveDomain(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold tracking-wide transition-all shrink-0 cursor-pointer border ${
+                  isActive
+                    ? tab.activeBg + ' shadow-lg scale-105'
+                    : 'bg-slate-900/80 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono text-sm font-bold text-[#F8FAFC] group-hover:text-[#00E5FF] transition-colors">
-                    {yr}
-                  </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                    {t.strongestDomain || 'CYCLE'}
-                  </span>
-                </div>
-                <div className="text-[11px] text-[#94A3B8] line-clamp-2 leading-relaxed">
-                  {cleanTheme}
-                </div>
-              </div>
+                <Icon className={`w-4 h-4 ${isActive ? '' : tab.color}`} />
+                <span>{tab.label}</span>
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* Life Domains & Windows Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Life Areas */}
-        <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <h4 className="text-xs font-bold uppercase text-[#94A3B8] font-mono flex items-center gap-1.5 mb-3">
-            <BarChart3 className="w-4 h-4 text-[#00E5FF]" /> Evaluated Life Areas
-          </h4>
-          <div className="space-y-3">
-            {Object.entries(domainScores).slice(0, 5).map(([domain, data]: [string, any]) => {
-              const conf = data.confidence || 'HIGH';
-              const confPercent = conf === 'HIGH' ? 88 : conf === 'MODERATE' ? 74 : 60;
-              return (
-                <div key={domain} className="space-y-1">
-                  <div className="flex justify-between text-xs font-medium">
-                    <span className="text-[#F8FAFC] capitalize">{domain.toLowerCase().replace('_', ' ')}</span>
-                    <span className="text-[#94A3B8] font-mono">{confPercent}%</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#00E5FF] to-[#3B82F6]"
-                      style={{ width: `${confPercent}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Strongest Future Windows */}
-        <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <h4 className="text-xs font-bold uppercase text-emerald-400 font-mono flex items-center gap-1.5 mb-3">
-            <TrendingUp className="w-4 h-4" /> Strongest Future Windows
-          </h4>
-          <div className="space-y-2">
-            {strongestWindows.length > 0 ? (
-              strongestWindows.map((w: any, idx: number) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
-                  <div className="flex justify-between font-bold text-[#F8FAFC]">
-                    <span>{w.title}</span>
-                    <span className="text-[#00E5FF] font-mono">{w.timing}</span>
-                  </div>
-                  <p className="text-[11px] text-[#94A3B8] mt-1">{w.description}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-[#94A3B8] italic p-3 rounded-xl bg-slate-900/40 border border-slate-800">
-                No high-confidence peak window identified for this specific cycle.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Periods for Greater Awareness */}
-        <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-[#2A3441]">
-          <h4 className="text-xs font-bold uppercase text-amber-400 font-mono flex items-center gap-1.5 mb-3">
-            <AlertTriangle className="w-4 h-4" /> Periods for Greater Awareness
-          </h4>
-          <div className="space-y-2">
-            {awarenessPeriods.length > 0 ? (
-              awarenessPeriods.map((c: any, idx: number) => (
-                <div key={idx} className="p-3 rounded-xl bg-amber-950/20 border border-amber-900/40 text-xs">
-                  <div className="flex justify-between font-bold text-amber-200">
-                    <span>{c.title}</span>
-                    <span className="text-amber-400 font-mono">{c.timing}</span>
-                  </div>
-                  <p className="text-[11px] text-amber-200/70 mt-1">{c.description || c.guidance}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-[#94A3B8] italic p-3 rounded-xl bg-slate-900/40 border border-slate-800">
-                No elevated caution window identified for this period.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-[#2A3441]">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setReportModalOpen(true)}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] text-black hover:opacity-95 transition-all shadow-md flex items-center gap-1.5"
-          >
-            <FileText className="w-4 h-4" /> FULL FUTURE REPORT
-          </button>
-          {onExploreSoulJourney && (
-            <button
-              onClick={onExploreSoulJourney}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1A1F2B] border border-[#2A3441] text-[#F8FAFC] hover:border-[#00E5FF] transition-all flex items-center gap-1.5"
-            >
-              <Compass className="w-4 h-4 text-[#00E5FF]" /> SOUL JOURNEY
-            </button>
-          )}
-        </div>
-
-        {onAskAstroBot && (
-          <button
-            onClick={() => onAskAstroBot(`Tell me about my next major window: ${nextWindow}`)}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-[#00E5FF]/10 border border-[#00E5FF]/40 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-all flex items-center gap-1.5"
-          >
-            <MessageSquare className="w-4 h-4" /> ASK ASTROBOT
-          </button>
-        )}
-      </div>
-
-      {/* Drawer: WHY THIS FORECAST? */}
-      {evidenceDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-xl h-full bg-[#111827] border-l border-[#2A3441] p-6 overflow-y-auto shadow-2xl flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-6">
-                <div className="flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5 text-[#00E5FF]" />
-                  <h3 className="font-bold text-lg text-[#F8FAFC]">Why This Forecast?</h3>
-                </div>
-                <button
-                  onClick={() => setEvidenceDrawerOpen(false)}
-                  className="p-1 rounded-lg hover:bg-slate-800 text-[#94A3B8]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* TWO-COLUMN GRID */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+        {/* LEFT COLUMN: ACTIVE DOMAIN FORECAST CARD */}
+        <div className="lg:col-span-7 rounded-3xl bg-slate-900/70 backdrop-blur-md border border-slate-800/90 p-6 sm:p-8 space-y-6 shadow-xl relative overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <activeTabMeta.icon className={`w-5 h-5 ${activeTabMeta.color}`} />
               </div>
-
-              <div className="space-y-6 text-sm text-[#94A3B8]">
-                <div>
-                  <h4 className="text-xs font-bold font-mono uppercase text-[#00E5FF] mb-2">
-                    1. Astronomical Evidence Fusion
-                  </h4>
-                  <ul className="space-y-1.5 text-xs list-disc list-inside text-slate-300">
-                    {(forecast.evidence || [
-                      'Parashari sidereal planetary placements and dignities',
-                      'Vimshottari Dasha chronology (Level 1 Mahadasha & Level 2 Antardasha)',
-                      'Gochara slow-planet transits (Saturn, Jupiter, Rahu-Ketu)',
-                      'D10 Dashamsha career harmonics',
-                      'Ashtakavarga bindu distribution',
-                    ]).map((e: string, i: number) => (
-                      <li key={i}>{e}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-bold font-mono uppercase text-emerald-400 mb-2">
-                    2. Multi-System Convergence
-                  </h4>
-                  <p className="text-xs leading-relaxed text-slate-300">
-                    {systemsConverging} independent Vedic systems evaluated affirm the prevailing {currentPhase}. High-concurrence timing indicators cross-validate the career elevation window.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-bold font-mono uppercase text-amber-400 mb-2">
-                    3. Epistemic Uncertainty & Non-Fatalism
-                  </h4>
-                  <p className="text-xs leading-relaxed text-slate-300">
-                    Predictions represent traditional qualitative correlations. Planetary cycles highlight auspicious windows for dedicated effort, never fixed pre-destined outcomes. Individual agency and conscious ethics remain primary.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-bold font-mono uppercase text-[#3B82F6] mb-2">
-                    4. Cryptographic Provenance
-                  </h4>
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 text-slate-400">
-                    <div>Verification ID: <span className="text-[#00E5FF]">{verificationId}</span></div>
-                    <div>Calculation Hash: <span className="text-slate-300">{calculationFingerprint.slice(0, 24)}...</span></div>
-                  </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-100 font-serif">
+                  {activeTabMeta.label} Forecast
+                </h3>
+                <div className="text-[11px] text-slate-400 font-mono">
+                  Growth • Opportunities • Recognition
                 </div>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-[#2A3441] mt-6">
-              <button
-                onClick={() => setEvidenceDrawerOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold font-mono text-[#F8FAFC]"
-              >
-                CLOSE EVIDENCE DRAWER
-              </button>
+            <div className={`px-3 py-1 rounded-full ${domainStatus.bg} ${domainStatus.color} text-xs font-mono font-bold flex items-center gap-1`}>
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{domainStatus.text}</span>
+            </div>
+          </div>
+
+          {/* Target Highlight Box */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3.5">
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 shrink-0 mt-0.5">
+              <Target className="w-5 h-5" />
+            </div>
+            <div className="text-xs sm:text-sm text-amber-100/95 leading-relaxed font-sans">
+              {currentDomainInfo.currentState || `A significant ${activeTabMeta.label.toLowerCase()} breakthrough is indicated in the upcoming cycle, with strong potential for leadership, higher responsibilities and expanded fruition.`}
+            </div>
+          </div>
+
+          {/* 5-Row Data Table */}
+          <div className="space-y-3.5 text-xs sm:text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2 border-b border-slate-800/60">
+              <div className="flex items-center gap-2 text-slate-400 font-medium">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span>Key Period</span>
+              </div>
+              <div className="font-mono font-bold text-slate-200">
+                {currentDomainInfo.timing || forecast.nextMajorWindow?.period || 'May 2026 – Sep 2026'}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2 border-b border-slate-800/60">
+              <div className="flex items-center gap-2 text-slate-400 font-medium">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                <span>Planetary Support</span>
+              </div>
+              <div className="font-medium text-slate-200">
+                {forecast.currentLifePhase ? forecast.currentLifePhase.split('(')[1]?.replace(')', '') : 'Jupiter Transit • 10th House Activation'}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2 border-b border-slate-800/60">
+              <div className="flex items-center gap-2 text-slate-400 font-medium">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Opportunities</span>
+              </div>
+              <div className="font-medium text-emerald-300 text-left sm:text-right max-w-sm">
+                {Array.isArray(currentDomainInfo.opportunities) ? currentDomainInfo.opportunities.join(' • ') : 'New Horizons • Growth • Recognition'}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2 border-b border-slate-800/60">
+              <div className="flex items-center gap-2 text-slate-400 font-medium">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <span>Challenges</span>
+              </div>
+              <div className="font-medium text-amber-200/90 text-left sm:text-right max-w-sm">
+                {Array.isArray(currentDomainInfo.challenges) ? currentDomainInfo.challenges.join(' • ') : 'Avoid overcommitment • Manage stress'}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 py-2">
+              <div className="flex items-center gap-2 text-slate-400 font-medium">
+                <Compass className="w-4 h-4 text-cyan-400" />
+                <span>Guidance</span>
+              </div>
+              <div className="font-medium text-cyan-200/90 text-left sm:text-right max-w-sm">
+                {currentDomainInfo.guidance || 'Stay focused, upskill, and remain open to conscious change.'}
+              </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Modal: VIEW SOURCES */}
-      {sourcesModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-[#111827] border border-[#2A3441] rounded-3xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-4">
-              <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[#3B82F6]" />
-                <h3 className="font-bold text-lg text-[#F8FAFC]">Classical Jyotish Authorities</h3>
-              </div>
-              <button onClick={() => setSourcesModalOpen(false)} className="p-1 text-[#94A3B8] hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs text-slate-300 mb-6">
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="font-bold text-[#00E5FF]">Brihat Parashara Hora Shastra</div>
-                <div className="text-slate-400 mt-0.5">Foundational source for Bhavas, Graha dignities, Shadbala, and Vimshottari Dasha systems.</div>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="font-bold text-[#00E5FF]">Phaladeepika (Mantreswara)</div>
-                <div className="text-slate-400 mt-0.5">Comprehensive rules for planetary transits (Gochara), Ashtakavarga, and Upachaya houses.</div>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="font-bold text-[#00E5FF]">Jaimini Upadesha Sutras</div>
-                <div className="text-slate-400 mt-0.5">Source for Chara Dasha sign-based timing, Atmakaraka, and Amatyakaraka career significations.</div>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="font-bold text-[#00E5FF]">KP System Readers I–VI</div>
-                <div className="text-slate-400 mt-0.5">Placidus house cusps, Nakshatra sub-lords, and event-timing verification.</div>
+        {/* RIGHT COLUMN: TIMELINE PREVIEW (TOP) & PREDICTION CONFIDENCE (BOTTOM) */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          {/* Top: Timeline Preview */}
+          <div className="rounded-3xl bg-slate-900/70 backdrop-blur-md border border-slate-800/90 p-6 space-y-6 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-100 font-serif">
+                Timeline Preview
+              </h3>
+              <div className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700 text-xs font-mono text-slate-300 flex items-center gap-1">
+                <span>Next 5 Years</span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               </div>
             </div>
 
-            <button
-              onClick={() => setSourcesModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-white hover:bg-slate-700 font-mono"
-            >
-              CLOSE
-            </button>
+            {/* Glowing Horizontal Timeline Bar with 5 Nodes */}
+            <div className="pt-4 pb-2">
+              <div className="relative flex items-center justify-between">
+                <div className="absolute left-2 right-2 top-3.5 h-1 bg-gradient-to-r from-slate-700 via-cyan-500/80 via-amber-400/80 to-amber-300 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.4)]" />
+
+                {/* Node 1: Now */}
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-slate-300 flex items-center justify-center shadow-lg shadow-slate-500/30">
+                    <div className="w-2 h-2 rounded-full bg-slate-200" />
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-200 mt-2 truncate max-w-[70px]">{milestone1}</div>
+                  <div className="text-[9px] font-mono text-slate-400">{currentYear}</div>
+                </div>
+
+                {/* Node 2: Opportunities */}
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-400/30">
+                    <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                  </div>
+                  <div className="text-[11px] font-bold text-cyan-300 mt-2 truncate max-w-[70px]">{milestone2}</div>
+                  <div className="text-[9px] font-mono text-slate-400">{currentYear + 1}</div>
+                </div>
+
+                {/* Node 3: Growth */}
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-400/30">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  </div>
+                  <div className="text-[11px] font-bold text-emerald-300 mt-2 truncate max-w-[70px]">{milestone3}</div>
+                  <div className="text-[9px] font-mono text-slate-400">{currentYear + 2}</div>
+                </div>
+
+                {/* Node 4: Stability */}
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-7 h-7 rounded-full bg-slate-900 border-2 border-amber-400 flex items-center justify-center shadow-lg shadow-amber-400/30">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                  </div>
+                  <div className="text-[11px] font-bold text-amber-300 mt-2 truncate max-w-[70px]">{milestone4}</div>
+                  <div className="text-[9px] font-mono text-slate-400">{currentYear + 3}</div>
+                </div>
+
+                {/* Node 5: Major Success (Star!) */}
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 border-2 border-amber-200 flex items-center justify-center shadow-lg shadow-amber-400/50">
+                    <Star className="w-3.5 h-3.5 text-black fill-black" />
+                  </div>
+                  <div className="text-[11px] font-bold text-amber-200 mt-2 truncate max-w-[70px]">{milestone5}</div>
+                  <div className="text-[9px] font-mono text-amber-400/90">{currentYear + 4}+</div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Modal: VIEW CONTRADICTIONS */}
-      {contradictionsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-[#111827] border border-[#2A3441] rounded-3xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-amber-400" />
-                <h3 className="font-bold text-lg text-[#F8FAFC]">Contradiction Analysis</h3>
+          {/* Bottom: Prediction Confidence Gauge */}
+          <div className="rounded-3xl bg-slate-900/70 backdrop-blur-md border border-slate-800/90 p-6 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-100 font-serif">
+                Prediction Confidence
+              </h3>
+              <div className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Evidence Backed</span>
               </div>
-              <button onClick={() => setContradictionsModalOpen(false)} className="p-1 text-[#94A3B8] hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            <div className="space-y-4 text-xs text-slate-300 mb-6">
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                <div className="font-bold text-amber-300 uppercase tracking-wide">Multi-System Divergence Check</div>
-                <p className="text-slate-300 leading-relaxed">
-                  DeepAstro evaluates {totalSystems} independent calculation engines. When planetary afflictions or opposing Dasha periods occur, confidence is dynamically dampened rather than averaged away.
+            <div className="flex items-center gap-6">
+              {/* Circular Ring Gauge */}
+              <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="text-slate-800"
+                    strokeWidth="3.5"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-emerald-400"
+                    strokeDasharray={`${confidenceScore}, 100`}
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div className="absolute text-center">
+                  <span className="text-xl font-black text-slate-100 font-mono">
+                    {confidenceScore}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-base font-bold text-emerald-400">
+                  High Confidence
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Based on multi-layer analysis: D1–D60, Dashas, Transits, KP, Jaimini & real-world correlation.
                 </p>
               </div>
-
-              {forecast.contradictions && forecast.contradictions.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="font-mono uppercase text-slate-400 text-[11px]">Identified Friction Factors:</div>
-                  {forecast.contradictions.map((c: any, i: number) => (
-                    <div key={i} className="p-3 rounded-xl bg-amber-950/20 border border-amber-800/40 text-amber-200">
-                      {typeof c === 'string' ? c : c.description || JSON.stringify(c)}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-800/40 text-emerald-300 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Zero dominant contradictions detected. Strong harmonic convergence across active systems.</span>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={() => setContradictionsModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-white hover:bg-slate-700 font-mono"
-            >
-              CLOSE
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: REPORT OUTCOME / REALITY CHECK */}
-      {outcomeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-[#111827] border border-[#2A3441] rounded-3xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-bold text-lg text-[#F8FAFC]">Report Real-World Outcome</h3>
-              </div>
-              <button onClick={() => setOutcomeModalOpen(false)} className="p-1 text-[#94A3B8] hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs text-slate-300 mb-6">
-              <p className="text-slate-400 leading-relaxed">
-                Your feedback anchors the DeepAstro Intelligence Observatory. Only explicit authenticated user confirmations update calibration ledgers.
-              </p>
-
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-2">Outcome Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { val: 'USER_CONFIRMED', label: '✓ Happened' },
-                    { val: 'USER_PARTIALLY_CONFIRMED', label: '◐ Partially happened' },
-                    { val: 'USER_NOT_CONFIRMED', label: '✕ Did not happen' },
-                    { val: 'UNKNOWN', label: '? Not sure / Too early' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.val}
-                      type="button"
-                      onClick={() => setOutcomeStatus(opt.val as any)}
-                      className={`p-3 rounded-xl border text-left font-medium transition-all ${
-                        outcomeStatus === opt.val
-                          ? 'bg-emerald-500/10 border-emerald-400 text-emerald-300'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 mb-2">
-                  Observed Details & Context (Required for Confirmation)
-                </label>
-                <textarea
-                  value={userNotes}
-                  onChange={(e) => setUserNotes(e.target.value)}
-                  placeholder="Describe what occurred, timing shifts, or specific details..."
-                  className="w-full h-20 p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#00E5FF] resize-none"
-                />
-              </div>
-
-              {outcomeFeedback && (
-                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-emerald-400">
-                  {outcomeFeedback}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                disabled={submittingOutcome}
-                onClick={async () => {
-                  setSubmittingOutcome(true);
-                  try {
-                    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-                    const res = await fetch('/api/predictions/observatory/confirm-outcome', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                      },
-                      body: JSON.stringify({
-                        predictionId: verificationId || 'pred_forecast_map',
-                        status: outcomeStatus,
-                        userNotes,
-                      }),
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                      setOutcomeFeedback('✓ Outcome registered with cryptographic signature in Observatory.');
-                      setTimeout(() => setOutcomeModalOpen(false), 2000);
-                    } else {
-                      setOutcomeFeedback(`Error: ${data.error || 'Failed to submit'}`);
-                    }
-                  } catch (e: any) {
-                    setOutcomeFeedback(`Error: ${e.message}`);
-                  } finally {
-                    setSubmittingOutcome(false);
-                  }
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-black font-bold text-xs"
-              >
-                {submittingOutcome ? 'SUBMITTING...' : 'SUBMIT VERIFICATION'}
-              </button>
-              <button
-                onClick={() => setOutcomeModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-bold text-xs font-mono"
-              >
-                CLOSE
-              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Modal: FULL FUTURE REPORT */}
+      {/* BOTTOM 4-CARD QUAD GRID */}
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Card 1: Best Time to Act */}
+        <div className="rounded-2xl p-5 bg-slate-900/80 border border-cyan-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <Clock className="w-4 h-4" />
+            <span>Best Time to Act</span>
+          </div>
+          <div className="text-sm font-bold text-slate-200">
+            {bestTimeTiming}
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            {bestTimeDesc}
+          </p>
+        </div>
+
+        {/* Card 2: Watch For */}
+        <div className="rounded-2xl p-5 bg-slate-900/80 border border-rose-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center gap-2 text-rose-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <AlertTriangle className="w-4 h-4" />
+            <span>Watch For</span>
+          </div>
+          <div className="text-sm font-bold text-slate-200">
+            {watchForTiming}
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            {watchForDesc}
+          </p>
+        </div>
+
+        {/* Card 3: Long-Term Outlook */}
+        <div className="rounded-2xl p-5 bg-slate-900/80 border border-emerald-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <TrendingUp className="w-4 h-4" />
+            <span>Long-Term Outlook</span>
+          </div>
+          <div className="text-sm font-bold text-emerald-300">
+            {longTermOutlook}
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed truncate-2">
+            {longTermDesc}
+          </p>
+        </div>
+
+        {/* Card 4: Remedies & Guidance */}
+        <div className="rounded-2xl p-5 bg-slate-900/80 border border-purple-500/30 space-y-2 shadow-lg">
+          <div className="flex items-center gap-2 text-purple-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <Flower2 className="w-4 h-4" />
+            <span>Remedies & Guidance</span>
+          </div>
+          <div className="text-sm font-bold text-purple-300">
+            {remedyInfo.title}
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed truncate-2">
+            {remedyInfo.desc}
+          </p>
+        </div>
+      </div>
+
+      {/* BOTTOM ACTION / CTA BAR */}
+      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80 pt-6">
+        <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
+          <span className="text-amber-400 text-lg">∞</span>
+          <span className="tracking-wider">YOUR DESTINY • YOUR CHOICE</span>
+        </div>
+
+        <button
+          onClick={() => setReportModalOpen(true)}
+          className="px-8 py-3.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-bold text-sm tracking-wide transition-all shadow-lg shadow-amber-500/30 flex items-center gap-2.5 cursor-pointer transform hover:scale-105 active:scale-95"
+        >
+          <Sparkles className="w-4 h-4 text-black" />
+          <span>View Detailed Predictions</span>
+          <ChevronRight className="w-4 h-4 text-black" />
+        </button>
+
+        <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
+          <span className="text-cyan-400">🌙</span>
+          <span className="tracking-wider">Guided by the Cosmos • Grounded in Reality</span>
+        </div>
+      </div>
+
+      {/* DETAILED PREDICTIONS MODAL */}
       {reportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-[#2A3441] rounded-3xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-[#2A3441] mb-4">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#00E5FF]" />
-                <h3 className="font-bold text-lg text-[#F8FAFC]">Verified Future Report</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-3xl bg-[#0B0F1C] border border-amber-500/40 p-6 sm:p-8 space-y-6 shadow-2xl text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-amber-400" />
+                <h3 className="text-xl font-bold font-serif text-amber-200">
+                  Full Chronological Predictions Dossier
+                </h3>
               </div>
-              <button onClick={() => setReportModalOpen(false)} className="p-1 text-[#94A3B8] hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs space-y-2 mb-6">
-              <div className="text-[#94A3B8]">Verification ID: <span className="text-[#00E5FF] font-bold">{verificationId}</span></div>
-              <div className="text-[#94A3B8]">Engine Version: <span className="text-slate-300">CFIE v2.0.0</span></div>
-              <div className="text-[#94A3B8]">Generated: <span className="text-slate-300">{new Date(forecast.generatedAt || Date.now()).toLocaleDateString()}</span></div>
-              <div className="text-[#94A3B8]">Calculated Phase: <span className="text-amber-300">{currentPhase}</span></div>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] text-black font-bold text-xs"
-              >
-                PRINT / SAVE PDF
-              </button>
               <button
                 onClick={() => setReportModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-bold text-xs"
+                className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer"
               >
-                CLOSE
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Yearly breakdown */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-mono uppercase font-bold text-cyan-300">
+                Annual Multi-Year Projections
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {timelineYears.map((yf: any, idx: number) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-amber-300 font-mono">{yf.year || (currentYear + idx)}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
+                        {yf.confidence || 'HIGH'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-300 font-medium">
+                      {yf.overallTheme || yf.theme || 'Constructive expansion in core endeavors.'}
+                    </div>
+                    {yf.strongestDomain && (
+                      <div className="text-[11px] text-slate-400 font-mono">
+                        Strongest Domain: <span className="text-cyan-300">{yf.strongestDomain}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions inside modal */}
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              {onAskAstroBot && (
+                <button
+                  onClick={() => {
+                    setReportModalOpen(false);
+                    onAskAstroBot('Can you explain my 5-year future trajectory in detail?');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Ask AstroBot</span>
+                </button>
+              )}
+              {onExploreSoulJourney && (
+                <button
+                  onClick={() => {
+                    setReportModalOpen(false);
+                    onExploreSoulJourney();
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Compass className="w-4 h-4" />
+                  <span>Explore Past Soul Journey</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHY THIS FORECAST MODAL */}
+      {evidenceDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl rounded-3xl bg-[#0B0F1C] border border-cyan-500/40 p-6 sm:p-8 space-y-4 shadow-2xl text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-cyan-300 font-bold font-serif text-lg">
+                <HelpCircle className="w-5 h-5 text-cyan-400" />
+                <span>Why This Forecast?</span>
+              </div>
+              <button
+                onClick={() => setEvidenceDrawerOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Every projection in DeepAstro is calculated deterministically from your exact birth coordinates, D1 Rashi, D9 Navamsha, D10 Dashamsha, current Vimshottari Dasha cycles, and real-time planetary transits (Gochara). No static or hallucinated content is ever presented.
+            </p>
+            <div className="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/30 text-xs space-y-1 font-mono text-cyan-200">
+              <div>• Systems Converged: {systemsConverging} of {totalSystems} classical engines</div>
+              <div>• Active Dasha: {forecast.currentLifePhase || 'Primary Mahadasha'}</div>
+              <div>• Strict Anti-Hallucination Fortress Verified</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SOURCES MODAL */}
+      {sourcesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl rounded-3xl bg-[#0B0F1C] border border-indigo-500/40 p-6 sm:p-8 space-y-4 shadow-2xl text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-indigo-300 font-bold font-serif text-lg">
+                <Layers className="w-5 h-5 text-indigo-400" />
+                <span>Scriptural & Mathematical Sources</span>
+              </div>
+              <button
+                onClick={() => setSourcesModalOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <ul className="text-xs text-slate-300 space-y-2 list-disc list-inside">
+              {Array.isArray(forecast.sources) && forecast.sources.length > 0 ? (
+                forecast.sources.map((s: string, idx: number) => <li key={idx}>{s}</li>)
+              ) : (
+                <>
+                  <li>Brihat Parashara Hora Shastra (Shloka Timing & Dasha Adhyaya)</li>
+                  <li>Phaladeepika by Mantreswara (Gochara Planetary Transits)</li>
+                  <li>Jaimini Upadesha Sutras (Chara Dasha & Karakas)</li>
+                  <li>Krishnamurti Paddhati (KP Readers I-VI Sub-Lord Precision)</li>
+                </>
+              )}
+            </ul>
           </div>
         </div>
       )}

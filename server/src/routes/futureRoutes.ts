@@ -100,11 +100,14 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-    // 3. Subscription & Entitlement Check (PREMIUM / PRO only)
+    // 3. Subscription & Entitlement Check (PREMIUM / PRO / ADMIN only)
     const hasPremium =
       db.hasEntitlement(userId, 'FUTURE_INTELLIGENCE_PREMIUM') ||
       db.hasEntitlement(userId, 'PRO');
-    const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
+    const isAdmin =
+      req.user.role === 'ADMIN' ||
+      req.user.role === 'SUPER_ADMIN' ||
+      req.user.role === 'DEEPASTRO_QA_ADMIN';
 
     if (!hasPremium && !isAdmin) {
       return res.status(403).json({
@@ -112,8 +115,6 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
         details: 'Cosmic Future Intelligence is an elite premium feature reserved for Pro and Premium members.',
       });
     }
-
-    // 4. Consent Enforcement
     const requestedLevel = normalizeConsentLevel(req.body.requestedLevel);
     const consent = FutureConsentEngine.getConsent(userId);
 
@@ -169,6 +170,7 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       horizon,
       requestedLevel,
       clientRole: req.user.role,
+      bypassEntitlementForAdmin: isAdmin,
     });
 
     const futureMapData = CosmicFutureIntelligenceEngine.toFutureMapData(forecast);
