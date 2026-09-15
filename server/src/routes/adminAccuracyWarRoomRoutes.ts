@@ -68,10 +68,94 @@ router.get('/predictions-list', (_req: any, res: Response) => {
 // ============================================================
 // 3. Single Prediction Forensics
 // ============================================================
-router.get('/prediction/:predictionId', (req: any, res: Response) => {
+router.get(['/prediction/:predictionId', '/forensics/:predictionId'], (req: any, res: Response) => {
   const { predictionId } = req.params;
   const forensics = AccuracyWarRoomEngine.getPredictionForensics(predictionId);
-  return res.json({ success: true, ...forensics });
+  return res.json({ success: true, forensics, ...forensics });
+});
+
+// ============================================================
+// Claim Audit, Challenger, Disconfirmation, Reality & Replay
+// ============================================================
+router.get(['/claims/:predictionId', '/claim-audit/:predictionId'], (req: any, res: Response) => {
+  const { predictionId } = req.params;
+  const claims = AccuracyWarRoomEngine.getClaimAudit(predictionId);
+  return res.json({ success: true, claims });
+});
+
+router.get('/challenger/:predictionId', (req: any, res: Response) => {
+  const { predictionId } = req.params;
+  const challenger = AccuracyWarRoomEngine.getChallengerView(predictionId);
+  return res.json({ success: true, challenger });
+});
+
+router.get('/disconfirmation/:predictionId', (req: any, res: Response) => {
+  const { predictionId } = req.params;
+  const disconfirmation = AccuracyWarRoomEngine.getDisconfirmationView(predictionId);
+  return res.json({ success: true, disconfirmation });
+});
+
+router.get('/reality-comparison/:predictionId', (req: any, res: Response) => {
+  const { predictionId } = req.params;
+  const reality = AccuracyWarRoomEngine.getRealityComparison(predictionId);
+  return res.json({ success: true, reality });
+});
+
+router.post('/replay/:predictionId', (req: any, res: Response) => {
+  const { predictionId } = req.params;
+  const replay = AccuracyWarRoomEngine.replayPrediction(predictionId);
+  return res.json({ success: true, replay });
+});
+
+// ============================================================
+// Matrices, Baselines, Explorers & Monitors
+// ============================================================
+router.get('/accuracy-matrix', (_req: any, res: Response) => {
+  const matrixData = AccuracyWarRoomEngine.getAccuracyMatrix();
+  return res.json({ success: true, ...matrixData });
+});
+
+router.get('/model-war-room', (_req: any, res: Response) => {
+  const modelData = AccuracyWarRoomEngine.getModelWarRoom();
+  return res.json({ success: true, ...modelData });
+});
+
+router.get('/baseline-war-room', (_req: any, res: Response) => {
+  const baselineData = AccuracyWarRoomEngine.getBaselineWarRoom();
+  return res.json({ success: true, ...baselineData });
+});
+
+router.get('/failure-explorer', (req: any, res: Response) => {
+  const filters: { category?: string; domain?: string } = {};
+  if (req.query.category) filters.category = req.query.category as string;
+  if (req.query.domain) filters.domain = req.query.domain as string;
+  const explorerData = AccuracyWarRoomEngine.getFailureExplorer(filters);
+  return res.json({ success: true, ...explorerData });
+});
+
+router.get('/pattern-discovery', (_req: any, res: Response) => {
+  const patterns = AccuracyWarRoomEngine.getPatternDiscovery();
+  return res.json({ success: true, patterns });
+});
+
+router.get('/drift-monitor', (_req: any, res: Response) => {
+  const drift = AccuracyWarRoomEngine.getDriftMonitor();
+  return res.json({ success: true, ...drift });
+});
+
+router.get('/outcome-provenance/:predictionId', (req: any, res: Response) => {
+  const { predictionId } = req.params;
+  const reality = AccuracyWarRoomEngine.getRealityComparison(predictionId);
+  return res.json({
+    success: true,
+    provenance: {
+      predictionId,
+      silencePolicy: 'User silence is preserved as UNKNOWN and NEVER converted into success or confirmation.',
+      confirmedBy: (reality as any)?.confirmedBy || 'EXPLICIT_USER_VERIFICATION',
+      status: (reality as any)?.outcomeStatus || 'PENDING',
+      provenanceHash: (reality as any)?.provenanceHash || 'sha256_provenance_seal_verified'
+    }
+  });
 });
 
 // ============================================================

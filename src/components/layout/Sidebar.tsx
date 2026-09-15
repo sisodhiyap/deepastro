@@ -31,6 +31,7 @@ import { Logo } from '../brand/Logo.js';
 
 export type NavTabId =
   | 'home'
+  | 'my-cosmos'
   | 'dashboard'
   | 'intelligence'
   | 'cosmic-hub'

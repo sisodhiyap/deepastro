@@ -209,6 +209,8 @@ export const App: React.FC = () => {
     switch (activeTab) {
       case 'home':
         return <LandingPage onNavigate={setActiveTab} />;
+        case 'my-cosmos':
+        return <MyCosmosPage onNavigate={setActiveTab} />;
       case 'dashboard':
         return <DashboardPage onNavigate={setActiveTab} userName={userName} chartContext={chartContext} />;
       case 'intelligence':

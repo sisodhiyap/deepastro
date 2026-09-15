@@ -6,6 +6,8 @@
 import { Router, Response } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { db } from '../database/db.js';
+import { AuthBootstrapService } from '../services/AuthBootstrapService.js';
+import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
 import {
   PastLifeIntelligenceEngine,
   PastLifeCardEngine,
@@ -17,13 +19,20 @@ import {
 const router = Router();
 
 // 1. POST /api/intelligence/past-life/generate
-router.post('/generate', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const profile = db.getBirthProfile(userId);
+    let profile =
+      (await AuthBootstrapService.getBirthProfile(userId)) ||
+      (await birthProfileRepository.getProfileByUserId(userId)) ||
+      db.getBirthProfile(userId);
+
+    if ((!profile || !profile.birthDate) && req.body.birthProfile) {
+      profile = await AuthBootstrapService.saveBirthProfile(userId, req.body.birthProfile);
+    }
     const { format, language, include_numerology, include_vedic_sources, include_purana_context, overrides } = req.body;
 
-    const result = PastLifeIntelligenceEngine.generate(userId, profile, {
+    const result = PastLifeIntelligenceEngine.generate(userId, profile as any, {
       format: format || 'insight_card',
       language: language || 'en',
       include_numerology: include_numerology !== false,
@@ -99,7 +108,7 @@ router.get('/:id', requireAuth, (req: AuthenticatedRequest, res: Response) => {
 });
 
 // 4. POST /api/intelligence/past-life/:id/regenerate
-router.post('/:id/regenerate', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/regenerate', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const readingId = String(req.params.id);
@@ -109,8 +118,15 @@ router.post('/:id/regenerate', requireAuth, (req: AuthenticatedRequest, res: Res
       return res.status(404).json({ error: 'NOT_FOUND', message: 'Original reading not found.' });
     }
 
-    const profile = db.getBirthProfile(userId);
-    const regenerated = PastLifeIntelligenceEngine.generate(userId, profile, {
+    let profile =
+      (await AuthBootstrapService.getBirthProfile(userId)) ||
+      (await birthProfileRepository.getProfileByUserId(userId)) ||
+      db.getBirthProfile(userId);
+
+    if ((!profile || !profile.birthDate) && req.body.birthProfile) {
+      profile = await AuthBootstrapService.saveBirthProfile(userId, req.body.birthProfile);
+    }
+    const regenerated = PastLifeIntelligenceEngine.generate(userId, profile as any, {
       format: req.body.format || 'insight_card',
       language: req.body.language || 'en',
     });

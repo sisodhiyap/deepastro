@@ -309,10 +309,61 @@ router.patch('/profile', requireAuth, async (req: AuthenticatedRequest, res: Res
   const userId = req.user!.userId;
   const updated = await AuthBootstrapService.updateProfile(userId, req.body);
 
+  let birthProfile = null;
+  if (req.body.birthDate || req.body.birthTime || req.body.birthPlace) {
+    birthProfile = await AuthBootstrapService.saveBirthProfile(userId, {
+      fullName: req.body.fullName || updated.fullName,
+      birthDate: req.body.birthDate,
+      birthTime: req.body.birthTime,
+      birthPlace: req.body.birthPlace,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      timezone: req.body.timezone,
+      gender: req.body.gender,
+      isApproximateTime: req.body.isApproximateTime,
+    });
+  }
+
   return res.json({
-    message: 'Profile updated successfully.',
+    message: 'Profile and birth data updated successfully.',
     profile: updated,
+    birthProfile,
   });
+});
+
+// GET /api/auth/birth-profiles - list all saved profile versions for comparison
+router.get('/birth-profiles', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const resList = await pool.query(
+      'SELECT id, user_id, full_name, birth_date, birth_time, birth_place, latitude, longitude, timezone, gender, is_approximate_time, created_at FROM birth_profiles WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+    return res.json({ success: true, profiles: resList.rows });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to load profile history', details: err.message });
+  }
+});
+
+// POST /api/auth/birth-profile - explicitly save a new comparison profile version
+router.post('/birth-profile', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const saved = await AuthBootstrapService.saveBirthProfile(userId, {
+      fullName: req.body.fullName || req.body.name,
+      birthDate: req.body.birthDate,
+      birthTime: req.body.birthTime,
+      birthPlace: req.body.birthPlace,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      timezone: req.body.timezone,
+      gender: req.body.gender,
+      isApproximateTime: req.body.isApproximateTime,
+    });
+    return res.status(201).json({ success: true, message: 'Birth profile version saved successfully for future comparison.', birthProfile: saved });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to save birth profile version', details: err.message });
+  }
 });
 
 // POST /api/auth/logout

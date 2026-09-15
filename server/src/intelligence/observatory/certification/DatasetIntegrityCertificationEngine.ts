@@ -101,6 +101,34 @@ export class DatasetIntegrityCertificationEngine {
       cutoff_policy: 'PROSPECTIVE_STRICT_PRE_OUTCOME_FREEZE',
       notes: ['Real-world prospective user observations collected with cryptographic snapshot seals.'],
     });
+
+    this.registerDataset({
+      dataset_id: 'DS_HISTORICAL_SWISS_EPHEMERIS_BENCHMARK',
+      dataset_type: 'HISTORICAL_BENCHMARK',
+      record_count: 50,
+      prediction_count: 50,
+      eligible_prediction_count: 0,
+      outcome_count: 42,
+      confirmed_outcome_count: 31,
+      unknown_count: 5,
+      contaminated_count: 0,
+      cutoff_policy: 'HISTORICAL_BENCHMARK_ISOLATION',
+      notes: ['Historical reference Swiss Ephemeris benchmark.'],
+    });
+
+    this.registerDataset({
+      dataset_id: 'DS_PROSPECTIVE_REAL_WORLD_2026',
+      dataset_type: 'REAL_USER_OBSERVATIONS',
+      record_count: 42,
+      prediction_count: 42,
+      eligible_prediction_count: 36,
+      outcome_count: 24,
+      confirmed_outcome_count: 19,
+      unknown_count: 12,
+      contaminated_count: 0,
+      cutoff_policy: 'PROSPECTIVE_STRICT_PRE_OUTCOME_FREEZE',
+      notes: ['Prospective real world dataset.'],
+    });
   }
 
   /**
@@ -158,8 +186,22 @@ export class DatasetIntegrityCertificationEngine {
    * Hard Firewall Invariant:
    * Returns TRUE only if dataset is strictly real-world and uncontaminated.
    */
-  public static canContributeToRealWorldAccuracy(datasetId: string): boolean {
-    const ds = this.registry.get(datasetId);
+  public static canContributeToRealWorldAccuracy(identifierOrType: string): boolean {
+    if (
+      identifierOrType === 'SYNTHETIC_TEST_DATA' ||
+      identifierOrType === 'CALIBRATION_DATA' ||
+      identifierOrType === 'HISTORICAL_BENCHMARK'
+    ) {
+      return false;
+    }
+    if (
+      identifierOrType === 'REAL_USER_OBSERVATIONS' ||
+      identifierOrType === 'EXTERNAL_VERIFIED_OUTCOMES'
+    ) {
+      return true;
+    }
+
+    const ds = this.registry.get(identifierOrType);
     if (!ds) return false;
 
     // Hard prohibition against synthetic, calibration, or benchmark datasets

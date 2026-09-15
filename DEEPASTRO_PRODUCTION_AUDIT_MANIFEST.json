@@ -1,0 +1,132 @@
+{
+  "manifestVersion": "1.0.0",
+  "generatedAt": "2026-09-14T12:17:58.318Z",
+  "environment": "production-audit",
+  "git": {
+    "commit": "f1dcacec3184fac74e6f1ad0ac1045957a0a2c3e",
+    "branch": "main",
+    "workingTreeState": "clean",
+    "remoteOrigin": "https://github.com/sisodhiyap/deepastro.git"
+  },
+  "runtimeVersions": {
+    "node": "v24.16.0",
+    "react": "^19.0.0",
+    "vite": "^6.2.1",
+    "typescript": "^5.8.2",
+    "serverFramework": "Express 4.19.2"
+  },
+  "database": {
+    "engine": "PostgreSQL 15 (Supabase Pooler)",
+    "host": "aws-0-ap-south-1.pooler.supabase.com:6543",
+    "supabaseProjectId": "bytufynvpwqhphoirxfo",
+    "poolerMode": "transaction",
+    "tablesVerified": [
+      "users",
+      "profiles",
+      "birth_profiles",
+      "calculation_snapshots",
+      "kundli_calculations",
+      "kundli_planets",
+      "kundli_houses",
+      "kundli_vargas",
+      "kundli_yogas",
+      "kundli_doshas",
+      "dasha_periods",
+      "transits",
+      "numerology_reports",
+      "palmistry_reports",
+      "reports",
+      "report_versions",
+      "report_pipeline_runs",
+      "report_pipeline_stages",
+      "report_claims",
+      "report_sources",
+      "ai_runs",
+      "ai_consensus_results",
+      "verification_results",
+      "pdf_artifacts",
+      "knowledge_sources",
+      "knowledge_chunks",
+      "audit_logs",
+      "schema_migrations"
+    ]
+  },
+  "vercel": {
+    "projectId": "prj_V77DOaz148rQSmNrhZ0rzdWUaG14",
+    "projectName": "deepastro",
+    "liveUrl": "https://deepastro.vercel.app",
+    "activeDeploymentId": "bom1::ggxcw-1789387451602-35c6a977f9b6",
+    "deployedBuildTimestamp": "2026-09-14T09:39:21Z",
+    "deploymentDriftDetected": true,
+    "driftReason": "Live site serves index-guBjwdMk.js (09:39:21Z) prior to commit f1dcace (10:33:28Z)."
+  },
+  "environmentVariables": [
+    "PORT",
+    "NODE_ENV",
+    "JWT_SECRET",
+    "DATABASE_URL",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "OPENAI_API_KEY",
+    "GEMINI_API_KEY",
+    "GROK_API_KEY",
+    "OLLAMA_HOST",
+    "OLLAMA_MODEL",
+    "PAYMENT_SECRET",
+    "PAYMENT_WEBHOOK_SECRET",
+    "STORAGE_BUCKET",
+    "UPLOAD_DIR",
+    "OPENROUTER_API_KEY",
+    "Z53_API_KEY",
+    "Z53_MODEL",
+    "ROUTER9_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY"
+  ],
+  "aiProviders": [
+    {
+      "provider": "Z53",
+      "model": "z-5.3-flash",
+      "status": "CONFIGURED"
+    },
+    {
+      "provider": "OpenAI",
+      "model": "gpt-4o-mini",
+      "status": "CONFIGURED"
+    },
+    {
+      "provider": "Gemini",
+      "model": "gemini-1.5-flash",
+      "status": "CONFIGURED"
+    },
+    {
+      "provider": "Grok",
+      "model": "grok-beta",
+      "status": "CONFIGURED"
+    },
+    {
+      "provider": "Ollama",
+      "model": "llama3:8b",
+      "status": "FALLBACK_LOCAL_OPTIONAL"
+    }
+  ],
+  "intelligenceEngines": [
+    "VedicAstroEngine (D1-D60, Parashari, Jaimini, KP, Shadbala, Ashtakavarga)",
+    "CalculationSnapshotEngine & CalculationSnapshotService (SHA-256 Fingerprint Snapshot Caching)",
+    "CosmicIntelligenceEvidenceEngine (CFIE v2.0)",
+    "PastLifeIntelligenceEngine (SoulTrace)",
+    "FutureIntelligenceEngine (Comprehensive Forecast Simulations)",
+    "UniversalChatService (AstroBot Multi-Engine Synthesis)",
+    "AccuracyWarRoomEngine (Observatory V2.0 Forensic Analysis & Certification)",
+    "DatasetIntegrityCertificationEngine (Prospective Prediction Registry & Statistical Clean Room)"
+  ],
+  "adminAndQASystems": [
+    "AdminQAAccessGuard (Scoped Preview & QA Session Security)",
+    "QAGoldenFixtures (Deterministic Astronomical & Identity Fixtures)",
+    "Accuracy War Room (/admin/qa/accuracy-war-room)",
+    "Prediction Observatory (/admin/qa/war-room)",
+    "QA Control Center (/admin/qa)"
+  ]
+}

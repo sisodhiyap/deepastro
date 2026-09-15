@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { getBirthProfile } from '../../utils/storage.js';
+import { getBirthProfile } from '../../utils/birthStorage.js';
 import {
   Compass,
   Star,
@@ -101,8 +101,8 @@ export const KPIntelligencePanel: React.FC<KPIntelligencePanelProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          birthDate: '1995-05-15',
-          birthTime: '14:30',
+          birthDate: kpData.metadata?.birthDate || getBirthProfile()?.birthDate || getBirthProfile()?.date || '1995-05-15',
+          birthTime: kpData.metadata?.birthTime || getBirthProfile()?.birthTime || getBirthProfile()?.time || '12:00',
           latitude: kpData.metadata?.latitude || 28.6139,
           longitude: kpData.metadata?.longitude || 77.209,
           timezone: 5.5,

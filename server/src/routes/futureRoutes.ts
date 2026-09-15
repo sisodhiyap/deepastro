@@ -18,6 +18,7 @@ import { CosmicFutureIntelligenceEngine } from '../intelligence/future/CosmicFut
 import { FutureConsentEngine } from '../intelligence/future/FutureConsentEngine.js';
 import { FutureTimelineEngine } from '../intelligence/future/FutureTimelineEngine.js';
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
+import { AuthBootstrapService } from '../services/AuthBootstrapService.js';
 import { db } from '../database/db.js';
 import { VedicAstroEngine, BirthProfileInput } from '../astrology/VedicAstroEngine.js';
 import { pool } from '../database/postgres.js';
@@ -123,10 +124,15 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-    // 5. Server-Authoritative Profile Resolution (Zero Synthetic Fallbacks)
-    const savedProfile =
+        // 5. Server-Authoritative Profile Resolution (Zero Synthetic Fallbacks)
+    let savedProfile =
+      (await AuthBootstrapService.getBirthProfile(userId)) ||
       (await birthProfileRepository.getProfileByUserId(userId)) ||
       db.getBirthProfile(userId);
+
+    if ((!savedProfile || !savedProfile.birthDate) && req.body.birthProfile) {
+      savedProfile = await AuthBootstrapService.saveBirthProfile(userId, req.body.birthProfile);
+    }
 
     if (
       !savedProfile ||
@@ -158,7 +164,7 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
         latitude: savedProfile.latitude,
         longitude: savedProfile.longitude,
         timezone: savedProfile.timezone || 5.5,
-        gender: savedProfile.gender,
+        gender: savedProfile.gender as any,
       },
       horizon,
       requestedLevel,
