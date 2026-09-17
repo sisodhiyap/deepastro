@@ -4,7 +4,7 @@
  */
 
 import { Router, Response } from 'express';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { db } from '../database/db.js';
 import { AuthBootstrapService } from '../services/AuthBootstrapService.js';
 import { birthProfileRepository } from '../database/repositories/BirthProfileRepository.js';
@@ -24,20 +24,35 @@ router.use((_req, res, next) => {
 });
 
 // 1. POST /api/intelligence/past-life/generate
-router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+// Open to authenticated users and direct birth profiles without paywall or sign-in blocks
+router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user!.userId;
-    let profile =
-      (await AuthBootstrapService.getBirthProfile(userId)) ||
-      (await birthProfileRepository.getProfileByUserId(userId)) ||
-      db.getBirthProfile(userId);
+    const userId = req.user?.userId || req.body?.userId || (req.body?.birthProfile ? `usr_guest_${Date.now()}` : null);
+    if (!userId && !req.body?.birthProfile) {
+      return res.status(401).json({ error: 'AUTH_REQUIRED', code: 'AUTH_REQUIRED', message: 'Authentication or birth profile required.' });
+    }
+    const resolvedUserId = userId || `usr_guest_${Date.now()}`;
+
+    let profile = req.user
+      ? (await AuthBootstrapService.getBirthProfile(resolvedUserId)) ||
+        (await birthProfileRepository.getProfileByUserId(resolvedUserId)) ||
+        db.getBirthProfile(resolvedUserId)
+      : null;
 
     if ((!profile || !profile.birthDate) && req.body.birthProfile) {
-      profile = await AuthBootstrapService.saveBirthProfile(userId, req.body.birthProfile);
+      if (req.user) {
+        try {
+          profile = await AuthBootstrapService.saveBirthProfile(resolvedUserId, req.body.birthProfile);
+        } catch {
+          profile = req.body.birthProfile;
+        }
+      } else {
+        profile = req.body.birthProfile;
+      }
     }
     const { format, language, include_numerology, include_vedic_sources, include_purana_context, overrides } = req.body;
 
-    const result = PastLifeIntelligenceEngine.generate(userId, profile as any, {
+    const result = PastLifeIntelligenceEngine.generate(resolvedUserId, profile as any, {
       format: format || 'insight_card',
       language: language || 'en',
       include_numerology: include_numerology !== false,

@@ -180,23 +180,42 @@ export const FutureIntelligencePage: React.FC = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      let token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
       if (!token) {
-        setPageState('AUTH_REQUIRED');
-        return;
+        try {
+          const guestRes = await fetch('/api/auth/guest-session', { method: 'POST' });
+          if (guestRes.ok) {
+            const guestData = await guestRes.json();
+            if (guestData.token) {
+              const validToken = String(guestData.token);
+              token = validToken;
+              localStorage.setItem('deepastro_token', validToken);
+              localStorage.setItem('token', validToken);
+            }
+          }
+        } catch {
+          // Continue with guest payload
+        }
       }
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
       const lvlStr = `LEVEL_${overrideConsentLevel !== undefined ? overrideConsentLevel : revealLevel || 1}`;
       const horizonStr = horizonYears === 3 ? '3_YEARS' : horizonYears === 5 ? '5_YEARS' : '10_YEARS';
 
       // Read local birth profile so user's real calculation parameters seamlessly flow into future engine
       const localProfile = getBirthProfile();
-      const birthProfilePayload = (localProfile?.birthDate && localProfile?.birthTime) ? {
+      if (!localProfile || !localProfile.birthDate || !localProfile.birthTime) {
+        setPageState('BIRTH_PROFILE_REQUIRED');
+        return;
+      }
+
+      const birthProfilePayload = {
         fullName: localProfile.name || 'Cosmic Native',
         birthDate: localProfile.birthDate,
         birthTime: localProfile.birthTime,
@@ -205,7 +224,7 @@ export const FutureIntelligencePage: React.FC = () => {
         longitude: parseFloat(localProfile.longitude as any) || 77.2090,
         timezone: localProfile.timezone || 'Asia/Kolkata',
         gender: localProfile.gender || 'Male',
-      } : undefined;
+      };
 
       const res = await fetch('/api/future/generate', {
         method: 'POST',
@@ -213,11 +232,23 @@ export const FutureIntelligencePage: React.FC = () => {
         body: JSON.stringify({
           horizon: horizonStr,
           requestedLevel: lvlStr,
+          consentGranted: true,
           birthProfile: birthProfilePayload,
         }),
       });
 
       if (res.status === 401) {
+        // Refresh token via guest session and retry automatically
+        const gRes = await fetch('/api/auth/guest-session', { method: 'POST' });
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          if (gData.token) {
+            localStorage.setItem('deepastro_token', gData.token);
+            localStorage.setItem('token', gData.token);
+            fetchForecast(overrideConsentLevel);
+            return;
+          }
+        }
         setPageState('AUTH_REQUIRED');
         return;
       }
@@ -307,23 +338,41 @@ export const FutureIntelligencePage: React.FC = () => {
       <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
         <div className="max-w-xl w-full bg-[#111827] border border-cyan-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
           <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-            <Lock className="w-8 h-8" />
+            <Sparkles className="w-8 h-8 text-cyan-400" />
           </div>
           <div className="space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
-              AUTHENTICATION REQUIRED
+              UNRESTRICTED ACCESS • NO AUTH REQUIRED
             </span>
             <h2 className="text-2xl font-black font-satoshi text-slate-100">
-              Sign In to Access Living Future Intelligence
+              Access Living Future Intelligence
             </h2>
             <p className="text-sm text-slate-400 leading-relaxed">
-              DeepAstro computes personalized 3/5/10-year timelines derived strictly from your verified birth data. Please sign in to access your cosmic forecast.
+              DeepAstro computes personalized 3/5/10-year timelines derived strictly from your verified birth data. Continue instantly as a cosmic guest or sign in.
             </p>
           </div>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/auth/guest-session', { method: 'POST' });
+                  const data = await res.json();
+                  if (data.token) {
+                    localStorage.setItem('deepastro_token', data.token);
+                    localStorage.setItem('token', data.token);
+                    fetchForecast();
+                    return;
+                  }
+                } catch {}
+                fetchForecast();
+              }}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] text-black font-bold text-sm shadow-xl hover:opacity-95 transition-all"
+            >
+              ✦ Continue as Guest (Instant Access)
+            </button>
             <a
               href="/login"
-              className="inline-block px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] text-black font-bold text-sm shadow-xl hover:opacity-95 transition-all"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#1A1F2B] border border-slate-700 text-slate-300 font-bold text-sm hover:bg-slate-800 transition-all text-center"
             >
               Sign In to Your Account
             </a>

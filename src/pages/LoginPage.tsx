@@ -23,7 +23,7 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLanding }) => {
   const { language, setLanguage, t } = useLanguage();
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, loginWithGoogle, continueAsGuest } = useAuth();
   
   // Access mode: user vs admin
   
@@ -45,31 +45,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
-
-    // Validation
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
-
-    if (viewMode === 'forgot') {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setSuccessMessage('If an account exists for this email, you will receive password reset instructions.');
-      }, 650);
-      return;
-    }
-
-    if (!password || password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters.');
-      return;
-    }
-
     setIsSubmitting(true);
 
+    if (viewMode === 'forgot') {
+      setIsSubmitting(false);
+      setSuccessMessage('Password reset link sent if an account exists.');
+      return;
+    }
+
     if (viewMode === 'register') {
-      const regRes = await register(fullName || 'Cosmic Seeker', email, password);
+      const regRes = await register(fullName, email, password);
       setIsSubmitting(false);
       if (regRes.success && regRes.user) {
         onSuccess(regRes.user);
@@ -79,13 +64,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       return;
     }
 
-    // Standard sign in flow
-    const loginRes = await login(
-      email.trim(),
-      password,
-      'user',
-      ''
-    );
+    const loginRes = await login(email, password, 'user');
     setIsSubmitting(false);
 
     if (loginRes.success && loginRes.user) {
@@ -98,13 +77,37 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
   const handleGoogleAuth = async () => {
     setIsSubmitting(true);
     setErrorMessage(null);
-    const googleRes = await loginWithGoogle();
-    setIsSubmitting(false);
+    try {
+      const googleRes = await loginWithGoogle();
+      setIsSubmitting(false);
 
-    if (googleRes.success && googleRes.user) {
-      onSuccess(googleRes.user);
-    } else {
-      setErrorMessage(t('error.googleFailed') || 'Google sign-in could not be completed.');
+      if (googleRes.success) {
+        if (googleRes.user) {
+          onSuccess(googleRes.user);
+        }
+      } else {
+        setErrorMessage(googleRes.error || t('error.googleFailed') || 'Google sign-in could not be completed.');
+      }
+    } catch {
+      setIsSubmitting(false);
+      setErrorMessage('Google sign-in could not be completed.');
+    }
+  };
+
+  const handleGuestAccess = async () => {
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      const guestRes = await continueAsGuest();
+      setIsSubmitting(false);
+      if (guestRes.success && guestRes.user) {
+        onSuccess(guestRes.user);
+      } else {
+        setErrorMessage(guestRes.error || 'Guest access could not be initialized.');
+      }
+    } catch {
+      setIsSubmitting(false);
+      setErrorMessage('Guest access could not be initialized.');
     }
   };
 
@@ -365,6 +368,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
                     />
                   </svg>
                   <span>Continue with Google</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGuestAccess}
+                  disabled={isSubmitting}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-950/50 via-[#111827] to-blue-950/50 hover:from-cyan-900/60 hover:to-blue-900/60 border border-cyan-500/40 text-cyan-300 font-semibold text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
+                >
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <span>✦ Enter as Cosmic Guest (Instant Access)</span>
                 </button>
               </div>
             )}

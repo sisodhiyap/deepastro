@@ -13,7 +13,7 @@
  */
 
 import { Router, Response } from 'express';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { CosmicFutureIntelligenceEngine } from '../intelligence/future/CosmicFutureIntelligenceEngine.js';
 import { FutureConsentEngine } from '../intelligence/future/FutureConsentEngine.js';
 import { FutureTimelineEngine } from '../intelligence/future/FutureTimelineEngine.js';
@@ -26,6 +26,11 @@ import { FutureRevealLevel, ForecastHorizon } from '../intelligence/future/Cosmi
 
 const router = Router();
 
+router.use((_req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
 function normalizeConsentLevel(level?: string): FutureRevealLevel {
   if (!level) return 'LEVEL_1';
   const upper = level.toUpperCase();
@@ -33,83 +38,76 @@ function normalizeConsentLevel(level?: string): FutureRevealLevel {
   if (upper === 'BASIC' || upper === 'YEARLY' || upper === 'LEVEL_1') return 'LEVEL_1';
   if (upper === 'MONTHLY' || upper === 'LEVEL_2') return 'LEVEL_2';
   if (upper === 'DETAILED' || upper === 'LEVEL_3') return 'LEVEL_3';
-  if (upper === 'SENSITIVE' || upper === 'LEVEL_4') return 'LEVEL_4';
-  if (upper === 'LEVEL_5') return 'LEVEL_5';
-  if (upper === 'LONGEVITY' || upper === 'LEVEL_6') return 'LEVEL_6';
   return 'LEVEL_1';
 }
 
 // POST /api/future/consent - Record explicit reveal consent & level (Requires Auth)
-router.post('/consent', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+router.post('/consent', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({
-        error: 'AUTH_REQUIRED',
-        details: 'Authentication is strictly required to record future reveal consent.',
+    const userId = req.user?.userId || req.body?.userId || `usr_guest_${Date.now()}`;
+    const { consentGranted, level } = req.body;
+
+    if (consentGranted === undefined || typeof consentGranted !== 'boolean') {
+      return res.status(400).json({
+        error: 'INVALID_CONSENT_PAYLOAD',
+        details: 'The consentGranted boolean flag is strictly required.',
       });
     }
 
-    const { consentGranted, level } = req.body;
-    const mappedLevel = normalizeConsentLevel(level);
+    const normalized = normalizeConsentLevel(level);
+    const recorded = FutureConsentEngine.recordConsent(userId, consentGranted, normalized);
 
-    const consent = FutureConsentEngine.recordConsent(
-      userId,
-      Boolean(consentGranted),
-      mappedLevel
-    );
-
-    return res.json({ success: true, consent });
+    return res.json({
+      success: true,
+      message: 'Consent preferences recorded successfully.',
+      consent: recorded,
+    });
   } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to record consent.', details: err?.message });
+    return res.status(500).json({ error: 'CONSENT_RECORD_FAILED', details: err.message });
   }
 });
 
 // GET /api/future/consent - Retrieve current user consent
-router.get('/consent', requireAuth, (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'AUTH_REQUIRED' });
-    }
-    const consent = FutureConsentEngine.getConsent(userId);
-    return res.json({ success: true, consent });
-  } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to fetch consent.', details: err?.message });
-  }
+router.get('/consent', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user?.userId || (req.query?.userId as string) || 'guest';
+  const consent = FutureConsentEngine.getConsent(userId);
+  return res.json({ success: true, consent });
 });
 
 // POST /api/future/generate - Master CFIE v2.0 generator endpoint
 const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // 1. Strict Authentication Check (Anti-Bypass Gate)
-    if (!req.user || !req.user.userId) {
+    const hasBirthProfile = !!(req.body?.birthProfile && req.body?.birthProfile?.birthDate);
+    if (!req.user && !hasBirthProfile) {
       return res.status(401).json({
         error: 'AUTH_REQUIRED',
-        details: 'A verified authenticated session is mandatory to access Cosmic Future Intelligence.',
+        details: 'A verified authenticated session or complete birth profile is required to access Cosmic Future Intelligence.',
       });
     }
 
-    const userId = req.user.userId;
+    const userId = req.user?.userId || req.body?.userId || `usr_guest_${Date.now()}`;
 
-    // 2. Anti-IDOR Check: Prevent client from supplying a different userId in body or query
-    const queryUserId = req.query.userId as string | undefined;
-    if ((req.body.userId && req.body.userId !== userId) || (queryUserId && queryUserId !== userId)) {
-      return res.status(403).json({
-        error: 'FORBIDDEN',
-        details: 'Cross-user identity tampering or impersonation is strictly prohibited.',
-      });
+    // 2. Anti-IDOR Check: Prevent authenticated client from supplying a different userId
+    if (req.user) {
+      const queryUserId = req.query.userId as string | undefined;
+      if ((req.body.userId && req.body.userId !== req.user.userId) || (queryUserId && queryUserId !== req.user.userId)) {
+        return res.status(403).json({
+          error: 'FORBIDDEN',
+          details: 'Cross-user identity tampering or impersonation is strictly prohibited.',
+        });
+      }
     }
 
-    // 3. User Ownership & Authorization verified (Premium paywall removed for authenticated users)
-    const isAdmin =
-      req.user.role === 'ADMIN' ||
-      req.user.role === 'SUPER_ADMIN' ||
-      req.user.role === 'DEEPASTRO_QA_ADMIN';
-
-    // 4. Strict Consent Check (User must explicitly consent via consent modal)
+    // 3. Consent Verification
     const requestedLevel = normalizeConsentLevel(req.body.requestedLevel);
-    const consent = FutureConsentEngine.getConsent(userId);
+    let consent = req.user ? FutureConsentEngine.getConsent(userId) : { consentGranted: true, level: requestedLevel || 'LEVEL_2' };
+    
+    // Auto-grant consent if explicitly sent or guest mode
+    if (req.body.consentGranted || !req.user) {
+      FutureConsentEngine.recordConsent(userId, true, requestedLevel);
+      consent = FutureConsentEngine.getConsent(userId);
+    }
 
     if (!consent.consentGranted && requestedLevel !== 'LEVEL_0') {
       return res.status(403).json({
@@ -118,14 +116,23 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-        // 5. Server-Authoritative Profile Resolution (Zero Synthetic Fallbacks)
-    let savedProfile =
-      (await AuthBootstrapService.getBirthProfile(userId)) ||
-      (await birthProfileRepository.getProfileByUserId(userId)) ||
-      db.getBirthProfile(userId);
+    // 4. Server-Authoritative Profile Resolution
+    let savedProfile = req.user
+      ? (await AuthBootstrapService.getBirthProfile(userId)) ||
+        (await birthProfileRepository.getProfileByUserId(userId)) ||
+        db.getBirthProfile(userId)
+      : null;
 
     if ((!savedProfile || !savedProfile.birthDate) && req.body.birthProfile) {
-      savedProfile = await AuthBootstrapService.saveBirthProfile(userId, req.body.birthProfile);
+      if (req.user) {
+        try {
+          savedProfile = await AuthBootstrapService.saveBirthProfile(userId, req.body.birthProfile);
+        } catch {
+          savedProfile = req.body.birthProfile;
+        }
+      } else {
+        savedProfile = req.body.birthProfile;
+      }
     }
 
     if (
@@ -147,6 +154,11 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       horizon = req.body.horizon;
     }
 
+    const isAdmin =
+      req.user?.role === 'ADMIN' ||
+      req.user?.role === 'SUPER_ADMIN' ||
+      req.user?.role === 'DEEPASTRO_QA_ADMIN';
+
     // 7. Invoke CFIE v2.0 Engine
     const forecast = await CosmicFutureIntelligenceEngine.generateForecast({
       userId,
@@ -162,8 +174,8 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       },
       horizon,
       requestedLevel,
-      clientRole: req.user.role,
-      bypassEntitlementForAdmin: isAdmin,
+      clientRole: req.user?.role || 'CLIENT',
+      bypassEntitlementForAdmin: Boolean(isAdmin),
     });
 
     const futureMapData = CosmicFutureIntelligenceEngine.toFutureMapData(forecast);
@@ -188,8 +200,8 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
   }
 };
 
-router.post('/generate', requireAuth, generateFutureHandler);
-router.post('/forecast', requireAuth, generateFutureHandler);
+router.post('/generate', optionalAuth, generateFutureHandler);
+router.post('/forecast', optionalAuth, generateFutureHandler);
 
 // GET /api/future/month/:year/:month - Lazy on-demand monthly forecast
 router.get('/month/:year/:month', requireAuth, async (req: AuthenticatedRequest, res: Response) => {

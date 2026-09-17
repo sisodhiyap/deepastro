@@ -164,13 +164,33 @@ export const PastLifePage: React.FC = () => {
     setError(null);
     setNeedsBirthProfile(false);
     try {
-      const token = getToken();
+      let token = getToken();
+      if (!token) {
+        try {
+          const gRes = await fetch('/api/auth/guest-session', { method: 'POST' });
+          if (gRes.ok) {
+            const gData = await gRes.json();
+            if (gData.token) {
+              const validToken = String(gData.token);
+              token = validToken;
+              localStorage.setItem('deepastro_token', validToken);
+              localStorage.setItem('token', validToken);
+            }
+          }
+        } catch {}
+      }
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       // Read local canonical profile so user's real calculation parameters seamlessly flow into past life engine
       const localProfile = getBirthProfile();
-      const birthProfilePayload = (localProfile?.birthDate && localProfile?.birthTime) ? {
+      if (!localProfile || !localProfile.birthDate || !localProfile.birthTime) {
+        setNeedsBirthProfile(true);
+        setLoading(false);
+        return;
+      }
+
+      const birthProfilePayload = {
         fullName: localProfile.name || 'Cosmic Native',
         birthDate: localProfile.birthDate,
         birthTime: localProfile.birthTime,
@@ -179,7 +199,7 @@ export const PastLifePage: React.FC = () => {
         longitude: parseFloat(localProfile.longitude as any) || 77.2090,
         timezone: localProfile.timezone || 'Asia/Kolkata',
         gender: localProfile.gender || 'Male',
-      } : undefined;
+      };
 
       const res = await fetch('/api/intelligence/past-life/generate', {
         method: 'POST',
@@ -200,7 +220,17 @@ export const PastLifePage: React.FC = () => {
       }
 
       if (res.status === 401) {
-        setError('Authentication required. Please sign in to view your past-life soul journey.');
+        try {
+          const gRes = await fetch('/api/auth/guest-session', { method: 'POST' });
+          const gData = await gRes.json();
+          if (gData.token) {
+            localStorage.setItem('deepastro_token', gData.token);
+            localStorage.setItem('token', gData.token);
+            fetchPastLife(formatChoice);
+            return;
+          }
+        } catch {}
+        setNeedsBirthProfile(true);
         setLoading(false);
         return;
       }
