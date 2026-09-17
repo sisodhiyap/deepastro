@@ -4,17 +4,21 @@ import { Heart, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 import { MatchingCard, MatchingDataUI } from '../components/astrology/MatchingCard.js';
 import { MarriageCompatibilityCard } from '../components/astrology/MarriageCompatibilityCard.js';
 import { MarriageCompatibilityReport } from '../../server/src/astrology/MarriageCompatibilityEngine.js';
+import { getBirthProfile } from '../utils/birthStorage.js';
 
 export const MatchingPage: React.FC = () => {
-  const [partnerA, setPartnerA] = useState({
-    name: '',
-    birthDate: '',
-    birthTime: '',
-    birthPlace: '',
-    latitude: '28.6139',
-    longitude: '77.2090',
-    timezone: '5.5',
-    gender: 'Male',
+  const [partnerA, setPartnerA] = useState(() => {
+    const saved = getBirthProfile();
+    return {
+      name: saved?.name || '',
+      birthDate: saved?.birthDate || '',
+      birthTime: saved?.birthTime || '',
+      birthPlace: saved?.birthPlace || '',
+      latitude: saved?.latitude ? String(saved.latitude) : '28.6139',
+      longitude: saved?.longitude ? String(saved.longitude) : '77.2090',
+      timezone: saved?.timezone ? String(saved.timezone) : '5.5',
+      gender: saved?.gender || 'Male',
+    };
   });
 
   const [partnerB, setPartnerB] = useState({

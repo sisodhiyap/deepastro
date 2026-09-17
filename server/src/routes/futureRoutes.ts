@@ -92,29 +92,22 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
 
     const userId = req.user.userId;
 
-    // 2. Anti-IDOR Check: Prevent client from supplying a different userId in body
-    if (req.body.userId && req.body.userId !== userId) {
+    // 2. Anti-IDOR Check: Prevent client from supplying a different userId in body or query
+    const queryUserId = req.query.userId as string | undefined;
+    if ((req.body.userId && req.body.userId !== userId) || (queryUserId && queryUserId !== userId)) {
       return res.status(403).json({
         error: 'FORBIDDEN',
         details: 'Cross-user identity tampering or impersonation is strictly prohibited.',
       });
     }
 
-    // 3. Subscription & Entitlement Check (PREMIUM / PRO / ADMIN only)
-    const hasPremium =
-      db.hasEntitlement(userId, 'FUTURE_INTELLIGENCE_PREMIUM') ||
-      db.hasEntitlement(userId, 'PRO');
+    // 3. User Ownership & Authorization verified (Premium paywall removed for authenticated users)
     const isAdmin =
       req.user.role === 'ADMIN' ||
       req.user.role === 'SUPER_ADMIN' ||
       req.user.role === 'DEEPASTRO_QA_ADMIN';
 
-    if (!hasPremium && !isAdmin) {
-      return res.status(403).json({
-        error: 'PREMIUM_REQUIRED',
-        details: 'Cosmic Future Intelligence is an elite premium feature reserved for Pro and Premium members.',
-      });
-    }
+    // 4. Strict Consent Check (User must explicitly consent via consent modal)
     const requestedLevel = normalizeConsentLevel(req.body.requestedLevel);
     const consent = FutureConsentEngine.getConsent(userId);
 

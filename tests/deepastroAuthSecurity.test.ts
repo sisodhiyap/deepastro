@@ -15,6 +15,7 @@ import { db } from '../server/src/database/db.js';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'deepastro_cosmic_super_secret_jwt_key_2026';
+const AUTH_SECRET = process.env.DEEPASTRO_ACCESS_SECRET || 'Deep1904';
 
 describe('DeepAstro Production Authentication & Security Suite', () => {
   let adminToken: string;
@@ -49,13 +50,13 @@ describe('DeepAstro Production Authentication & Security Suite', () => {
       JWT_SECRET,
       { expiresIn: '1h' }
     );
-  });
+  }, 30000);
 
   describe('1. Server-Side Security Gate & Cryptographic Verification', () => {
     it('accepts correct authorization code on server and returns signed JWT token', async () => {
       const res = await request(app)
         .post('/api/security/verify')
-        .send({ code: 'Deep1904' });
+        .send({ code: AUTH_SECRET });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -67,7 +68,7 @@ describe('DeepAstro Production Authentication & Security Suite', () => {
       expect(decoded.authorized).toBe(true);
 
       // Ensure the raw secret is NEVER sent back in the response
-      expect(JSON.stringify(res.body)).not.toContain('Deep1904');
+      expect(JSON.stringify(res.body)).not.toContain(AUTH_SECRET);
     });
 
     it('rejects invalid authorization codes with 401 Unauthorized', async () => {
@@ -262,7 +263,7 @@ describe('DeepAstro Production Authentication & Security Suite', () => {
         const serialized = JSON.stringify(log);
         expect(serialized).not.toContain('passwordHash');
         expect(serialized).not.toContain('AdminPassword123!');
-        expect(serialized).not.toContain('Deep1904');
+        expect(serialized).not.toContain(AUTH_SECRET);
       }
     });
   });

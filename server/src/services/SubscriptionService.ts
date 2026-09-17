@@ -39,6 +39,7 @@ export class SubscriptionService {
       db.grantEntitlement(userId, 'numerology');
       db.grantEntitlement(userId, 'reports');
       db.grantEntitlement(userId, 'astrobot');
+      db.grantEntitlement(userId, 'FUTURE_INTELLIGENCE_PREMIUM');
     }
 
     if (targetPlanId === 'PRO') {

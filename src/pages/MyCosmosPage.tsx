@@ -18,10 +18,98 @@ import {
   RefreshCw,
   Zap,
   BookOpen,
-  AlertCircle
+  AlertCircle,
+  Award,
+  CheckCircle2
 } from 'lucide-react';
-import { useChartSession, SubViewId, ReadingDepth, BirthInputState } from '../context/ChartSessionContext.js';
+import { useChartSession, ReadingDepth, BirthInputState } from '../context/ChartSessionContext.js';
 import { PlanetPosition, HouseCusp, VerifiedYoga } from '../types/chartSession.js';
+import {
+  COSMIC_MODULE_REGISTRY,
+  CosmicModuleId,
+  getCosmicModule,
+  VERIFIED_MODULE_COUNT
+} from '../modules/cosmicModuleRegistry.js';
+
+// Deep Dive and Domain Components
+import { CareerDeepDiveView } from '../components/astrology/CareerDeepDiveView.js';
+import { NakshatrasView } from '../components/astrology/NakshatrasView.js';
+import { TransitsRadarView } from '../components/astrology/TransitsRadarView.js';
+import { WealthDeepDiveView } from '../components/astrology/WealthDeepDiveView.js';
+import { RelationshipsDeepDiveView } from '../components/astrology/RelationshipsDeepDiveView.js';
+
+// Module-level Error Boundary to protect My Cosmos layout
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  activeSubView: CosmicModuleId;
+  onRetry: () => void;
+  onReturnOverview: () => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ModuleErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('Module rendering error caught in ModuleErrorBoundary:', error, info);
+  }
+
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    if (prevProps.activeSubView !== this.props.activeSubView && this.state.hasError) {
+      this.setState({ hasError: false, error: undefined });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 rounded-2xl bg-rose-950/20 border border-rose-500/30 text-center space-y-4 max-w-xl mx-auto my-8">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white uppercase tracking-wider font-mono">
+              MODULE UNAVAILABLE
+            </h3>
+            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              A rendering exception occurred while processing this celestial module. Your verified calculation snapshot remains 100% active and intact.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: undefined });
+                this.props.onRetry();
+              }}
+              className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-200 font-semibold hover:border-slate-500 transition-all flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry Module</span>
+            </button>
+            <button
+              onClick={this.props.onReturnOverview}
+              className="px-4 py-2 rounded-xl bg-amber-500 text-black text-xs font-bold hover:bg-amber-400 transition-all"
+            >
+              Return to Cosmic Overview
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = () => {
   const {
@@ -81,25 +169,6 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
   const [aiResponse, setAiResponse] = useState<any>(null);
   const [aiError, setAiError] = useState<any>(null);
 
-  const subViewTabs: { id: SubViewId; label: string; icon: any; tag?: string }[] = [
-    { id: 'overview', label: 'Cosmic Overview', icon: Compass },
-    { id: 'planets', label: 'Planets & Dignities', icon: Sun },
-    { id: 'houses', label: '12 Bhavas (Houses)', icon: Layers },
-    { id: 'nakshatras', label: 'Nakshatras (Lunar)', icon: Sparkles },
-    { id: 'yogas', label: 'Mathematical Yogas', icon: Shield },
-    { id: 'dasha', label: 'Vimshottari Dasha', icon: Clock },
-    { id: 'transits', label: 'Transit Radar (Gochara)', icon: Activity },
-    { id: 'vargas', label: 'Vargas (D1, D9, D10)', icon: Layers },
-    { id: 'kp', label: 'KP Stellar Astrology', icon: Binary },
-    { id: 'western', label: 'Western Tropical', icon: Globe },
-    { id: 'career', label: 'Career & Purpose', icon: Briefcase },
-    { id: 'money', label: 'Wealth & Dhana', icon: Coins },
-    { id: 'relationships', label: 'Relationships & Dharma', icon: Heart },
-    { id: 'timeline', label: '10-Chapter Life Story', icon: BookOpen },
-    { id: 'daily-context', label: 'Daily Cosmic Weather', icon: Calendar },
-    { id: 'ai-astrologer', label: 'Ask DeepAstro AI', icon: Brain, tag: 'WHY?' },
-  ];
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -123,35 +192,41 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
     }
   };
 
+  const currentModuleMeta = getCosmicModule(activeSubView as CosmicModuleId) || COSMIC_MODULE_REGISTRY[0];
+
   return (
-    <div className="min-h-screen bg-[#06070A] text-[#F8FAFC] pb-24 font-sans selection:bg-amber-500/30 selection:text-amber-200">
-      {/* Top Banner & Telemetry Bar */}
-      <div className="border-b border-slate-800/80 bg-[#111827]/80 backdrop-blur-xl sticky top-0 z-30 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+    <div className="h-full w-full flex flex-col min-h-0 bg-[#06070A] text-[#F8FAFC] font-sans selection:bg-amber-500/30 selection:text-amber-200 overflow-y-auto lg:overflow-hidden relative">
+      {/* ========================================================================= */}
+      {/* 1. CANONICAL SESSION HEADER (Stationary on Desktop, z-40, shrink-0)      */}
+      {/* ========================================================================= */}
+      <header className="shrink-0 border-b border-slate-800/80 bg-[#111827]/95 backdrop-blur-xl sticky top-0 lg:static z-40 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4 select-none">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
             <Compass className="w-5 h-5 text-black" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold tracking-tight text-sm text-white">MY COSMOS</span>
-              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/50">
+              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/50 font-bold">
                 CANONICAL SESSION 6.0.3
               </span>
             </div>
-            <div className="text-xs text-slate-400">Single Source of Truth Astronomical Model</div>
+            <div className="text-xs text-slate-400 hidden sm:block">
+              Single Source of Truth Astronomical Model
+            </div>
           </div>
         </div>
 
-        {session && (
+        {session ? (
           <div className="flex items-center flex-wrap gap-2 text-xs font-mono">
             <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{session.identity.userName}</span>
+              <span className="font-semibold">{session.identity.userName}</span>
             </div>
-            <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400">
+            <div className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hidden md:block">
               {session.resolvedLocation.city} ({session.resolvedLocation.latitude.toFixed(2)}°, {session.resolvedLocation.longitude.toFixed(2)}°)
             </div>
-            <div className="px-2.5 py-1 rounded-lg bg-cyan-950/50 border border-cyan-800/40 text-cyan-300">
+            <div className="px-2.5 py-1 rounded-lg bg-cyan-950/50 border border-cyan-800/40 text-cyan-300 hidden sm:block">
               FP: {session.birthDataFingerprint.slice(0, 8)}...
             </div>
             {/* Depth Selector */}
@@ -169,58 +244,31 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
               ))}
             </div>
           </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono uppercase px-2 py-1 rounded bg-amber-950/80 text-amber-400 border border-amber-800 font-bold">
+              CALCULATION REQUIRED
+            </span>
+          </div>
         )}
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        {!session && (
-          <div className="max-w-2xl mx-auto my-12 p-8 rounded-2xl bg-[#111827]/90 border border-slate-800 shadow-2xl backdrop-blur-xl">
+      {/* ========================================================================= */}
+      {/* 2. UNCALCULATED STATE: AUTHENTIC BIRTH CALCULATION FORM                  */}
+      {/* ========================================================================= */}
+      {!session ? (
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+          <div className="max-w-2xl w-full my-auto p-6 sm:p-8 rounded-2xl bg-[#111827]/90 border border-slate-800 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30">
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Generate Your Canonical Cosmic Chart</h2>
-                <p className="text-xs text-slate-400">
-                  Every calculation is deterministic and mathematically grounded in real celestial mechanics. Zero hardcoding.
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Deterministic ephemeris calculations grounded in celestial mechanics. Zero synthetic fallbacks.
                 </p>
               </div>
-            </div>
-
-                        {/* Recruiter / Evaluator 1-Click Fast Track */}
-            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-cyan-500/10 to-amber-500/15 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg shadow-amber-500/5">
-              <div>
-                <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>RECRUITER PRODUCTION EVALUATION FAST-TRACK</span>
-                </div>
-                <div className="text-[11px] text-slate-300 mt-0.5">
-                  Explore full production Kundli, KP, Vargas, and 10-chapter cosmic story with 1 click.
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  calculateSession({
-                    name: 'Demo Native (Recruiter Sample)',
-                    date: '1995-05-15',
-                    time: '14:30',
-                    latitude: 28.6139,
-                    longitude: 77.2090,
-                    timezone: 5.5,
-                    city: 'New Delhi',
-                    country: 'India',
-                    gender: 'female',
-                    ayanamsa: 'Lahiri',
-                    houseSystem: 'Placidus'
-                  });
-                }}
-                disabled={isLoading}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-bold text-xs whitespace-nowrap hover:opacity-95 shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5 shrink-0"
-              >
-                {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                <span>Explore Demo Chart</span>
-              </button>
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -230,7 +278,8 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                   type="text"
                   value={formInput.name}
                   onChange={(e) => setFormInput({ ...formInput, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                  placeholder="Enter your name"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
                   required
                 />
               </div>
@@ -242,7 +291,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                     type="date"
                     value={formInput.date}
                     onChange={(e) => setFormInput({ ...formInput, date: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
                     required
                   />
                 </div>
@@ -253,7 +302,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                     step="60"
                     value={formInput.time}
                     onChange={(e) => setFormInput({ ...formInput, time: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
                     required
                   />
                 </div>
@@ -261,12 +310,14 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">City</label>
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Birth Place / City</label>
                   <input
                     type="text"
                     value={formInput.city}
                     onChange={(e) => setFormInput({ ...formInput, city: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                    placeholder="e.g. New Delhi"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                    required
                   />
                 </div>
                 <div>
@@ -276,7 +327,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                     step="0.0001"
                     value={formInput.latitude}
                     onChange={(e) => setFormInput({ ...formInput, latitude: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
                   />
                 </div>
                 <div>
@@ -286,7 +337,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                     step="0.0001"
                     value={formInput.longitude}
                     onChange={(e) => setFormInput({ ...formInput, longitude: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-sm focus:outline-none focus:border-cyan-500"
                   />
                 </div>
               </div>
@@ -294,7 +345,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 mt-4 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-cyan-500 text-black font-bold flex items-center justify-center gap-2 hover:opacity-95 shadow-lg shadow-amber-500/25 transition-all"
+                className="w-full py-3 mt-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-cyan-500 text-black font-bold flex items-center justify-center gap-2 hover:opacity-95 shadow-lg shadow-amber-500/25 transition-all"
               >
                 {isLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                 <span>Calculate Canonical Chart Session</span>
@@ -304,12 +355,12 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
             {availableSessions.length > 0 && (
               <div className="mt-8 pt-6 border-t border-slate-800">
                 <div className="text-xs font-mono uppercase text-slate-400 mb-3">Or Load Cached Birth Fingerprint</div>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-48 overflow-y-auto">
                   {availableSessions.map((s) => (
                     <button
                       key={s.fingerprint}
                       onClick={() => loadSessionByFingerprint(s.fingerprint)}
-                      className="w-full px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left text-xs flex items-center justify-between transition-all"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left text-xs flex items-center justify-between transition-all"
                     >
                       <span className="font-semibold text-slate-200">{s.name}</span>
                       <span className="font-mono text-cyan-400">{s.fingerprint.slice(0, 12)}...</span>
@@ -319,124 +370,172 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
               </div>
             )}
           </div>
-        )}
-
-        {session && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Nav Column */}
-            <div className="lg:col-span-3 space-y-1 bg-[#111827]/60 p-3 rounded-2xl border border-slate-800/80 backdrop-blur-xl h-fit sticky top-16">
-              <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center justify-between">
-                <span>COSMIC MODULES</span>
-                <span className="text-emerald-400">16 VERIFIED</span>
-              </div>
-              <div className="space-y-1">
-                {subViewTabs.map((tab) => {
-                  const Icon = tab.icon;
-                  const isCur = activeSubView === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveSubView(tab.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${
-                        isCur
-                          ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm font-semibold'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 ${isCur ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                        <span>{tab.label}</span>
-                      </div>
-                      {tab.tag && (
-                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
-                          {tab.tag}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-800/80 px-2 space-y-2">
-                <button
-                  onClick={clearSession}
-                  className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-center gap-1.5"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Switch Birth Profile</span>
-                </button>
-              </div>
+        </div>
+      ) : (
+        /* ========================================================================= */
+        /* 3. THREE-REGION WORKSPACE: SIDEBAR + CONTENT SCROLL ARCHITECTURE          */
+        /* ========================================================================= */
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+          {/* 3A. DESKTOP MODULE SIDEBAR (Independent Scroll, shrink-0) */}
+          <aside className="hidden lg:flex flex-col w-72 shrink-0 border-r border-slate-800/80 bg-[#0B0F17]/80 overflow-y-auto p-4 space-y-1">
+            <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center justify-between border-b border-slate-800/80 mb-2">
+              <span>COSMIC MODULES</span>
+              <span className="text-cyan-400 font-semibold">{VERIFIED_MODULE_COUNT} VERIFIED</span>
             </div>
 
-            {/* Right Display Column */}
-            <div className="lg:col-span-9 space-y-6">
-              {/* 1. OVERVIEW */}
+            <div className="space-y-1 flex-1">
+              {COSMIC_MODULE_REGISTRY.map((mod) => {
+                const Icon = mod.icon;
+                const isCur = activeSubView === mod.id;
+                return (
+                  <button
+                    key={mod.id}
+                    onClick={() => setActiveSubView(mod.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${
+                      isCur
+                        ? 'bg-gradient-to-r from-amber-500/20 to-cyan-500/10 text-white border border-amber-500/40 shadow-sm font-semibold'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <Icon className={`w-4 h-4 shrink-0 ${isCur ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                      <span className="truncate">{mod.label}</span>
+                    </div>
+                    {mod.badge && (
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+                        {mod.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="pt-4 border-t border-slate-800/80 px-2 space-y-2 shrink-0">
+              <button
+                onClick={clearSession}
+                className="w-full py-2 text-xs font-mono text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-900/50 rounded-xl transition-all"
+              >
+                Clear Chart Session
+              </button>
+            </div>
+          </aside>
+
+          {/* 3B. MOBILE HORIZONTAL MODULE STRIP (Fluid natural scrolling) */}
+          <div className="lg:hidden shrink-0 border-b border-slate-800/80 bg-[#0B0F17]/95 px-3 py-2 overflow-x-auto flex gap-2 no-scrollbar">
+            {COSMIC_MODULE_REGISTRY.map((mod) => {
+              const Icon = mod.icon;
+              const isCur = activeSubView === mod.id;
+              return (
+                <button
+                  key={mod.id}
+                  onClick={() => setActiveSubView(mod.id)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all ${
+                    isCur
+                      ? 'bg-amber-500 text-black font-bold shadow-sm'
+                      : 'bg-slate-900 text-slate-300 border border-slate-800'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{mod.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 3C. MAIN CONTENT PANE (Independent Vertical Scroll, zero horizontal overflow) */}
+          <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 space-y-6 card-safe">
+            <ModuleErrorBoundary
+              activeSubView={activeSubView as CosmicModuleId}
+              onRetry={() => {}}
+              onReturnOverview={() => setActiveSubView('overview')}
+            >
+              {/* 1. COSMIC OVERVIEW */}
               {activeSubView === 'overview' && (
                 <div className="space-y-6">
-                  {/* Distinctive Unique Highlights */}
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900 to-cyan-500/10 border border-amber-500/30 shadow-xl">
-                    <div className="flex items-center gap-2 text-amber-400 text-xs font-mono font-bold uppercase mb-2">
-                      <Sparkles className="w-4 h-4" />
-                      <span>WHAT MAKES YOUR CHART DISTINCTIVE</span>
+                  {/* Astronomical Snapshot Card */}
+                  <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                      <div>
+                        <h2 className="text-xl font-bold text-white">Astronomical Foundation Snapshot</h2>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Calculated via DeepAstro deterministic ephemeris bridge. Ayanamsa: {session.calculationMetadata.ayanamsa}.
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
+                        MATHEMATICALLY VALIDATED
+                      </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                      {session.personalization.whatMakesYouUnique.map((h, i) => (
-                        <div key={i} className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-                          <div className="text-xs font-bold text-white mb-1">{h.title}</div>
-                          <div className="text-[11px] text-slate-300">{h.description}</div>
-                          <div className="mt-2 text-[10px] font-mono text-cyan-400">Basis: {h.astrologicalBasis}</div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Ascendant (Lagna)</div>
+                        <div className="text-lg font-bold text-white mt-1">{session.vedic.ascendantSign}</div>
+                        <div className="text-xs text-cyan-400 font-mono">
+                          {session.vedic.ascendantDegree.toFixed(2)}° &bull; {session.vedic.ascendantNakshatra}
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Moon Sign (Rashi)</div>
+                        <div className="text-lg font-bold text-white mt-1">{session.vedic.moonSign}</div>
+                        <div className="text-xs text-amber-400 font-mono">
+                          {session.vedic.moonNakshatra} (Pada {session.vedic.moonPada})
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Sun Sign (Surya)</div>
+                        <div className="text-lg font-bold text-white mt-1">{session.vedic.sunSign}</div>
+                        <div className="text-xs text-slate-400 font-mono">Vedic Sidereal</div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Active Operating Period</div>
+                        <div className="text-base font-bold text-emerald-400 mt-1">
+                          {session.dasha.currentMahaDasha}/{session.dasha.currentAntarDasha}
+                        </div>
+                        <div className="text-xs text-slate-400 font-mono">
+                          {session.dasha.currentCycleRemainingYears.toFixed(1)} yrs remaining
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Distinctive Features */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-mono uppercase tracking-wider text-slate-400 font-bold">
+                      WHAT MAKES YOUR CHART DISTINCTIVE
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {session.personalization.whatMakesYouUnique.map((feat, idx) => (
+                        <div key={idx} className="p-5 rounded-2xl bg-[#111827] border border-slate-800 space-y-2">
+                          <div className="text-xs font-mono text-cyan-400 font-bold uppercase">{feat.uniquenessDescriptor}</div>
+                          <div className="text-base font-bold text-white">{feat.title}</div>
+                          <p className="text-xs text-slate-300 leading-relaxed">{feat.description}</p>
+                          <div className="pt-2 text-[10px] font-mono text-slate-400 border-t border-slate-800">
+                            Basis: {feat.astrologicalBasis}
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* 4 Identity Pillars */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800">
-                      <div className="text-[10px] font-mono uppercase text-slate-400">Lagna (Ascendant)</div>
-                      <div className="text-lg font-bold text-white mt-1">{session.vedic.ascendantSign}</div>
-                      <div className="text-xs text-amber-400 font-mono mt-0.5">{session.vedic.ascendantDegree.toFixed(2)}°</div>
-                      <div className="text-[11px] text-slate-400 mt-2">Lord: {session.vedic.ascendantLord}</div>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800">
-                      <div className="text-[10px] font-mono uppercase text-slate-400">Moon (Rashi)</div>
-                      <div className="text-lg font-bold text-white mt-1">{session.vedic.moonSign}</div>
-                      <div className="text-xs text-cyan-400 font-mono mt-0.5">{session.vedic.moonNakshatra} Pada {session.vedic.moonPada}</div>
-                      <div className="text-[11px] text-slate-400 mt-2">Mind & Emotional Core</div>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800">
-                      <div className="text-[10px] font-mono uppercase text-slate-400">Sun (Atma)</div>
-                      <div className="text-lg font-bold text-white mt-1">{session.vedic.sunSign}</div>
-                      <div className="text-xs text-amber-400 font-mono mt-0.5">Soul Authority</div>
-                      <div className="text-[11px] text-slate-400 mt-2">House {session.vedic.planets.find(p => p.name === 'Sun')?.house || 1}</div>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800">
-                      <div className="text-[10px] font-mono uppercase text-slate-400">Active Dasha</div>
-                      <div className="text-lg font-bold text-emerald-400 mt-1">{session.dasha.currentMahaDasha}</div>
-                      <div className="text-xs text-slate-300 font-mono mt-0.5">Antar: {session.dasha.currentAntarDasha}</div>
-                      <div className="text-[10px] text-slate-400 mt-2">Remaining: {session.dasha.currentCycleRemainingYears.toFixed(1)} yrs</div>
-                    </div>
-                  </div>
-
-                  {/* Chart at a Glance Themes */}
-                  <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="text-sm font-bold text-white flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-amber-400" />
-                        <span>Evidence-Grounded Insights ({readingDepth})</span>
-                      </div>
-                      <span className="text-xs text-slate-400 font-mono">{session.personalization.chartAtAGlance.length} verified themes</span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {session.personalization.chartAtAGlance.slice(0, readingDepth === 'QUICK' ? 5 : 12).map((ins, iIdx) => (
-                        <div key={iIdx} className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="font-mono uppercase font-bold text-cyan-400">[{ins.category}]</span>
-                            <span className="text-[10px] font-mono text-slate-400">Strength: {ins.strength}</span>
+                  {/* Chart at a Glance / Dominant Theme Signals */}
+                  <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-4">
+                    <h3 className="text-sm font-mono uppercase tracking-wider text-slate-400 font-bold">
+                      DOMINANT LIFE THEMES & SIGNALS
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {session.personalization.chartAtAGlance.map((ins, idx) => (
+                        <div key={idx} className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-bold text-amber-400">{ins.category}</span>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                              ins.strength === 'DOMINANT' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                              {ins.strength}
+                            </span>
                           </div>
                           <div className="text-sm font-semibold text-slate-200">{ins.headline}</div>
                           <div className="text-xs text-slate-400 mt-1">{ins.summary}</div>
@@ -456,7 +555,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 2. PLANETS */}
+              {/* 2. PLANETS & DIGNITIES */}
               {activeSubView === 'planets' && (
                 <div className="space-y-6">
                   <div className="flex flex-wrap gap-2">
@@ -466,7 +565,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                         onClick={() => setSelectedPlanetName(p.name)}
                         className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                           selectedPlanetName === p.name
-                            ? 'bg-amber-500 text-black shadow-md'
+                            ? 'bg-amber-500 text-black shadow-md font-bold'
                             : 'bg-[#111827] text-slate-300 border border-slate-800 hover:border-slate-700'
                         }`}
                       >
@@ -479,7 +578,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                     const planet = session.vedic.planets.find(p => p.name === selectedPlanetName) || session.vedic.planets[0];
                     return (
                       <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
                           <div>
                             <h3 className="text-2xl font-bold text-white">{planet.name}</h3>
                             <div className="text-xs text-slate-400 font-mono mt-1">
@@ -539,7 +638,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 3. HOUSES */}
+              {/* 3. 12 BHAVAS (HOUSES) */}
               {activeSubView === 'houses' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
@@ -562,7 +661,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                     const house = session.vedic.houses.find(h => h.houseNumber === selectedHouseNumber) || session.vedic.houses[0];
                     return (
                       <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
                           <div>
                             <h3 className="text-xl font-bold text-white">House {house.houseNumber}: {house.sign}</h3>
                             <div className="text-xs text-slate-400 font-mono mt-1">
@@ -586,7 +685,12 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 4. YOGAS */}
+              {/* 4. NAKSHATRAS (LUNAR MANSIIONS) - GENUINE EVIDENCE RESTORED */}
+              {activeSubView === 'nakshatras' && (
+                <NakshatrasView session={session} />
+              )}
+
+              {/* 5. MATHEMATICAL YOGAS */}
               {activeSubView === 'yogas' && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800 text-xs text-slate-300">
@@ -616,7 +720,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 5. DASHA */}
+              {/* 6. VIMSHOTTARI DASHA */}
               {activeSubView === 'dasha' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
                   <div>
@@ -657,10 +761,15 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 6. VARGAS */}
+              {/* 7. TRANSIT RADAR (GOCHARA) - GENUINE EVIDENCE RESTORED */}
+              {activeSubView === 'transits' && (
+                <TransitsRadarView session={session} />
+              )}
+
+              {/* 8. VARGAS (D1, D9, D10) */}
               {activeSubView === 'vargas' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
                     <div>
                       <h3 className="text-xl font-bold text-white">Divisional Vargas (Harmonic Charts)</h3>
                       <p className="text-xs text-slate-400 mt-1">Micro-harmonics of destiny: D1 Rashi, D9 Navamsha, D10 Dashamsha.</p>
@@ -694,7 +803,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 7. KP */}
+              {/* 9. KP STELLAR ASTROLOGY */}
               {activeSubView === 'kp' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
                   <div>
@@ -733,7 +842,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 8. WESTERN */}
+              {/* 10. WESTERN TROPICAL */}
               {activeSubView === 'western' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
                   <div>
@@ -770,7 +879,22 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 9. 10-CHAPTER LIFE STORY */}
+              {/* 11. CAREER DEEP DIVE - PRIMARY REPORTED MISSING MODULE RESTORED */}
+              {activeSubView === 'career' && (
+                <CareerDeepDiveView session={session} />
+              )}
+
+              {/* 12. WEALTH & DHANA - GENUINE EVIDENCE RESTORED */}
+              {activeSubView === 'money' && (
+                <WealthDeepDiveView session={session} />
+              )}
+
+              {/* 13. RELATIONSHIPS & DHARMA - GENUINE EVIDENCE RESTORED */}
+              {activeSubView === 'relationships' && (
+                <RelationshipsDeepDiveView session={session} />
+              )}
+
+              {/* 14. 10-CHAPTER LIFE STORY */}
               {activeSubView === 'timeline' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
                   <div>
@@ -798,7 +922,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 10. DAILY COSMIC WEATHER */}
+              {/* 15. DAILY COSMIC WEATHER */}
               {activeSubView === 'daily-context' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
                   <div>
@@ -833,7 +957,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                 </div>
               )}
 
-              {/* 11. ASK DEEPASTRO AI ASTROLOGER */}
+              {/* 16. ASK DEEPASTRO AI ASTROLOGER */}
               {activeSubView === 'ai-astrologer' && (
                 <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-6">
                   <div>
@@ -912,7 +1036,7 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                       <div className="space-y-2 pt-2">
                         {aiError.availableEvidence?.map((ev: any, idx: number) => (
                           <div key={idx} className="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300">
-                            • <span className="text-cyan-400 font-bold">{ev.label || ev.id}:</span> {ev.detail || ev.observation}
+                            &bull; <span className="text-cyan-400 font-bold">{ev.label || ev.id}:</span> {ev.detail || ev.observation}
                           </div>
                         ))}
                       </div>
@@ -920,28 +1044,10 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
                   )}
                 </div>
               )}
-
-              {/* 12, 13, 14, 15: Career, Money, Relationships */}
-              {['career', 'money', 'relationships', 'transits', 'nakshatras'].includes(activeSubView) && (
-                <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-4">
-                  <h3 className="text-xl font-bold text-white capitalize">{activeSubView} Deep Dive</h3>
-                  <div className="space-y-3">
-                    {session.evidenceGraph.filter(e => e.category.toLowerCase().includes(activeSubView.slice(0, 4))).map((ev) => (
-                      <div key={ev.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                        <div className="text-sm font-bold text-amber-400">{ev.label}</div>
-                        <div className="text-xs text-slate-300 mt-1">{ev.detail}</div>
-                        <div className="mt-2 text-[10px] font-mono text-cyan-400">
-                          Source: {ev.source} | Strength: {(ev.strength * 100).toFixed(0)}%
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+            </ModuleErrorBoundary>
+          </main>
+        </div>
+      )}
     </div>
   );
 };

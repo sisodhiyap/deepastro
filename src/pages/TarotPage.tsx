@@ -19,6 +19,7 @@ import {
 } from '../services/tarotEngine.js';
 import { TarotCardComponent } from '../components/tarot/TarotCardComponent.js';
 import { TarotShuffleAnimation } from '../components/tarot/TarotShuffleAnimation.js';
+import { TarotResponsiveLayout } from '../components/tarot/TarotResponsiveLayout.js';
 import {
   Sparkles,
   RotateCw,
@@ -461,37 +462,13 @@ export const TarotPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 3-Card Spread */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 justify-items-center">
-            {activeSession.drawnCards.map((draw, idx) => {
-              const isFlipped = flippedCards[draw.position];
-              const posLabel = draw.position === 'root' ? 'ROOT / PAST' : draw.position === 'present' ? 'PRESENT / ENERGY' : 'DIRECTION / NEXT';
-              const posQuestion = draw.position === 'root'
-                ? 'What energy has shaped this situation?'
-                : draw.position === 'present'
-                ? 'What energy surrounds you now?'
-                : 'What direction should you consciously consider?';
-
-              return (
-                <div key={draw.position} className="flex flex-col items-center w-full max-w-xs">
-                  <div className="mb-3 text-center">
-                    <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-400/90">
-                      CARD {idx + 1} · {posLabel}
-                    </span>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{posQuestion}</p>
-                  </div>
-                  <TarotCardComponent
-                    card={draw.card}
-                    orientation={draw.orientation}
-                    positionLabel={posLabel}
-                    isFlipped={isFlipped}
-                    onFlip={() => setFlippedCards((prev) => ({ ...prev, [draw.position]: !prev[draw.position] }))}
-                    size="md"
-                  />
-                </div>
-              );
-            })}
-          </div>
+          {/* 3-Card Spread with Layout-Safe Zero-Collision Engine */}
+          <TarotResponsiveLayout
+            drawnCards={activeSession.drawnCards}
+            flippedCards={flippedCards}
+            onFlipCard={(pos) => setFlippedCards((prev) => ({ ...prev, [pos]: !prev[pos] }))}
+            activeSession={activeSession}
+          />
 
           {/* Connecting Flow Bar */}
           <div className="flex items-center justify-center gap-3 text-xs text-amber-300/70 font-mono tracking-widest uppercase">

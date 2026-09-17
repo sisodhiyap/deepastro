@@ -89,55 +89,64 @@ export const PastLifeInsightCard: React.FC<PastLifeInsightCardProps> = ({ data, 
         </p>
       </div>
 
+      {/* EPISTEMIC SAFETY & TRADITIONAL FRAMING */}
+      <div className="relative z-10 p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/20 mb-6 text-xs text-amber-200/90 leading-relaxed flex items-start gap-2.5">
+        <Shield className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <p>
+          <span className="font-bold text-amber-300">Epistemic Note: </span>
+          Traditional Jyotish interpretations of past life (Ketu, Rahu, Atmakaraka, D60) provide symbolic and philosophical archetypes for spiritual reflection. They are never deterministic historical facts. Your destiny remains guided by conscious choice and free will.
+        </p>
+      </div>
+
       {/* HERO SECTION: CELESTIAL CIRCULAR PORTAL & 4 FEATURE PILLARS */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-8">
         {/* LEFT / CENTER: 4 FEATURE PILLARS */}
         <div className="lg:col-span-6 space-y-4">
-          {/* Pillar 1: Past Life Insights */}
+          {/* Pillar 1: Ketu */}
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-purple-500/30 hover:border-purple-400/60 transition-all flex items-start gap-4">
             <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20">
               <Flower2 className="w-5 h-5 text-purple-300" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="text-sm font-bold text-slate-100 font-serif">Past Life Insights</h3>
-              <p className="text-xs text-purple-300/90 font-medium">Traditional Archetypal Resonance</p>
-              <p className="text-[11px] text-slate-400">{archetype}</p>
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Ketu · Past Karmic Seed</h3>
+              <p className="text-xs text-purple-300/90 font-medium">Spiritual Memory & Deep-Rooted Instincts</p>
+              <p className="text-[11px] text-slate-400 line-clamp-2">{data.rawSchema?.ketuData?.significance || 'Intuitive detachment and subconscious wisdom carried across cycles.'}</p>
             </div>
           </div>
 
-          {/* Pillar 2: Karmic Patterns */}
+          {/* Pillar 2: Rahu */}
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/30 hover:border-cyan-400/60 transition-all flex items-start gap-4">
             <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/20">
               <Compass className="w-5 h-5 text-cyan-300" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="text-sm font-bold text-slate-100 font-serif">Karmic Patterns</h3>
-              <p className="text-xs text-cyan-300/90 font-medium">Karmic Axis Interpretation</p>
-              <p className="text-[11px] text-slate-400 truncate">{karmicPattern}</p>
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Rahu · Growth Vector</h3>
+              <p className="text-xs text-cyan-300/90 font-medium">Current Incarnation Evolutionary Edge</p>
+              <p className="text-[11px] text-slate-400 line-clamp-2">{data.rawSchema?.rahuData?.significance || 'Dynamic expansion into uncharted areas of personal evolution.'}</p>
             </div>
           </div>
 
-          {/* Pillar 3: Soul Evolution */}
+          {/* Pillar 3: Atmakaraka */}
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 hover:border-amber-400/60 transition-all flex items-start gap-4">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
               <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="text-sm font-bold text-slate-100 font-serif">Soul Evolution</h3>
-              <p className="text-xs text-amber-300/90 font-medium">Spiritual Trajectory & Lessons</p>
-              <p className="text-[11px] text-slate-400 truncate">{soulLesson}</p>
+              <h3 className="text-sm font-bold text-slate-100 font-serif">Atmakaraka · Soul Motif</h3>
+              <p className="text-xs text-amber-300/90 font-medium">{data.rawSchema?.atmakarakaData ? `${data.rawSchema.atmakarakaData.planet} (${data.rawSchema.atmakarakaData.signName || 'Core'})` : 'Primary Soul Planet'}</p>
+              <p className="text-[11px] text-slate-400 line-clamp-2">{data.rawSchema?.atmakarakaData?.soulLesson || soulLesson}</p>
             </div>
           </div>
 
-          {/* Pillar 4: Life Purpose */}
+          {/* Pillar 4: 12th House */}
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-emerald-500/30 hover:border-emerald-400/60 transition-all flex items-start gap-4">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
               <Feather className="w-5 h-5 text-emerald-300" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="text-sm font-bold text-slate-100 font-serif">Life Purpose</h3>
-              <p className="text-xs text-emerald-300/90 font-medium">Present Life Dharma Alignment</p>
-              <p className="text-[11px] text-slate-400">{karmicCurrent}</p>
+              <h3 className="text-sm font-bold text-slate-100 font-serif">12th House · Moksha Axis</h3>
+              <p className="text-xs text-emerald-300/90 font-medium">Transcendence & Subconscious Imprints</p>
+              <p className="text-[11px] text-slate-400 line-clamp-2">{data.rawSchema?.house12Data?.significance || 'Liberation, inner meditation, and releasing attachment.'}</p>
             </div>
           </div>
         </div>

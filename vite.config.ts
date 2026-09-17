@@ -22,6 +22,15 @@ export default defineConfig({
   build: {
     sourcemap: false,
     minify: 'esbuild',
-    chunkSizeWarningLimit: 2500,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-pdf': ['jspdf', 'html2canvas'],
+        },
+      },
+    },
   },
 });

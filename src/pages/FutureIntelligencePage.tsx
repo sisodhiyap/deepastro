@@ -30,6 +30,7 @@ import { FutureYearCard, YearCardData } from '../components/future/FutureYearCar
 import { FutureMonthCard, MonthCardData } from '../components/future/FutureMonthCard';
 import { FutureLongevityCard, LongevityCardData } from '../components/future/FutureLongevityCard';
 import { FutureConsentModal } from '../components/future/FutureConsentModal';
+import { getBirthProfile } from '../utils/birthStorage.js';
 
 
 // --- Inline Birth Profile Form ---
@@ -152,8 +153,18 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
   );
 };
 
+export type FuturePageState =
+  | 'AUTH_REQUIRED'
+  | 'PREMIUM_REQUIRED'
+  | 'CONSENT_REQUIRED'
+  | 'BIRTH_PROFILE_REQUIRED'
+  | 'READY'
+  | 'GENERATING'
+  | 'SUCCESS'
+  | 'ERROR';
+
 export const FutureIntelligencePage: React.FC = () => {
-  const [loading, setLoading] = useState<boolean>(true);
+  const [pageState, setPageState] = useState<FuturePageState>('GENERATING');
   const [forecastData, setForecastData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'overview' | 'years' | 'months' | 'domains' | 'longevity' | 'compare'>('overview');
@@ -163,34 +174,38 @@ export const FutureIntelligencePage: React.FC = () => {
   const [isConsentModalOpen, setIsConsentModalOpen] = useState<boolean>(false);
   const [revealLevel, setRevealLevel] = useState<number>(1);
   const [horizonYears, setHorizonYears] = useState<3 | 5 | 10>(10);
-  const [isPremiumDenied, setIsPremiumDenied] = useState<boolean>(false);
-  const [isAuthRequired, setIsAuthRequired] = useState<boolean>(false);
-  const [isProfileIncomplete, setIsProfileIncomplete] = useState<boolean>(false);
-
-  const grantConsent = async (level: number) => {
-    try {
-      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
-      if (!token) return;
-      await fetch('/api/future/consent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ consentGranted: true, level: `LEVEL_${level}` }),
-      });
-    } catch {}
-  };
 
   const fetchForecast = async (overrideConsentLevel?: number) => {
-    setLoading(true);
+    setPageState('GENERATING');
     setError(null);
-    setIsPremiumDenied(false);
 
     try {
       const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (!token) {
+        setPageState('AUTH_REQUIRED');
+        return;
+      }
 
-      const lvlStr = `LEVEL_${overrideConsentLevel !== undefined ? overrideConsentLevel : revealLevel}`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
+
+      const lvlStr = `LEVEL_${overrideConsentLevel !== undefined ? overrideConsentLevel : revealLevel || 1}`;
       const horizonStr = horizonYears === 3 ? '3_YEARS' : horizonYears === 5 ? '5_YEARS' : '10_YEARS';
+
+      // Read local birth profile so user's real calculation parameters seamlessly flow into future engine
+      const localProfile = getBirthProfile();
+      const birthProfilePayload = (localProfile?.birthDate && localProfile?.birthTime) ? {
+        fullName: localProfile.name || 'Cosmic Native',
+        birthDate: localProfile.birthDate,
+        birthTime: localProfile.birthTime,
+        birthPlace: localProfile.birthPlace || 'Calculated Location',
+        latitude: parseFloat(localProfile.latitude as any) || 28.6139,
+        longitude: parseFloat(localProfile.longitude as any) || 77.2090,
+        timezone: localProfile.timezone || 'Asia/Kolkata',
+        gender: localProfile.gender || 'Male',
+      } : undefined;
 
       const res = await fetch('/api/future/generate', {
         method: 'POST',
@@ -198,52 +213,53 @@ export const FutureIntelligencePage: React.FC = () => {
         body: JSON.stringify({
           horizon: horizonStr,
           requestedLevel: lvlStr,
+          birthProfile: birthProfilePayload,
         }),
       });
 
       if (res.status === 401) {
-        setIsAuthRequired(true);
-        setLoading(false);
+        setPageState('AUTH_REQUIRED');
         return;
       }
 
+      const rawText = await res.text();
+      let body: any = {};
+      try {
+        body = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        throw new Error(`Server returned non-JSON response (${res.status})`);
+      }
+
       if (res.status === 403) {
-        const body = await res.json().catch(() => ({}));
         if (body.error === 'FUTURE_CONSENT_REQUIRED') {
-          // Explicit consent required: prompt the user with FutureConsentModal
-          setIsConsentModalOpen(true);
-          setLoading(false);
+          setPageState('CONSENT_REQUIRED');
           return;
-        } else {
-          setIsPremiumDenied(true);
         }
-        setLoading(false);
+        setError(body.details || body.error || 'Access to Future Intelligence requires verification.');
+        setPageState('ERROR');
         return;
       }
 
       if (res.status === 422) {
-        setIsProfileIncomplete(true);
-        setLoading(false);
+        setPageState('BIRTH_PROFILE_REQUIRED');
         return;
       }
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `HTTP ${res.status}: Failed to generate future forecast`);
+        throw new Error(body.error || body.details || `HTTP ${res.status}: Failed to generate future forecast`);
       }
 
-      const body = await res.json();
       const payload = body.data || body;
       setForecastData(payload);
       if (payload?.revealLevel) {
         const parsed = parseInt(payload.revealLevel.replace('LEVEL_', ''), 10);
         if (!isNaN(parsed)) setRevealLevel(parsed);
       }
+      setPageState('SUCCESS');
     } catch (err: any) {
       console.error('Failed to fetch future forecast:', err);
       setError(err.message || 'Unable to connect to Cosmic Future Intelligence Engine.');
-    } finally {
-      setLoading(false);
+      setPageState('ERROR');
     }
   };
 
@@ -256,24 +272,37 @@ export const FutureIntelligencePage: React.FC = () => {
     setRevealLevel(level);
     try {
       const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (!token) {
+        setPageState('AUTH_REQUIRED');
+        return;
+      }
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      };
 
-      await fetch('/api/future/consent', {
+      const res = await fetch('/api/future/consent', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          granted: true,
+          consentGranted: true,
           level: `LEVEL_${level}`,
         }),
       });
-    } catch (e) {
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || errBody.details || 'Failed to record consent');
+      }
+      // Explicit consent recorded successfully on server; now generate forecast
+      fetchForecast(level);
+    } catch (e: any) {
       console.warn('Consent sync error:', e);
+      setError(e.message || 'Failed to record ethical opt-in consent.');
+      setPageState('ERROR');
     }
-    fetchForecast(level);
   };
 
-  if (isAuthRequired) {
+  if (pageState === 'AUTH_REQUIRED') {
     return (
       <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
         <div className="max-w-xl w-full bg-[#111827] border border-cyan-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
@@ -304,44 +333,50 @@ export const FutureIntelligencePage: React.FC = () => {
     );
   }
 
-  if (isProfileIncomplete) {
-    return (
-      <BirthProfileForm onSaved={() => {
-        setIsProfileIncomplete(false);
-        fetchForecast();
-      }} />
-    );
-  }
 
-  if (isPremiumDenied) {
+
+  if (pageState === 'CONSENT_REQUIRED') {
     return (
       <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
         <div className="max-w-xl w-full bg-[#111827] border border-cyan-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
           <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-            <Compass className="w-8 h-8 animate-spin-slow" />
+            <ShieldAlert className="w-8 h-8 text-cyan-400" />
           </div>
           <div className="space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
-              PRO / PREMIUM FEATURE
+              ETHICAL CONSENT PROTOCOL
             </span>
             <h2 className="text-2xl font-black font-satoshi text-slate-100">
-              Cosmic Future Intelligence Engine
+              Review & Opt-In Required
             </h2>
             <p className="text-sm text-slate-400 leading-relaxed">
-              CFIE is an advanced multi-system forecasting intelligence integrating Vedic D1-D60 charts, Dasha timelines, planetary transits, KP sub-lords, Jaimini chara karakas, and sacred Vedic wisdom.
+              Cosmic Future Intelligence synthesizes multi-year life vectors. In alignment with Jyotish ethics, please review disclosure levels and confirm your consent before calculations commence.
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-[#1A1F2B] border border-slate-800 text-xs text-slate-300">
-            Upgrade your account to PRO or PREMIUM to unlock your personalized 10-year timeline, monthly breakdowns, and life-domain timing windows.
+          <div className="pt-2">
+            <button
+              onClick={() => setIsConsentModalOpen(true)}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-satoshi text-sm shadow-xl shadow-cyan-500/25 transition-all"
+            >
+              Review & Continue
+            </button>
           </div>
-          <button
-            onClick={() => window.location.href = '/#subscription'}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-satoshi text-sm shadow-xl shadow-cyan-500/25 transition-all"
-          >
-            Upgrade to Premium
-          </button>
         </div>
+        <FutureConsentModal
+          isOpen={isConsentModalOpen}
+          onClose={() => setIsConsentModalOpen(false)}
+          onConsent={handleConsentSubmit}
+          currentLevel={revealLevel}
+        />
       </div>
+    );
+  }
+
+  if (pageState === 'BIRTH_PROFILE_REQUIRED') {
+    return (
+      <BirthProfileForm onSaved={() => {
+        fetchForecast();
+      }} />
     );
   }
 
@@ -398,11 +433,11 @@ export const FutureIntelligencePage: React.FC = () => {
 
           <button
             onClick={() => fetchForecast()}
-            disabled={loading}
+            disabled={pageState === 'GENERATING'}
             className="p-2 rounded-xl bg-[#1A1F2B] border border-slate-800 text-slate-300 hover:text-cyan-400 transition-all"
             title="Recalculate Snapshot"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${pageState === 'GENERATING' ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
@@ -437,7 +472,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="max-w-6xl mx-auto">
-        {loading ? (
+        {pageState === 'GENERATING' ? (
           <div className="py-24 text-center space-y-4">
             <Compass className="w-10 h-10 text-cyan-400 animate-spin mx-auto" />
             <div className="text-sm font-bold text-slate-200">
@@ -466,12 +501,17 @@ export const FutureIntelligencePage: React.FC = () => {
                   forecast={{
                     ...forecastData,
                     lifePhase: forecastData?.currentLifePhase,
-                    nextMajorWindow: forecastData?.nextMajorWindow?.period,
+                    nextMajorWindow: forecastData?.nextMajorWindow,
                     timeline: yearlyTimeline.map((y: any) => ({
                       year: y.year,
                       theme: y.overallTheme,
                       intensity: y.intensityScore ? y.intensityScore / 100 : 0.75,
+                      strongestDomain: y.strongestDomain,
+                      activeDasha: y.activeDasha,
+                      confidence: y.confidence,
                     })),
+                    domainForecasts: forecastData?.domainForecasts,
+                    monthForecasts: forecastData?.monthForecasts,
                     provenance: forecastData?.provenance,
                   }}
                   onViewYearDetail={(yr) => {

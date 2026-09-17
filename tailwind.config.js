@@ -15,6 +15,7 @@ export default {
           border: 'var(--border-cosmic)',
           cyan: 'var(--primary-cyan)',
           indigo: 'var(--secondary-indigo)',
+          accent: 'var(--secondary-accent)',
           violet: 'var(--cosmic-violet)',
           gold: 'var(--divine-gold)',
           text: 'var(--text-main)',

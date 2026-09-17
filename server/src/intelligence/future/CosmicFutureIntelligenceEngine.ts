@@ -62,24 +62,19 @@ export class CosmicFutureIntelligenceEngine {
     const horizon: ForecastHorizon = req.horizon || '10_YEARS';
     const requestedLevel: FutureRevealLevel = req.requestedLevel || 'LEVEL_1';
 
-    // 1. Entitlement Security Check (PREMIUM / PRO / ADMIN only)
-    const isAdmin = req.clientRole === 'ADMIN' || req.clientRole === 'SUPER_ADMIN' || req.bypassEntitlementForAdmin;
-    const hasPremiumEntitlement = db.hasEntitlement(userId, 'FUTURE_INTELLIGENCE_PREMIUM') || db.hasEntitlement(userId, 'PRO');
-
-    if (!isAdmin && !hasPremiumEntitlement) {
-      FutureIntelligenceObservatory.record({
-        forecastId: 'none',
-        userId,
-        timestamp: new Date().toISOString(),
-        horizon,
-        revealLevel: requestedLevel,
-        generationTimeMs: Date.now() - startTime,
-        convergence: 'LOW',
-        contradictionCount: 0,
-        status: 'DENIED_FREE',
-      });
-      throw new Error('PREMIUM_ACCESS_REQUIRED: Cosmic Future Intelligence is reserved exclusively for Premium and Pro members.');
-    }
+    // 1. Session & Access Verification (Unrestricted authenticated feature access)
+    // Recorded for observatory monitoring without blocking free authenticated users
+    FutureIntelligenceObservatory.record({
+      forecastId: 'pending',
+      userId,
+      timestamp: new Date().toISOString(),
+      horizon,
+      revealLevel: requestedLevel,
+      generationTimeMs: 0,
+      convergence: 'HIGH',
+      contradictionCount: 0,
+      status: 'GRANTED_AUTHENTICATED',
+    });
 
     // 2. Consent & Reveal Level Enforcement
     const consent = FutureConsentEngine.getConsent(userId);

@@ -483,21 +483,24 @@ class DatabaseStore {
     if (user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
       return true;
     }
-    const sub = this.getSubscription(userId);
-    if (sub.planId === 'PRO') return true;
-    if (sub.planId === 'PREMIUM') {
-      const premiumFeatures = [
-        'view_protected_astrologer_contact',
-        'full_kundli',
-        'matching',
-        'palmistry',
-        'numerology',
-        'reports',
-        'astrobot',
-        'FUTURE_INTELLIGENCE_PREMIUM',
-      ];
-      if (premiumFeatures.includes(featureKey)) return true;
+    // DeepAstro 6.4: Full access model - normal features open to all authenticated users
+    const openUserFeatures = [
+      'full_kundli',
+      'matching',
+      'palmistry',
+      'numerology',
+      'reports',
+      'astrobot',
+      'past_life',
+      'cosmic_hub',
+      'my_cosmos_advanced',
+      'career_deep_dive',
+    ];
+    if (openUserFeatures.includes(featureKey)) {
+      return true;
     }
+    const sub = this.getSubscription(userId);
+    if (sub.planId === 'PRO' || sub.planId === 'PREMIUM') return true;
     const userSet = this.entitlements.get(userId);
     return userSet ? userSet.has(featureKey) : false;
   }

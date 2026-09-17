@@ -18,6 +18,11 @@ import {
 
 const router = Router();
 
+router.use((_req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
 // 1. POST /api/intelligence/past-life/generate
 router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -43,8 +48,13 @@ router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res: Res
 
     if (!result.success || !result.data) {
       return res.status(400).json({
+        success: false,
         error: result.error || 'PAST_LIFE_ANALYSIS_UNAVAILABLE',
         message: 'Birth data incomplete for authentic past-life calculation.',
+        details: {
+          code: result.error || 'PAST_LIFE_ANALYSIS_UNAVAILABLE',
+          message: 'Birth data incomplete for authentic past-life calculation.',
+        },
         missingFields: result.missingFields || [],
       });
     }
@@ -54,15 +64,29 @@ router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res: Res
       : PastLifeCardEngine.formatForInsightCard(result.data);
 
     return res.status(200).json({
+      success: true,
       status: 'SUCCESS',
       readingId: result.data.id,
       schema: result.data,
+      data: result.data,
       card: cardPayload,
+      provenance: {
+        engineVersion: PastLifeIntelligenceEngine.VERSION,
+        knowledgeVersion: PastLifeIntelligenceEngine.KNOWLEDGE_VERSION,
+        confidence: result.data.confidence,
+        astrologicalIndicatorsCount: result.data.astrological_indicators?.length || 0,
+        vedicReferencesCount: result.data.vedic_references?.length || 0,
+      },
     });
   } catch (error: any) {
     return res.status(500).json({
+      success: false,
       error: 'INTERNAL_CALCULATION_ERROR',
       message: error.message || 'An error occurred while calculating past life intelligence.',
+      details: {
+        code: 'INTERNAL_CALCULATION_ERROR',
+        message: error.message || 'An error occurred while calculating past life intelligence.',
+      },
     });
   }
 });

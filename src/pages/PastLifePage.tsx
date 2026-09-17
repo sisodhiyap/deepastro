@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, History, RefreshCw, AlertCircle, Share2, Printer, Compass, Layers, MapPin, Calendar, Clock, User } from 'lucide-react';
 import { PastLifeInsightCard } from '../components/astrology/PastLifeInsightCard';
 import { SoulJourneyCard } from '../components/astrology/SoulJourneyCard';
+import { getBirthProfile } from '../utils/birthStorage.js';
 
 // --- Inline Birth Profile Form ---
 const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
@@ -167,26 +168,56 @@ export const PastLifePage: React.FC = () => {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
+      // Read local canonical profile so user's real calculation parameters seamlessly flow into past life engine
+      const localProfile = getBirthProfile();
+      const birthProfilePayload = (localProfile?.birthDate && localProfile?.birthTime) ? {
+        fullName: localProfile.name || 'Cosmic Native',
+        birthDate: localProfile.birthDate,
+        birthTime: localProfile.birthTime,
+        birthPlace: localProfile.birthPlace || 'Calculated Location',
+        latitude: parseFloat(localProfile.latitude as any) || 28.6139,
+        longitude: parseFloat(localProfile.longitude as any) || 77.2090,
+        timezone: localProfile.timezone || 'Asia/Kolkata',
+        gender: localProfile.gender || 'Male',
+      } : undefined;
+
       const res = await fetch('/api/intelligence/past-life/generate', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ format: formatChoice }),
+        body: JSON.stringify({
+          format: formatChoice,
+          birthProfile: birthProfilePayload,
+        }),
       });
 
-      const data = await res.json();
+      // Defensive HTTP inspection & safe reading (prevents 'Unexpected end of JSON input')
+      const rawText = await res.text();
+      let data: any = null;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        throw new Error(`Server returned non-JSON response (${res.status} ${res.statusText || 'Error'})`);
+      }
+
+      if (res.status === 401) {
+        setError('Authentication required. Please sign in to view your past-life soul journey.');
+        setLoading(false);
+        return;
+      }
 
       // Missing birth profile → show inline form
-      if (!res.ok && (data.error === 'PAST_LIFE_ANALYSIS_UNAVAILABLE' || data.missingFields?.length > 0)) {
+      if (!res.ok && (data?.error === 'PAST_LIFE_ANALYSIS_UNAVAILABLE' || data?.missingFields?.length > 0)) {
         setNeedsBirthProfile(true);
         setLoading(false);
         return;
       }
 
-      if (!res.ok || !data.schema) {
-        throw new Error(data.message || data.error || 'Failed to generate past life insight');
+      if (!res.ok || (!data?.schema && !data?.data)) {
+        throw new Error(data?.message || data?.error || `Failed to generate past life insight (HTTP ${res.status})`);
       }
 
-      setReading(data.schema);
+      const activeSchema = data.schema || data.data;
+      setReading(activeSchema);
       setCardData(data.card);
       loadHistory();
     } catch (err: any) {
@@ -203,9 +234,13 @@ export const PastLifePage: React.FC = () => {
       const res = await fetch('/api/intelligence/past-life/history', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (res.ok && data.readings) setHistory(data.readings);
-    } catch (e) {}
+      if (!res.ok) return;
+      const raw = await res.text();
+      const data = raw ? JSON.parse(raw) : null;
+      if (data?.readings) setHistory(data.readings);
+    } catch {
+      // Non-blocking history fetch
+    }
   };
 
   const handleFeedback = async (sentiment: string) => {

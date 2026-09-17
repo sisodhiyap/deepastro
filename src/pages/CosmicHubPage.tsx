@@ -24,6 +24,31 @@ import {
 import { CosmicStoryCardModal } from '../components/astrology/CosmicStoryCardModal.js';
 import { CosmicSOSModal } from '../components/astrology/CosmicSOSModal.js';
 import { NavTabId } from '../components/layout/Sidebar.js';
+import { getBirthProfile, getCalculatedChart } from '../utils/birthStorage.js';
+
+export type CosmicHubTabId =
+  | 'vibe'
+  | 'timing'
+  | 'sky'
+  | 'choghadiya'
+  | 'tarot'
+  | 'prashna';
+
+export interface CosmicHubTabDefinition {
+  id: CosmicHubTabId;
+  label: string;
+  badge: string;
+  description: string;
+}
+
+export const COSMIC_HUB_TABS: CosmicHubTabDefinition[] = [
+  { id: 'vibe', label: '🌟 Vibe & Dimensions', badge: 'Co-Star', description: '6-Dimensional Life Energy Radar & Lucky Matrix' },
+  { id: 'timing', label: '⏳ Your Timing & Cycles', badge: 'The Pattern', description: 'Active Karmic Chapters & Evolutionary Timing' },
+  { id: 'sky', label: '🌌 Live Sky & Transits', badge: 'TimePassages', description: 'Real-Time Planetary Coordinates in the Sky' },
+  { id: 'choghadiya', label: '🕒 Auspicious Clock & Moon', badge: 'Chani', description: 'Live Choghadiya, Hora, & Lunar Manifestation' },
+  { id: 'tarot', label: '🎴 Tarot & Graha Oracle', badge: 'Sanctuary', description: '22 Graha Major Arcana Divination' },
+  { id: 'prashna', label: '🔮 Instant Prashna Oracle', badge: 'AstroSage', description: 'Horary Planetary Alignment Query' },
+];
 
 interface CosmicHubPageProps {
   onNavigate?: (tab: NavTabId) => void;
@@ -31,9 +56,7 @@ interface CosmicHubPageProps {
 }
 
 export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userName = 'Cosmic Seeker' }) => {
-  const [activeTab, setActiveTab] = useState<
-    'vibe' | 'timing' | 'sky' | 'choghadiya' | 'tarot' | 'prashna'
-  >('vibe');
+  const [activeTab, setActiveTab] = useState<CosmicHubTabId>('vibe');
 
   const [isLoading, setIsLoading] = useState(true);
   const [liveSky, setLiveSky] = useState<any[]>([]);
@@ -44,7 +67,7 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
   const [isCardFlipped, setIsCardFlipped] = useState(false);
   const [sadeSatiMatrix, setSadeSatiMatrix] = useState<any>(null);
   const [lifeCycles, setLifeCycles] = useState<any[]>([]);
-  const [chartContext, setChartContext] = useState<any>(null);
+  const [chartContext, setChartContext] = useState<any>(() => getCalculatedChart());
 
   // Prashna Oracle State
   const [prashnaQuestion, setPrashnaQuestion] = useState('');
@@ -58,42 +81,47 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
   // Ticking countdown seconds for Choghadiya
   const [countdownSeconds, setCountdownSeconds] = useState<number>(0);
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        const [skyRes, chogRes, moonRes, dimRes, tarotRes, sadeRes, chartRes, cycleRes] = await Promise.all([
-          fetch('/api/cosmic/live-sky').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/cosmic/choghadiya-hora').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/cosmic/moon-phase').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/cosmic/daily-dimensions').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/cosmic/daily-tarot').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/cosmic/sade-sati-matrix').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/astrology/chart').then((r) => (r.ok ? r.json() : null)),
-          fetch('/api/cosmic/life-cycles', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          }).then((r) => (r.ok ? r.json() : null)),
-        ]);
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      const localChart = chartContext || getCalculatedChart();
 
-        if (skyRes?.planets) setLiveSky(skyRes.planets);
-        if (chogRes) {
-          setChoghadiyaData(chogRes);
-          setCountdownSeconds(chogRes.remainingSecondsInCurrent || 0);
-        }
-        if (moonRes) setMoonPhase(moonRes);
-        if (dimRes) setDailyDimensions(dimRes);
-        if (tarotRes) setDailyTarot(tarotRes);
-        if (sadeRes) setSadeSatiMatrix(sadeRes);
-        if (chartRes?.chart || chartRes?.ascendant) setChartContext(chartRes.chart || chartRes);
-        if (cycleRes?.cycles) setLifeCycles(cycleRes.cycles);
-      } catch (err) {
-        console.error('Failed to load cosmic features', err);
-      } finally {
-        setIsLoading(false);
+      const [skyRes, chogRes, moonRes, dimRes, tarotRes, sadeRes, chartRes, cycleRes] = await Promise.all([
+        fetch('/api/cosmic/live-sky').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/cosmic/choghadiya-hora').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/cosmic/moon-phase').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/cosmic/daily-dimensions', { headers: authHeaders }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/cosmic/daily-tarot').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/cosmic/sade-sati-matrix', { headers: authHeaders }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/astrology/chart', { headers: authHeaders }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch('/api/cosmic/life-cycles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify({ chart: localChart?.chart || localChart }),
+        }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      ]);
+
+      if (skyRes?.planets) setLiveSky(skyRes.planets);
+      if (chogRes) {
+        setChoghadiyaData(chogRes);
+        setCountdownSeconds(chogRes.remainingSecondsInCurrent || 0);
       }
-    };
+      if (moonRes) setMoonPhase(moonRes);
+      if (dimRes) setDailyDimensions(dimRes);
+      if (tarotRes) setDailyTarot(tarotRes);
+      if (sadeRes) setSadeSatiMatrix(sadeRes);
+      if (chartRes?.chart || chartRes?.ascendant) setChartContext(chartRes.chart || chartRes);
+      if (cycleRes?.cycles) setLifeCycles(cycleRes.cycles);
+    } catch (err) {
+      console.error('Failed to load cosmic features', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchAllData();
   }, []);
 
@@ -152,7 +180,7 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
   const currentHora = choghadiyaData?.currentHora;
 
   return (
-    <div className="space-y-8 animate-fadeIn pb-16">
+    <div className="w-full max-w-full min-w-0 space-y-8 animate-fadeIn pb-16 overflow-hidden">
       {/* Top Banner & Command Bar */}
       <div className="rounded-3xl border border-cosmic-border bg-gradient-to-r from-cosmic-surface via-cosmic-card to-cosmic-surface p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-cosmic-card relative overflow-hidden">
         <div className="absolute top-0 right-1/4 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -207,19 +235,12 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
       </div>
 
       {/* Feature Tab Navigation */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-cosmic-border/60 select-none">
-        {[
-          { id: 'vibe' as const, label: '🌟 Vibe & Dimensions', badge: 'Co-Star' },
-          { id: 'timing' as const, label: '⏳ Your Timing & Cycles', badge: 'The Pattern' },
-          { id: 'sky' as const, label: '🌌 Live Sky & Transits', badge: 'TimePassages' },
-          { id: 'choghadiya' as const, label: '🕒 Auspicious Clock & Moon', badge: 'Chani' },
-          { id: 'tarot' as const, label: '🎴 Tarot & Graha Oracle', badge: 'Sanctuary' },
-          { id: 'prashna' as const, label: '🔮 Instant Prashna Oracle', badge: 'AstroSage' },
-        ].map((tab) => (
+      <div className="w-full max-w-full min-w-0 flex items-center gap-2 overflow-x-auto overflow-y-hidden pb-2 border-b border-cosmic-border/60 select-none flex-shrink-0">
+        {COSMIC_HUB_TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 flex-shrink-0 ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-extrabold shadow-glow-cyan'
                 : 'bg-cosmic-surface/70 text-cosmic-muted hover:text-white hover:bg-cosmic-surface border border-cosmic-border/40'
@@ -238,7 +259,8 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
       </div>
 
       {/* TAB 1: 🌟 VIBE & DIMENSIONS (Co-Star Style) */}
-      {activeTab === 'vibe' && dailyDimensions && (
+      {activeTab === 'vibe' && (
+        dailyDimensions ? (
         <div className="space-y-8 animate-fadeIn">
           {/* Top Vibe Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -426,6 +448,21 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
             </div>
           </div>
         </div>
+        ) : (
+          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/60 p-8 text-center space-y-4">
+            <Sparkles className="w-10 h-10 text-cyan-400 mx-auto animate-pulse" />
+            <h3 className="text-lg font-display font-bold text-white">Harmonizing Your Daily Dimensions</h3>
+            <p className="text-xs text-cosmic-muted max-w-md mx-auto">
+              Calculating 6-dimensional energetic alignment across mental, emotional, social, and spiritual planes from current transit dynamics.
+            </p>
+            <button
+              onClick={fetchAllData}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-bold text-xs hover:opacity-90 transition-opacity"
+            >
+              Recalculate Daily Vibe
+            </button>
+          </div>
+        )
       )}
 
       {/* TAB 2: ⏳ YOUR TIMING & LIFE CYCLES (The Pattern Style) */}
@@ -567,12 +604,27 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
           </div>
 
           {/* Planetary Radar Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {liveSky.map((p) => (
-              <div
-                key={p.name}
-                className="p-5 rounded-3xl bg-cosmic-surface/70 border border-cosmic-border space-y-3 hover:border-cyan-500/50 transition-all shadow-sm"
+          {liveSky.length === 0 ? (
+            <div className="rounded-3xl border border-cosmic-border/60 bg-cosmic-surface/40 p-10 text-center space-y-4">
+              <Compass className="w-12 h-12 text-cyan-400 mx-auto animate-spin" />
+              <h3 className="text-lg font-display font-bold text-white">Calculating Live Planetary Positions</h3>
+              <p className="text-xs sm:text-sm text-cosmic-muted max-w-md mx-auto">
+                Computing real-time Lahiri sidereal longitudes, house aspects, speed, and retrograde stations from VSOP87 theory.
+              </p>
+              <button
+                onClick={fetchAllData}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-bold text-xs hover:opacity-90 transition-opacity"
               >
+                Sync Astronomical Ephemeris
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {liveSky.map((p) => (
+                <div
+                  key={p.name}
+                  className="p-5 rounded-3xl bg-cosmic-surface/70 border border-cosmic-border space-y-3 hover:border-cyan-500/50 transition-all shadow-sm"
+                >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <span className="text-2xl font-serif text-cyan-400">{p.symbol}</span>
@@ -610,6 +662,7 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
               </div>
             ))}
           </div>
+          )}
 
           {/* 3-Phase Sade Sati Matrix (AstroSage Style) */}
           {sadeSatiMatrix && (
@@ -686,7 +739,8 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
       )}
 
       {/* TAB 4: 🕒 AUSPICIOUS CLOCK & MOON (Chani & Drik Panchang Style) */}
-      {activeTab === 'choghadiya' && choghadiyaData && (
+      {activeTab === 'choghadiya' && (
+        choghadiyaData ? (
         <div className="space-y-8 animate-fadeIn">
           {/* Live Countdown Clock */}
           <div className="rounded-3xl border border-cosmic-border bg-gradient-to-r from-cosmic-card via-cosmic-surface to-cosmic-card p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-cosmic-card">
@@ -894,10 +948,26 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
             </div>
           )}
         </div>
+        ) : (
+          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/60 p-8 text-center space-y-4">
+            <Clock className="w-10 h-10 text-emerald-400 mx-auto animate-pulse" />
+            <h3 className="text-lg font-display font-bold text-white">Calculating Auspicious Windows</h3>
+            <p className="text-xs text-cosmic-muted max-w-md mx-auto">
+              Computing local sunrise, sunset, and 8 Choghadiya spans for your current location.
+            </p>
+            <button
+              onClick={fetchAllData}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-600 text-black font-bold text-xs hover:opacity-90 transition-opacity"
+            >
+              Refresh Choghadiya Clock
+            </button>
+          </div>
+        )
       )}
 
       {/* TAB 5: 🎴 TAROT & VEDIC GRAHA ORACLE (Sanctuary Style) */}
-      {activeTab === 'tarot' && dailyTarot && (
+      {activeTab === 'tarot' && (
+        dailyTarot ? (
         <div className="space-y-8 animate-fadeIn">
           <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/60 p-6 sm:p-8 space-y-2 text-center max-w-2xl mx-auto">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
@@ -1003,6 +1073,26 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
             </button>
           </div>
         </div>
+        ) : (
+          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/60 p-8 text-center space-y-4 max-w-xl mx-auto">
+            <div className="text-4xl">🎴</div>
+            <h3 className="text-lg font-display font-bold text-white">Draw Today's Graha Tarot Card</h3>
+            <p className="text-xs text-cosmic-muted max-w-md mx-auto">
+              Consult the 22 Vedic Graha and Nakshatra major arcana for daily guidance and meditative insight.
+            </p>
+            <button
+              onClick={() => {
+                fetch('/api/cosmic/daily-tarot')
+                  .then((r) => (r.ok ? r.json() : null))
+                  .then((d) => { if (d) setDailyTarot(d); })
+                  .catch(() => {});
+              }}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-indigo-600 text-black font-extrabold text-xs shadow-glow-cyan hover:opacity-95 transition-all"
+            >
+              Reveal Daily Oracle Card
+            </button>
+          </div>
+        )
       )}
 
       {/* TAB 6: 🔮 INSTANT PRASHNA ORACLE (AstroSage Horary Style) */}

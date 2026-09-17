@@ -176,8 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
     setIsLoading(true);
     try {
-      const isMaster = password === 'deep1904' || masterPasscode === 'deep1904';
-      const cleanEmail = email ? email.trim() : (isMaster ? 'admin@deepastro.internal' : '');
+      const cleanEmail = email ? email.trim() : (masterPasscode ? 'admin@deepastro.internal' : '');
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

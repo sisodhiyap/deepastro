@@ -26,17 +26,26 @@ export const TarotCardComponent: React.FC<TarotCardComponentProps> = ({
   // Card dimensions per 2:3 aspect ratio
   const sizeClasses = {
     sm: 'w-40 h-60 text-xs',
-    md: 'w-56 h-84 sm:w-64 sm:h-96 text-xs',
+    md: 'w-56 h-80 sm:w-64 sm:h-96 text-xs',
     lg: 'w-64 h-96 sm:w-72 sm:h-[432px] text-sm',
   }[size];
 
   return (
     <div
-      className={`group perspective-[1200px] cursor-pointer select-none transition-transform duration-300 hover:scale-[1.02] ${sizeClasses} ${className}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`${card.name} (${orientation}). Tap or press Enter to flip.`}
+      className={`group perspective-[1200px] cursor-pointer select-none transition-transform duration-300 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 motion-reduce:hover:scale-100 motion-reduce:transition-none ${sizeClasses} ${className}`}
       onClick={onFlip}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (onFlip) onFlip();
+        }
+      }}
     >
       <div
-        className={`relative w-full h-full duration-700 transform-style-preserve-3d transition-transform ${
+        className={`relative w-full h-full duration-700 transform-style-preserve-3d transition-transform motion-reduce:transition-none ${
           isFlipped ? 'rotate-y-0' : 'rotate-y-180'
         }`}
       >

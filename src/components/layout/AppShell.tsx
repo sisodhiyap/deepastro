@@ -78,10 +78,16 @@ export const AppShell: React.FC<AppShellProps> = ({
           onLogout={onLogout}
         />
 
-        {/* Scrollable Content Container (Only Content Moves) */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full min-w-0 pb-24 lg:pb-12">
-          {children}
-        </main>
+        {/* Scrollable Content Container: For full-viewport workspaces like My Cosmos, isolate layout to prevent scroll coupling */}
+        {activeTab === 'my-cosmos' ? (
+          <main className="flex-1 min-h-0 w-full overflow-hidden flex flex-col relative card-safe">
+            {children}
+          </main>
+        ) : (
+          <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full min-w-0 max-w-full pb-24 lg:pb-12 card-safe">
+            {children}
+          </main>
+        )}
       </div>
 
       {/* AstroBot Floating Orb Assistant */}

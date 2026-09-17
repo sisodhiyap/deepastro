@@ -1,9 +1,12 @@
 {
   "name": "deepastro",
-  "version": "6.0.5",
+  "version": "6.4.0",
   "private": true,
   "description": "DeepAstro - Premium Vedic Astrology & Spiritual Intelligence Operating System",
   "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run server:dev\" \"npm run client:dev\"",
     "client:dev": "vite",

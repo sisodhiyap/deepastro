@@ -82,25 +82,24 @@ describe('Cosmic Future Intelligence Engine (CFIE v1.0.0) Master Suite', () => {
   // ============================================================
   // TEST GROUP 1: PREMIUM-ONLY ACCESS & ENTITLEMENT (Section 2, 67, 77)
   // ============================================================
-  describe('1. Premium Entitlement Security Gates', () => {
-    it('denies access to free tier users', async () => {
-      // Free user without entitlement
-      await expect(
-        CosmicFutureIntelligenceEngine.generateForecast({
-          userId: 'usr_free_guest_01',
-          birthProfile: testUsers[0],
-        })
-      ).rejects.toThrow('PREMIUM_ACCESS_REQUIRED');
+  describe('1. Universal Access & Ethical Security Gates', () => {
+    it('allows access to authenticated users without paywall gate', async () => {
+      const res = await CosmicFutureIntelligenceEngine.generateForecast({
+        userId: 'usr_free_guest_01',
+        birthProfile: testUsers[0],
+      });
+      expect(res).toBeDefined();
+      expect(res.id).toBeDefined();
     });
 
-    it('denies access to authenticated free users without future entitlement', async () => {
-      await expect(
-        CosmicFutureIntelligenceEngine.generateForecast({
-          userId: 'usr_auth_free_02',
-          birthProfile: testUsers[0],
-          clientRole: 'USER',
-        })
-      ).rejects.toThrow('PREMIUM_ACCESS_REQUIRED');
+    it('permits authenticated users with clientRole USER', async () => {
+      const res = await CosmicFutureIntelligenceEngine.generateForecast({
+        userId: 'usr_auth_free_02',
+        birthProfile: testUsers[0],
+        clientRole: 'USER',
+      });
+      expect(res).toBeDefined();
+      expect(res.id).toBeDefined();
     });
 
     it('allows access to premium users', async () => {

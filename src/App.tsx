@@ -1,48 +1,60 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { AppShell } from './components/layout/AppShell.js';
 import { NavTabId } from './components/layout/Sidebar.js';
-import { PastLifePage } from './pages/PastLifePage';
-import { FutureIntelligencePage } from './pages/FutureIntelligencePage';
-
 import { LandingPage } from './pages/LandingPage.js';
-import { DashboardPage } from './pages/DashboardPage.js';
-import { KundliPage } from './pages/KundliPage.js';
-import { DailyPredictionsPage } from './pages/DailyPredictionsPage.js';
-import { MatchingPage } from './pages/MatchingPage.js';
-import { NumerologyPage } from './pages/NumerologyPage.js';
-import { PalmistryPage } from './pages/PalmistryPage.js';
-import { LalKitabPage } from './pages/LalKitabPage.js';
-import { PanchangPage } from './pages/PanchangPage.js';
-import { MuhuratPage } from './pages/MuhuratPage.js';
-import { AstrologersPage } from './pages/AstrologersPage.js';
-import { SubscriptionPage } from './pages/SubscriptionPage.js';
-import { ReportsPage } from './pages/ReportsPage.js';
-import { ProfilePage } from './pages/ProfilePage.js';
-import { AdminPage } from './pages/AdminPage.js';
-import { QAControlCenterPage } from './pages/QAControlCenterPage.js';
-import { AccuracyWarRoomPage } from './pages/AccuracyWarRoomPage.js';
-import { SystemVerificationPage } from './pages/SystemVerificationPage.js';
-import { ContactPage } from './pages/ContactPage.js';
-import { CosmicHubPage } from './pages/CosmicHubPage.js';
-import { CosmicIntelligencePage } from './pages/CosmicIntelligencePage.js';
-import { TarotPage } from './pages/TarotPage.js';
-import { MyCosmosPage } from './pages/MyCosmosPage.js';
 import { ChartSessionProvider } from './context/ChartSessionContext.js';
-
-// DeepAstro 6.0 Multi-System Pages
-import { WesternPage } from './pages/WesternPage.js';
-import { KPAstrologyPage } from './pages/KPAstrologyPage.js';
-import { InvestmentLabPage } from './pages/InvestmentLabPage.js';
-import { AIAstrologerPage } from './pages/AIAstrologerPage.js';
-import { LoginPage } from './pages/LoginPage.js';
-import { SecurityGate } from './components/auth/SecurityGate.js';
 import { LanguageProvider } from './context/LanguageContext.js';
-import { AuthProvider, useAuth } from './context/AuthContext.js';
-
+import { AuthProvider } from './context/AuthContext.js';
 import { AuthModal } from './components/auth/AuthModal.js';
 import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
 import { ErrorBoundary } from './components/common/ErrorBoundary.js';
 import { getBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
+
+// Lazy-loaded heavy and secondary route components (Code-Splitting)
+const MyCosmosPage = lazy(() => import('./pages/MyCosmosPage.js').then(m => ({ default: m.MyCosmosPage })));
+const KundliPage = lazy(() => import('./pages/KundliPage.js').then(m => ({ default: m.KundliPage })));
+const FutureIntelligencePage = lazy(() => import('./pages/FutureIntelligencePage.js').then(m => ({ default: m.FutureIntelligencePage })));
+const PastLifePage = lazy(() => import('./pages/PastLifePage.js').then(m => ({ default: m.PastLifePage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage.js').then(m => ({ default: m.DashboardPage })));
+const DailyPredictionsPage = lazy(() => import('./pages/DailyPredictionsPage.js').then(m => ({ default: m.DailyPredictionsPage })));
+const MatchingPage = lazy(() => import('./pages/MatchingPage.js').then(m => ({ default: m.MatchingPage })));
+const NumerologyPage = lazy(() => import('./pages/NumerologyPage.js').then(m => ({ default: m.NumerologyPage })));
+const PalmistryPage = lazy(() => import('./pages/PalmistryPage.js').then(m => ({ default: m.PalmistryPage })));
+const LalKitabPage = lazy(() => import('./pages/LalKitabPage.js').then(m => ({ default: m.LalKitabPage })));
+const PanchangPage = lazy(() => import('./pages/PanchangPage.js').then(m => ({ default: m.PanchangPage })));
+const MuhuratPage = lazy(() => import('./pages/MuhuratPage.js').then(m => ({ default: m.MuhuratPage })));
+const AstrologersPage = lazy(() => import('./pages/AstrologersPage.js').then(m => ({ default: m.AstrologersPage })));
+const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage.js').then(m => ({ default: m.SubscriptionPage })));
+const ReportsPage = lazy(() => import('./pages/ReportsPage.js').then(m => ({ default: m.ReportsPage })));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.js').then(m => ({ default: m.ProfilePage })));
+const AdminPage = lazy(() => import('./pages/AdminPage.js').then(m => ({ default: m.AdminPage })));
+const QAControlCenterPage = lazy(() => import('./pages/QAControlCenterPage.js').then(m => ({ default: m.QAControlCenterPage })));
+const AccuracyWarRoomPage = lazy(() => import('./pages/AccuracyWarRoomPage.js').then(m => ({ default: m.AccuracyWarRoomPage })));
+const SystemVerificationPage = lazy(() => import('./pages/SystemVerificationPage.js').then(m => ({ default: m.SystemVerificationPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage.js').then(m => ({ default: m.ContactPage })));
+const CosmicHubPage = lazy(() => import('./pages/CosmicHubPage.js').then(m => ({ default: m.CosmicHubPage })));
+const CosmicIntelligencePage = lazy(() => import('./pages/CosmicIntelligencePage.js').then(m => ({ default: m.CosmicIntelligencePage })));
+const TarotPage = lazy(() => import('./pages/TarotPage.js').then(m => ({ default: m.TarotPage })));
+const WesternPage = lazy(() => import('./pages/WesternPage.js').then(m => ({ default: m.WesternPage })));
+const KPAstrologyPage = lazy(() => import('./pages/KPAstrologyPage.js').then(m => ({ default: m.KPAstrologyPage })));
+const InvestmentLabPage = lazy(() => import('./pages/InvestmentLabPage.js').then(m => ({ default: m.InvestmentLabPage })));
+const AIAstrologerPage = lazy(() => import('./pages/AIAstrologerPage.js').then(m => ({ default: m.AIAstrologerPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage.js').then(m => ({ default: m.LoginPage })));
+
+// Cosmic loading skeleton for route transitions
+const CosmicRouteSkeleton: React.FC = () => (
+  <div className="w-full min-h-[60vh] flex flex-col items-center justify-center p-8 text-center animate-pulse">
+    <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 flex items-center justify-center shadow-glow-cyan mb-4">
+      <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+    </div>
+    <div className="text-xs font-bold tracking-widest text-cyan-300 font-mono uppercase">
+      Aligning Celestial Coordinates
+    </div>
+    <p className="text-xs text-slate-400 mt-1 max-w-sm">
+      Loading cosmic intelligence module...
+    </p>
+  </div>
+);
 
 export const App: React.FC = () => {
 
@@ -216,7 +228,7 @@ export const App: React.FC = () => {
       case 'home':
         return <LandingPage onNavigate={setActiveTab} />;
         case 'my-cosmos':
-        return <MyCosmosPage onNavigate={setActiveTab} />;
+        return <MyCosmosPage onNavigate={(tab) => setActiveTab(tab as NavTabId)} />;
       case 'dashboard':
         return <DashboardPage onNavigate={setActiveTab} userName={userName} chartContext={chartContext} />;
       case 'intelligence':
@@ -313,7 +325,9 @@ export const App: React.FC = () => {
             chartContext={chartContext}
           >
             <ErrorBoundary fallbackTitle="Cosmic Matrix Synchronizing">
-              {renderActiveView()}
+              <Suspense fallback={<CosmicRouteSkeleton />}>
+                {renderActiveView()}
+              </Suspense>
             </ErrorBoundary>
           </AppShell>
 

@@ -1,7 +1,7 @@
 import { UniversalInsightCardEngine } from '../chatbot/UniversalInsightCardEngine.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, X, Sparkles, MessageSquare, Trash2, ShieldCheck, ChevronRight, Cpu, Check, ChevronDown, ChevronUp, AlertTriangle, Compass, HelpCircle, Bookmark } from 'lucide-react';
+import { Bot, Send, X, Sparkles, MessageSquare, Trash2, ShieldCheck, ChevronRight, Cpu, Check, ChevronDown, ChevronUp, AlertTriangle, Compass, HelpCircle, Bookmark, Minimize2, Maximize2 } from 'lucide-react';
 
 interface ChatMessage {
   id: string;

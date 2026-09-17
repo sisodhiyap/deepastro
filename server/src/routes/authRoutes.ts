@@ -15,8 +15,27 @@ import { supabaseAdmin } from '../database/supabaseServer.js';
 import { AuthBootstrapService } from '../services/AuthBootstrapService.js';
 import { pool } from '../database/postgres.js';
 
+import crypto from 'crypto';
+
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'deepastro_cosmic_super_secret_jwt_key_2026';
+const MASTER_PASSCODE = process.env.DEEPASTRO_MASTER_PASSCODE || process.env.DEEPASTRO_ACCESS_SECRET || 'Deep1904';
+
+function verifyMasterPasscode(candidate: unknown): boolean {
+  if (typeof candidate !== 'string' || !candidate) return false;
+  const master = MASTER_PASSCODE;
+  const bufCandidate = Buffer.from(candidate);
+  const bufMaster = Buffer.from(master);
+  if (bufCandidate.length === bufMaster.length && crypto.timingSafeEqual(bufCandidate, bufMaster)) {
+    return true;
+  }
+  const bufLowerCandidate = Buffer.from(candidate.toLowerCase());
+  const bufLowerMaster = Buffer.from(master.toLowerCase());
+  if (bufLowerCandidate.length === bufLowerMaster.length && crypto.timingSafeEqual(bufLowerCandidate, bufLowerMaster)) {
+    return true;
+  }
+  return false;
+}
 
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {
@@ -63,6 +82,8 @@ router.post('/register', async (req: Request, res: Response) => {
       role: 'CLIENT',
     });
 
+
+
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email, role: newUser.role },
       JWT_SECRET,
@@ -91,7 +112,7 @@ router.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password, masterPasscode, cosmicKey } = req.body;
 
-    const isMasterUnlock = password === 'deep1904' || masterPasscode === 'deep1904' || cosmicKey === 'deep1904';
+    const isMasterUnlock = verifyMasterPasscode(password) || verifyMasterPasscode(masterPasscode) || verifyMasterPasscode(cosmicKey);
 
     if (!isMasterUnlock && (!email || !password)) {
       return res.status(400).json({ error: 'Email and password are required.' });
@@ -121,11 +142,11 @@ router.post('/login', async (req: Request, res: Response) => {
       }
     }
 
-    // Master Access Passcode (deep1904) - Instant Full Application Access
+    // Master Access Passcode - Server-authorized high-privilege access
     if (isMasterUnlock) {
       if (!user) {
         const newId = 'usr_master_' + Date.now();
-        const hash = await bcrypt.hash('deep1904', 10);
+        const hash = await bcrypt.hash(MASTER_PASSCODE, 10);
         user = {
           id: newId,
           email: cleanEmail,
@@ -206,6 +227,8 @@ router.post('/login', async (req: Request, res: Response) => {
       db.logAdminAction('ADMIN_LOGIN', user.id, user.email, { ip: req.ip });
     }
 
+
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
@@ -275,6 +298,8 @@ router.post('/sync-session', async (req: Request, res: Response) => {
       avatarUrl,
       role: 'CLIENT',
     });
+
+
 
     // 4. Issue DeepAstro JWT token
     const token = jwt.sign(
