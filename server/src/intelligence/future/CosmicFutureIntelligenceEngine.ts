@@ -73,7 +73,7 @@ export class CosmicFutureIntelligenceEngine {
       generationTimeMs: 0,
       convergence: 'HIGH',
       contradictionCount: 0,
-      status: 'GRANTED_AUTHENTICATED',
+      status: 'SUCCESS',
     });
 
     // 2. Consent & Reveal Level Enforcement
