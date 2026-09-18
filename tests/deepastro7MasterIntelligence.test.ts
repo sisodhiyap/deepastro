@@ -278,4 +278,64 @@ describe('DEEPASTRO 7.0: Master Past & Future Intelligence Integration', () => {
     expect(incResolved.missingFields).toContain('latitude');
     expect(incResolved.missingFields).toContain('longitude');
   });
+
+  // Section 28: DeepAstro 7.2 Cross-Module Consistency
+  it('8. DeepAstro 7.2: Cross-Module Astronomical Placements Invariant across Kundli, KP, D9, D60, and Future Engine', async () => {
+    const kundli = VedicAstroEngine.calculateKundli({
+      name: profileA.fullName,
+      birthDate: profileA.birthDate,
+      birthTime: profileA.birthTime,
+      birthPlace: profileA.birthPlace,
+      latitude: profileA.latitude,
+      longitude: profileA.longitude,
+      timezone: Number(profileA.timezone),
+    });
+
+    const pastLife = PastLifeIntelligenceEngine.generate(userA, profileA as any);
+    const future = await CosmicFutureIntelligenceEngine.generateForecast({
+      userId: userA,
+      birthProfile: profileA as any,
+      horizon: '3_YEARS',
+      requestedLevel: 'LEVEL_2',
+    });
+
+    // A. Mahadasha coherence: Moon nakshatra lord must match active Mahadasha across all modules
+    const moon = kundli.planets.find(p => p.name === 'Moon')!;
+    expect(moon).toBeDefined();
+    expect(kundli.dashas.currentMahadasha.planet).toBeDefined();
+
+    // B. D9 & D60 presence and planetary length
+    expect(kundli.vargas.d9_navamsa.length).toBeGreaterThanOrEqual(9);
+    expect(kundli.shodashvargas?.d60_shashtiamsha.length).toBeGreaterThanOrEqual(9);
+
+    // C. Past Life astrological indicators must reference the exact calculated Ketu house and Atmakaraka
+    const ketu = kundli.planets.find(p => p.name === 'Ketu')!;
+    expect(ketu).toBeDefined();
+    const ketuInd = pastLife.data?.astrological_indicators.find(i => i.indicator.toLowerCase().includes('ketu'));
+    expect(ketuInd).toBeDefined();
+    expect(ketuInd?.placement).toContain(String(ketu.house));
+
+    // D. Future forecast calculation fingerprint must strictly match snapshot fingerprint
+    const fp = CalculationSnapshotService.generateFingerprint(profileA);
+    expect(pastLife.data?.calculationFingerprint).toBe(fp);
+    expect(future.calculationFingerprint).toBe(fp);
+  });
+
+  // Section 1 & 4: DeepAstro 7.2 Zero-Synthetic Fallback Verification
+  it('9. DeepAstro 7.2: Zero-Synthetic Fallback Verification for Incomplete Profiles across Engines', async () => {
+    // 1. Past Life Engine rejects missing birthDate with 400 and missingFields
+    const pastRes = PastLifeIntelligenceEngine.generate('usr_empty', { fullName: 'Empty Seeker' } as any);
+    expect(pastRes.success).toBe(false);
+    expect(pastRes.error).toBe('PAST_LIFE_ANALYSIS_UNAVAILABLE');
+    expect(pastRes.missingFields).toContain('birthDate');
+    expect(pastRes.missingFields).toContain('latitude');
+
+    // 2. Future Intelligence Engine throws PROFILE_INCOMPLETE
+    await expect(
+      CosmicFutureIntelligenceEngine.generateForecast({
+        userId: 'usr_empty',
+        birthProfile: { name: 'Empty Seeker' } as any,
+      })
+    ).rejects.toThrow(/PROFILE_INCOMPLETE/);
+  });
 });

@@ -79,55 +79,22 @@ export const MatchingPage: React.FC = () => {
 
   const handleMatch = () => runMatchingWith();
 
-  const applyPreset = (type: 'favorable' | 'challenging') => {
-    if (type === 'favorable') {
-      const a = {
-        name: 'Arjun Sharma',
-        birthDate: '1992-03-12',
-        birthTime: '10:15',
-        birthPlace: 'New Delhi, India',
-        latitude: '28.6139',
-        longitude: '77.2090',
-        timezone: '5.5',
-        gender: 'Male',
-      };
-      const b = {
-        name: 'Priya Mehta',
-        birthDate: '1994-08-25',
-        birthTime: '18:40',
-        birthPlace: 'Jaipur, India',
-        latitude: '26.9124',
-        longitude: '75.7873',
-        timezone: '5.5',
-        gender: 'Female',
-      };
-      setPartnerA(a);
-      setPartnerB(b);
-      runMatchingWith(a, b);
+  const loadMyProfileForA = () => {
+    const saved = getBirthProfile();
+    if (saved && saved.birthDate) {
+      setPartnerA({
+        name: saved.name || '',
+        birthDate: saved.birthDate || '',
+        birthTime: saved.birthTime || '',
+        birthPlace: saved.birthPlace || '',
+        latitude: saved.latitude ? String(saved.latitude) : '',
+        longitude: saved.longitude ? String(saved.longitude) : '',
+        timezone: saved.timezone ? String(saved.timezone) : '5.5',
+        gender: saved.gender || 'Male',
+      });
+      setErrorMessage(null);
     } else {
-      const a = {
-        name: 'Rahul Verma',
-        birthDate: '1990-06-05',
-        birthTime: '09:20',
-        birthPlace: 'Lucknow, India',
-        latitude: '26.8467',
-        longitude: '80.9462',
-        timezone: '5.5',
-        gender: 'Male',
-      };
-      const b = {
-        name: 'Neha Singh',
-        birthDate: '1993-11-14',
-        birthTime: '23:45',
-        birthPlace: 'Bhopal, India',
-        latitude: '23.2599',
-        longitude: '77.4126',
-        timezone: '5.5',
-        gender: 'Female',
-      };
-      setPartnerA(a);
-      setPartnerB(b);
-      runMatchingWith(a, b);
+      setErrorMessage('No saved birth profile found. Please enter Partner A details or complete your profile in Settings.');
     }
   };
 
@@ -153,26 +120,21 @@ export const MatchingPage: React.FC = () => {
         </div>
       )}
 
-      {/* Quick Test Presets: Favorable vs Challenging (Matches Reference Design) */}
+      {/* Canonical Profile Integration */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#0E131F] border border-cyan-500/20 shadow-md">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-cyan-400" />
           <span className="text-xs font-semibold text-slate-200">
-            Instant Test Scenarios:
+            Canonical Profile Integration:
           </span>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div>
           <button
-            onClick={() => applyPreset('favorable')}
+            type="button"
+            onClick={loadMyProfileForA}
             className="px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/70 hover:bg-cyan-900/70 border border-cyan-500/40 transition shadow-[0_0_12px_rgba(6,182,212,0.25)] flex items-center gap-1.5"
           >
-            <span>💙 Favorable: Arjun &amp; Priya (Souls Aligned)</span>
-          </button>
-          <button
-            onClick={() => applyPreset('challenging')}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-300 bg-rose-950/70 hover:bg-rose-900/70 border border-rose-500/40 transition shadow-[0_0_12px_rgba(244,63,94,0.25)] flex items-center gap-1.5"
-          >
-            <span>💔 Challenging: Rahul &amp; Neha (Different Paths)</span>
+            <span>✨ Use My Saved Birth Profile for Partner A</span>
           </button>
         </div>
       </div>

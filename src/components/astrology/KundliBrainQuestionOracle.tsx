@@ -57,15 +57,28 @@ export const KundliBrainQuestionOracle: React.FC<KundliBrainQuestionOracleProps>
     setAnswer(null);
 
     const profile = getBirthProfile();
-    const effectiveProfile = profile || {
-      name: chart?.profile?.name || chart?.birthData?.name || chart?.input?.name || 'Native Seeker',
-      birthDate: chart?.profile?.birthDate || chart?.birthData?.birthDate || chart?.input?.birthDate || '1990-01-01',
-      birthTime: chart?.profile?.birthTime || chart?.birthData?.birthTime || chart?.input?.birthTime || '12:00',
-      birthPlace: chart?.profile?.birthPlace || chart?.birthData?.birthPlace || chart?.input?.birthPlace || 'New Delhi',
-      latitude: chart?.profile?.latitude || chart?.birthData?.latitude || chart?.input?.latitude || 28.6139,
-      longitude: chart?.profile?.longitude || chart?.birthData?.longitude || chart?.input?.longitude || 77.209,
-      timezone: chart?.profile?.timezone || chart?.birthData?.timezone || chart?.input?.timezone || 5.5,
-      gender: chart?.profile?.gender || chart?.birthData?.gender || chart?.input?.gender || 'Other',
+    const birthDate = profile?.birthDate || chart?.profile?.birthDate || chart?.birthData?.birthDate || chart?.input?.birthDate;
+    const birthTime = profile?.birthTime || chart?.profile?.birthTime || chart?.birthData?.birthTime || chart?.input?.birthTime;
+    const birthPlace = profile?.birthPlace || chart?.profile?.birthPlace || chart?.birthData?.birthPlace || chart?.input?.birthPlace;
+    const latitude = profile?.latitude ?? chart?.profile?.latitude ?? chart?.birthData?.latitude ?? chart?.input?.latitude;
+    const longitude = profile?.longitude ?? chart?.profile?.longitude ?? chart?.birthData?.longitude ?? chart?.input?.longitude;
+    const timezone = profile?.timezone ?? chart?.profile?.timezone ?? chart?.birthData?.timezone ?? chart?.input?.timezone ?? 5.5;
+
+    if (!birthDate || !birthTime || !birthPlace || latitude === undefined || longitude === undefined) {
+      setError('Please complete your birth profile with accurate birth date, time, and birthplace before querying the Oracle.');
+      setIsAsking(false);
+      return;
+    }
+
+    const effectiveProfile = {
+      name: profile?.name || chart?.profile?.name || chart?.birthData?.name || chart?.input?.name || 'Native Seeker',
+      birthDate,
+      birthTime,
+      birthPlace,
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      timezone: Number(timezone),
+      gender: profile?.gender || chart?.profile?.gender || chart?.birthData?.gender || chart?.input?.gender || 'Other',
     };
 
     try {

@@ -87,10 +87,14 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
       const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
       const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
       const localChart = chartContext || getCalculatedChart();
+      const birthProfile = getBirthProfile();
+      const coordsQuery = birthProfile?.latitude && birthProfile?.longitude
+        ? `?lat=${birthProfile.latitude}&lon=${birthProfile.longitude}`
+        : '';
 
       const [skyRes, chogRes, moonRes, dimRes, tarotRes, sadeRes, chartRes, cycleRes] = await Promise.all([
         fetch('/api/cosmic/live-sky').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-        fetch('/api/cosmic/choghadiya-hora').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch(`/api/cosmic/choghadiya-hora${coordsQuery}`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch('/api/cosmic/moon-phase').then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch('/api/cosmic/daily-dimensions', { headers: authHeaders }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
         fetch('/api/cosmic/daily-tarot').then((r) => (r.ok ? r.json() : null)).catch(() => null),

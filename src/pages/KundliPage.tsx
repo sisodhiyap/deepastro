@@ -1,4 +1,4 @@
-﻿
+
 import { KPIntelligencePanel } from '../components/astrology/KPIntelligencePanel.js';
 import { VargaExplorerPanel } from '../components/astrology/VargaExplorerPanel.js';
 import { AstrologyEvidenceModal } from '../components/astrology/AstrologyEvidenceModal.js';
@@ -66,16 +66,19 @@ const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
 };
 
 export const KundliPage: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    birthDate: '',
-    birthTime: '',
-    birthPlace: 'New Delhi, Delhi, India',
-    latitude: '28.6139',
-    longitude: '77.2090',
-    timezone: '5.5',
-    gender: 'male',
-    isApproximateTime: false,
+  const [formData, setFormData] = useState(() => {
+    const saved = getBirthProfile();
+    return {
+      name: saved?.name || '',
+      birthDate: saved?.birthDate || '',
+      birthTime: saved?.birthTime || '',
+      birthPlace: saved?.birthPlace || '',
+      latitude: saved?.latitude ? String(saved.latitude) : '',
+      longitude: saved?.longitude ? String(saved.longitude) : '',
+      timezone: saved?.timezone ? String(saved.timezone) : '5.5',
+      gender: saved?.gender || 'male',
+      isApproximateTime: Boolean(saved?.isApproximateTime),
+    };
   });
 
   const handleBirthPlaceChange = (value: string) => {

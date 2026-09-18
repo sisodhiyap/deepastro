@@ -11,19 +11,23 @@ export const WesternPage: React.FC = () => {
   const [archetypeResult, setArchetypeResult] = useState<any>(null);
 
   // Partner data for synastry
-  const [partnerDate, setPartnerDate] = useState('1996-05-15');
-  const [partnerTime, setPartnerTime] = useState('14:30');
-  const [partnerName, setPartnerName] = useState('Partner Solar');
+  const [partnerDate, setPartnerDate] = useState('');
+  const [partnerTime, setPartnerTime] = useState('');
+  const [partnerName, setPartnerName] = useState('Partner');
 
   const profile = getBirthProfile();
 
   const fetchWesternChart = async () => {
+    if (!profile?.birthDate || !profile?.birthTime) {
+      setChartData(null);
+      return;
+    }
     setLoading(true);
     try {
-      const birthDate = profile?.birthDate || '1995-10-24';
-      const birthTime = profile?.birthTime || '11:45';
-      const latitude = profile?.latitude || 28.6139;
-      const longitude = profile?.longitude || 77.2090;
+      const birthDate = profile.birthDate;
+      const birthTime = profile.birthTime;
+      const latitude = Number(profile.latitude) || 28.6139;
+      const longitude = Number(profile.longitude) || 77.2090;
 
       const res = await fetch('/api/astrology/western/chart', {
         method: 'POST',
@@ -121,8 +125,18 @@ export const WesternPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#2A3441] pb-2 overflow-x-auto">
+      {/* Tabs / Incomplete State */}
+      {!profile?.birthDate ? (
+        <div className="rounded-2xl border border-cyan-500/20 bg-[#0E131F] p-8 text-center space-y-4">
+          <Compass className="w-12 h-12 text-cyan-400/60 mx-auto" />
+          <h2 className="text-xl font-bold text-slate-100">Complete Your Birth Profile</h2>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Western Tropical astrology and aspect calculations require authentic natal birth date, time, and coordinates. Please configure your birth profile in Dashboard or Settings to calculate your Tropical chart.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-2 border-b border-[#2A3441] pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveSubTab('chart')}
           className={`px-4 py-2 rounded-lg text-xs font-medium transition ${
@@ -442,6 +456,8 @@ export const WesternPage: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );

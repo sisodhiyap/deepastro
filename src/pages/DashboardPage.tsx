@@ -66,49 +66,6 @@ const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
   sydney: { lat: -33.8688, lng: 151.2093, tz: 10.0 },
 };
 
-const PRESET_PROFILES = [
-  {
-    name: 'Sample Chart Alpha',
-    birthDate: '1995-10-15',
-    birthTime: '06:30',
-    birthPlace: 'New Delhi, India',
-    latitude: '28.6139',
-    longitude: '77.2090',
-    timezone: '5.5',
-    gender: 'male',
-  },
-  {
-    name: 'Priya Patel',
-    birthDate: '1998-05-24',
-    birthTime: '14:15',
-    birthPlace: 'Mumbai, India',
-    latitude: '19.0760',
-    longitude: '72.8777',
-    timezone: '5.5',
-    gender: 'female',
-  },
-  {
-    name: 'Rohan Iyer',
-    birthDate: '1992-12-08',
-    birthTime: '09:45',
-    birthPlace: 'Bengaluru, India',
-    latitude: '12.9716',
-    longitude: '77.5946',
-    timezone: '5.5',
-    gender: 'male',
-  },
-  {
-    name: 'Elena Rostova',
-    birthDate: '1994-03-12',
-    birthTime: '18:20',
-    birthPlace: 'London, UK',
-    latitude: '51.5074',
-    longitude: '-0.1278',
-    timezone: '0.0',
-    gender: 'female',
-  },
-];
-
 const computeLifePath = (dob: string): number => {
   if (!dob) return 7;
   const digits = dob.replace(/\D/g, '');
@@ -478,25 +435,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               {calcError}
             </div>
           )}
-
-          {/* Quick Presets Row */}
-          <div className="flex flex-wrap items-center gap-2 pb-1 border-b border-cosmic-border/40">
-            <span className="text-[11px] font-semibold text-cosmic-muted flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-cyan-400" /> Instant Presets:
-            </span>
-            {PRESET_PROFILES.map((preset) => (
-              <button
-                key={preset.name}
-                type="button"
-                onClick={() => {
-                  setFormData({ ...preset, isApproximateTime: false });
-                }}
-                className="px-2.5 py-1 rounded-lg bg-cosmic-card border border-cosmic-border hover:border-cyan-400 text-[11px] text-cosmic-text font-medium transition-colors"
-              >
-                {preset.name.split(' ')[0]} ({preset.birthPlace.split(',')[0]})
-              </button>
-            ))}
-          </div>
 
           <form onSubmit={handleIntakeSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
