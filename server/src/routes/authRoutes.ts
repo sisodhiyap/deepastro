@@ -378,66 +378,6 @@ router.post('/guest-session', async (_req: Request, res: Response) => {
   }
 });
 
-// POST /api/auth/google-direct
-// Direct Google sign-in fallback providing immediate session generation
-router.post('/google-direct', async (req: Request, res: Response) => {
-  try {
-    const { email: reqEmail, fullName: reqName, avatarUrl: reqAvatar } = req.body || {};
-    const email = (reqEmail && typeof reqEmail === 'string' && reqEmail.includes('@'))
-      ? reqEmail.trim().toLowerCase()
-      : `google.seeker.${Date.now().toString(36)}@gmail.com`;
-    const fullName = reqName && typeof reqName === 'string' ? reqName.trim() : 'Google Seeker';
-    const avatarUrl = reqAvatar || '';
-
-    let existingUser = await userRepository.getUserByEmail(email);
-    let userId = existingUser?.id;
-
-    if (!userId) {
-      userId = `usr_g_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      const newUser: UserRecord = {
-        id: userId,
-        email,
-        passwordHash: 'GOOGLE_OAUTH_NO_PASSWORD',
-        role: 'CLIENT',
-        isVerified: true,
-        createdAt: new Date().toISOString(),
-      };
-      await userRepository.createUser(newUser);
-      db.users.set(userId, newUser);
-    }
-
-    const { profile } = await AuthBootstrapService.ensureUserProfile({
-      authUserId: userId,
-      email,
-      fullName,
-      avatarUrl,
-      role: 'CLIENT',
-    });
-
-    const token = jwt.sign(
-      { userId, email, role: 'CLIENT' },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    );
-
-    return res.json({
-      success: true,
-      token,
-      user: {
-        id: userId,
-        email,
-        role: 'CLIENT',
-        fullName: profile?.fullName || fullName,
-        avatarUrl: profile?.avatarUrl || avatarUrl,
-        themePreference: profile?.themePreference || 'dark',
-        chartStylePreference: profile?.chartStylePreference || 'north',
-      },
-    });
-  } catch (err: any) {
-    return res.status(500).json({ error: 'GOOGLE_AUTH_FAILED', details: err.message });
-  }
-});
-
 // GET /api/auth/me
 router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;

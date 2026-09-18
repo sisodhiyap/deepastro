@@ -288,48 +288,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async (): Promise<{ success: boolean; user?: UserProfile; error?: string }> => {
     setIsLoading(true);
     try {
-      // 1. Try Supabase Google OAuth redirect
-      let sbRedirectStarted = false;
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
-          },
-        });
-        if (!error && data?.url) {
-          sbRedirectStarted = true;
-          return { success: true };
-        }
-      } catch {
-        // Fall through to direct Google auth
-      }
-
-      // 2. Direct verified Google sign-in fallback (ensures Google sign-in NEVER fails)
-      const directRes = await fetch('/api/auth/google-direct', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: 'Google Seeker',
-          email: `google.user.${Date.now().toString(36)}@gmail.com`,
-        }),
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+        },
       });
 
-      if (directRes.ok) {
-        const d = await directRes.json();
-        if (d.token && d.user) {
-          setToken(d.token);
-          setUser(d.user);
-          localStorage.setItem('deepastro_token', d.token);
-          localStorage.setItem('token', d.token);
-          localStorage.setItem('deepastro_user', JSON.stringify(d.user));
-          setIsLoading(false);
-          return { success: true, user: d.user };
+      if (error) {
+        setIsLoading(false);
+        return { success: false, error: error.message };
+      }
+
+      if (data?.url) {
+        if (typeof window !== 'undefined') {
+          window.location.href = data.url;
         }
+        return { success: true };
       }
 
       setIsLoading(false);
-      return { success: false, error: 'Google sign-in could not be completed.' };
+      return { success: false, error: 'Google sign-in could not be initiated.' };
     } catch (err: any) {
       setIsLoading(false);
       return { success: false, error: err.message || 'Google OAuth failed.' };
