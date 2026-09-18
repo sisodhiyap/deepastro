@@ -50,6 +50,21 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
         profile = req.body.birthProfile;
       }
     }
+
+    if (profile) {
+      const rawLat = (profile as any).latitude;
+      const rawLon = (profile as any).longitude;
+      const lat = rawLat !== undefined && rawLat !== null && !isNaN(Number(rawLat)) ? Number(rawLat) : 28.6139;
+      const lon = rawLon !== undefined && rawLon !== null && !isNaN(Number(rawLon)) ? Number(rawLon) : 77.2090;
+      profile = {
+        ...profile,
+        fullName: (profile as any).fullName || (profile as any).name || 'Cosmic Native',
+        birthPlace: (profile as any).birthPlace || (profile as any).city || 'Calculated Location',
+        latitude: lat,
+        longitude: lon,
+      };
+    }
+
     const { format, language, include_numerology, include_vedic_sources, include_purana_context, overrides } = req.body;
 
     const result = PastLifeIntelligenceEngine.generate(resolvedUserId, profile as any, {

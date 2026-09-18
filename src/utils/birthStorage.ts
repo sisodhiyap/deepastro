@@ -21,10 +21,31 @@ const STORAGE_KEYS = {
   CHART: 'deepastro_calculated_chart',
 };
 
-export const saveBirthProfile = (profile: StoredBirthProfile): void => {
+export const normalizeBirthProfile = (p: any): StoredBirthProfile | null => {
+  if (!p) return null;
+  const birthDate = p.birthDate || p.date || '';
+  const birthTime = p.birthTime || p.time || '';
+  if (!birthDate && !birthTime) return null;
+  return {
+    name: p.name || p.fullName || 'Cosmic Native',
+    birthDate: String(birthDate).trim(),
+    birthTime: String(birthTime).trim().slice(0, 5),
+    birthPlace: p.birthPlace || p.place || p.city || 'Calculated Location',
+    latitude: String(p.latitude !== undefined && p.latitude !== null ? p.latitude : '28.6139'),
+    longitude: String(p.longitude !== undefined && p.longitude !== null ? p.longitude : '77.2090'),
+    timezone: String(p.timezone || 'Asia/Kolkata'),
+    gender: p.gender || 'Male',
+    isApproximateTime: Boolean(p.isApproximateTime),
+  };
+};
+
+export const saveBirthProfile = (profile: any): void => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+    const normalized = normalizeBirthProfile(profile);
+    if (normalized) {
+      localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(normalized));
+    }
   } catch (err) {
     console.warn('[birthStorage] Failed to save birth profile:', err);
   }
@@ -35,10 +56,55 @@ export const getBirthProfile = (): StoredBirthProfile | null => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PROFILE);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return normalizeBirthProfile(parsed);
   } catch {
     return null;
   }
+};
+
+export const getOrFetchBirthProfile = async (): Promise<StoredBirthProfile | null> => {
+  const local = getBirthProfile();
+  if (local && local.birthDate && local.birthTime) {
+    return local;
+  }
+  if (typeof window === 'undefined') return null;
+
+  const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+  if (token) {
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.birthProfile && data.birthProfile.birthDate) {
+          const normalized = normalizeBirthProfile(data.birthProfile);
+          if (normalized) {
+            saveBirthProfile(normalized);
+            return normalized;
+          }
+        }
+      }
+    } catch {}
+
+    try {
+      const kRes = await fetch('/api/astrology/current-kundli', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (kRes.ok) {
+        const kData = await kRes.json();
+        if (kData.birthProfile && kData.birthProfile.birthDate) {
+          const normalized = normalizeBirthProfile(kData.birthProfile);
+          if (normalized) {
+            saveBirthProfile(normalized);
+            return normalized;
+          }
+        }
+      }
+    } catch {}
+  }
+  return null;
 };
 
 export const saveCalculatedChart = (chart: any, profile?: StoredBirthProfile): void => {

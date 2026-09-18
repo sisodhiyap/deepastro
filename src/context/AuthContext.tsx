@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { saveBirthProfile } from '../utils/birthStorage';
 
 export interface UserProfile {
   id: string;
@@ -125,6 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data.user) {
           setUser(data.user);
           localStorage.setItem('deepastro_user', JSON.stringify(data.user));
+          if (data.birthProfile && data.birthProfile.birthDate) {
+            saveBirthProfile(data.birthProfile);
+          }
         } else {
           throw new Error('Invalid user profile');
         }

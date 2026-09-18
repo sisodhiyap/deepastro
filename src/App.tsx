@@ -8,7 +8,7 @@ import { AuthProvider } from './context/AuthContext.js';
 import { AuthModal } from './components/auth/AuthModal.js';
 import { CosmicSOSModal } from './components/astrology/CosmicSOSModal.js';
 import { ErrorBoundary } from './components/common/ErrorBoundary.js';
-import { getBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
+import { getBirthProfile, saveBirthProfile, getCalculatedChart, onChartUpdated } from './utils/birthStorage.js';
 
 // Lazy-loaded heavy and secondary route components (Code-Splitting)
 const MyCosmosPage = lazy(() => import('./pages/MyCosmosPage.js').then(m => ({ default: m.MyCosmosPage })));
@@ -136,6 +136,10 @@ export const App: React.FC = () => {
             setCurrentUser(data.user);
             setUserName(data.user.name || 'Cosmic Seeker');
             setUserPlan((data.user.plan as any) || 'FREE');
+          }
+          if (data.birthProfile) {
+            saveBirthProfile(data.birthProfile);
+            setCurrentProfile(data.birthProfile);
           }
         })
         .catch(() => {

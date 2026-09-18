@@ -29,12 +29,14 @@ export class PastLifeInputEngine {
   ): InputValidationResult {
     const missing: string[] = [];
 
-    const fullName = (overrides?.fullName || profile?.fullName || '').trim();
+    const fullName = (overrides?.fullName || profile?.fullName || (profile as any)?.name || '').trim();
     const birthDate = (overrides?.birthDate || profile?.birthDate || '').trim();
     const birthTime = (overrides?.birthTime || profile?.birthTime || '').trim();
-    const birthPlace = (overrides?.birthPlace || profile?.birthPlace || '').trim();
-    const latitude = overrides?.latitude ?? profile?.latitude;
-    const longitude = overrides?.longitude ?? profile?.longitude;
+    const birthPlace = (overrides?.birthPlace || profile?.birthPlace || (profile as any)?.birthCity || (profile as any)?.city || '').trim();
+    const rawLat = overrides?.latitude ?? profile?.latitude;
+    const rawLon = overrides?.longitude ?? profile?.longitude;
+    const latitude = rawLat !== undefined && rawLat !== null && !isNaN(Number(rawLat)) ? Number(rawLat) : undefined;
+    const longitude = rawLon !== undefined && rawLon !== null && !isNaN(Number(rawLon)) ? Number(rawLon) : undefined;
     let rawTz: any = overrides?.timezone ?? profile?.timezone;
     let timezone: number | undefined = undefined;
     if (typeof rawTz === 'number') {

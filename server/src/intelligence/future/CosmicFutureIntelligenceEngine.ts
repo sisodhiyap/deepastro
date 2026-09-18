@@ -100,8 +100,18 @@ export class CosmicFutureIntelligenceEngine {
 
     // 3. User Input & Immutable Calculation Snapshot (Zero Demo Fallbacks)
     const p = req.birthProfile;
-    if (!p || !p.birthDate || !p.birthTime || typeof p.latitude !== 'number' || typeof p.longitude !== 'number') {
+    const lat = Number(p?.latitude);
+    const lon = Number(p?.longitude);
+    if (!p || !p.birthDate || !p.birthTime || isNaN(lat) || isNaN(lon)) {
       throw new Error('PROFILE_INCOMPLETE: Valid birth profile with birthDate, birthTime, latitude, and longitude is required.');
+    }
+
+    let tz = 5.5;
+    if (typeof p.timezone === 'number') {
+      tz = p.timezone;
+    } else if (typeof p.timezone === 'string') {
+      const parsedTz = parseFloat(p.timezone);
+      tz = isNaN(parsedTz) ? 5.5 : parsedTz;
     }
 
     const profileInput: BirthProfileInput = {
@@ -109,9 +119,9 @@ export class CosmicFutureIntelligenceEngine {
       birthDate: p.birthDate,
       birthTime: p.birthTime,
       birthPlace: p.birthPlace || 'Calculated Location',
-      latitude: p.latitude,
-      longitude: p.longitude,
-      timezone: typeof p.timezone === 'number' ? p.timezone : 5.5,
+      latitude: lat,
+      longitude: lon,
+      timezone: tz,
       gender: (p.gender === 'Male' || p.gender === 'Female' || p.gender === 'Other') ? p.gender : undefined,
     };
 

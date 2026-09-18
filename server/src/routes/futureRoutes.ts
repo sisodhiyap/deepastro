@@ -136,17 +136,30 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       }
     }
 
+    const rawLat = savedProfile?.latitude;
+    const rawLon = savedProfile?.longitude;
+    const lat = rawLat !== undefined && rawLat !== null && !isNaN(Number(rawLat)) ? Number(rawLat) : NaN;
+    const lon = rawLon !== undefined && rawLon !== null && !isNaN(Number(rawLon)) ? Number(rawLon) : NaN;
+
     if (
       !savedProfile ||
       !savedProfile.birthDate ||
       !savedProfile.birthTime ||
-      typeof savedProfile.latitude !== 'number' ||
-      typeof savedProfile.longitude !== 'number'
+      isNaN(lat) ||
+      isNaN(lon)
     ) {
       return res.status(422).json({
         error: 'PROFILE_INCOMPLETE',
         details: 'A complete birth profile (birthDate, birthTime, latitude, and longitude) is required before calculating future intelligence.',
       });
+    }
+
+    let tz = 5.5;
+    if (typeof savedProfile.timezone === 'number') {
+      tz = savedProfile.timezone;
+    } else if (typeof savedProfile.timezone === 'string') {
+      const parsedTz = parseFloat(savedProfile.timezone);
+      tz = isNaN(parsedTz) ? 5.5 : parsedTz;
     }
 
     // 6. Horizon validation
@@ -164,13 +177,13 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
     const forecast = await CosmicFutureIntelligenceEngine.generateForecast({
       userId,
       birthProfile: {
-        name: savedProfile.fullName,
+        name: savedProfile.fullName || (savedProfile as any).name || 'Native',
         birthDate: savedProfile.birthDate,
         birthTime: savedProfile.birthTime,
-        birthPlace: savedProfile.birthPlace,
-        latitude: savedProfile.latitude,
-        longitude: savedProfile.longitude,
-        timezone: savedProfile.timezone || 5.5,
+        birthPlace: savedProfile.birthPlace || 'Calculated Location',
+        latitude: lat,
+        longitude: lon,
+        timezone: tz,
         gender: savedProfile.gender as any,
       },
       horizon,
@@ -182,9 +195,22 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
     const futureMapData = CosmicFutureIntelligenceEngine.toFutureMapData(forecast);
     const cardPayload = FutureCardEngine.formatForFutureMapCard(forecast);
 
+    const mergedData = {
+      ...futureMapData,
+      ...forecast,
+      forecastId: forecast.id || futureMapData.verificationId,
+      yearForecasts: forecast.yearForecasts,
+      monthForecasts: forecast.monthForecasts,
+      domainForecasts: forecast.domainForecasts,
+      timeline: futureMapData.timeline || forecast.yearForecasts,
+      lifeAreas: futureMapData.lifeAreas || forecast.domainForecasts,
+    };
+
     return res.json({
       success: true,
-      data: futureMapData,
+      status: 'SUCCESS',
+      data: mergedData,
+      futureMap: futureMapData,
       forecast,
       card: cardPayload,
       provenance: {
