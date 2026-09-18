@@ -20,6 +20,8 @@ import {
 import { TarotCardComponent } from '../components/tarot/TarotCardComponent.js';
 import { TarotShuffleAnimation } from '../components/tarot/TarotShuffleAnimation.js';
 import { TarotResponsiveLayout } from '../components/tarot/TarotResponsiveLayout.js';
+import { useAuth } from '../context/AuthContext.js';
+import { getCalculatedChart, getBirthProfile } from '../utils/birthStorage.js';
 import {
   Sparkles,
   RotateCw,
@@ -235,11 +237,13 @@ export const TarotPage: React.FC = () => {
 
   const [dailyDraw, setDailyDraw] = useState<{ card: TarotCard; orientation: 'upright' | 'reversed'; date: string } | null>(null);
   const [showDailyModal, setShowDailyModal] = useState(false);
+  const { user } = useAuth();
+  const currentUserId = user?.id || 'guest_tarot_seeker';
 
   useEffect(() => {
-    const daily = getDailyTarotCard('deepastro_user_1');
+    const daily = getDailyTarotCard(currentUserId);
     setDailyDraw(daily);
-  }, []);
+  }, [currentUserId]);
 
   const handleStartShuffle = () => {
     setIsSaved(false);
@@ -249,11 +253,32 @@ export const TarotPage: React.FC = () => {
 
   const handleShuffleComplete = () => {
     try {
+      const chart = getCalculatedChart();
+      const profile = getBirthProfile();
+
+      const moonSign = chart?.moonSign?.signName || chart?.planets?.find((p: any) => p.name === 'Moon')?.sign || 'Chandra';
+      const sunSign = chart?.sunSign?.signName || chart?.planets?.find((p: any) => p.name === 'Sun')?.sign || 'Surya';
+      const ascendant = chart?.ascendant?.signName || chart?.ascendantSign || 'Lagna';
+      const activeTransitGraha = chart?.currentDasha?.mahadasha || 'Brihaspati';
+
+      const dynamicAstroContext: AstroTarotContext = {
+        dominantTheme: `${ascendant} Soul Alignment`,
+        secondaryTheme: `${sunSign} Solar Consciousness`,
+        emotionalTheme: `${moonSign} Lunar Intuition`,
+        spiritualTheme: 'Dharmic Wisdom & Path',
+        sunSign: `Surya in ${sunSign}`,
+        moonSign: `Chandra in ${moonSign}`,
+        ascendant: `Lagna in ${ascendant}`,
+        activeTransitGraha,
+        moonPhase: 'Shukla Paksha (Waxing Cosmic Light)',
+        confidence: 0.94,
+      };
+
       const session = executeShuffleToDestiny({
-        userId: 'deepastro_user_1',
+        userId: currentUserId,
         category: selectedCategory,
         question: `What cosmic perspective should I receive regarding my ${selectedCategory.toLowerCase()}?`,
-        astroContext: DEFAULT_ASTRO_CONTEXT,
+        astroContext: dynamicAstroContext,
         applyAstroWeighting: astroWeighting,
       });
       setActiveSession(session);

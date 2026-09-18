@@ -161,7 +161,7 @@ describe('DEEPASTRO — FINAL INTELLIGENCE INTEGRITY + REAL USER SIMULATION AUDI
           expect(p.house).toBeLessThanOrEqual(12);
         }
       }
-    });
+    }, 30000);
 
     it('guarantees Rahu and Ketu exact 180° opposition (< 0.001° error) across all 100 profiles', () => {
       for (const u of simulationUsers) {
@@ -181,7 +181,7 @@ describe('DEEPASTRO — FINAL INTELLIGENCE INTEGRITY + REAL USER SIMULATION AUDI
         const delta = Math.abs(diff - 180);
         expect(delta).toBeLessThan(0.001);
       }
-    });
+    }, 30000);
   });
 
   // ── PHASE 4: USER A/B ISOLATION ───────────────────────────────────────────

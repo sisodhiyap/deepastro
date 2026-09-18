@@ -7,6 +7,7 @@
 import crypto from 'crypto';
 import { dbClient } from '../database/postgres.js';
 import { BirthProfileInput } from '../astrology/VedicAstroEngine.js';
+import { AuthBootstrapService } from './AuthBootstrapService.js';
 
 export interface CanonicalBirthProfile {
   birthDate: string; // YYYY-MM-DD
@@ -25,6 +26,7 @@ export interface CanonicalBirthProfile {
   historicalTimezoneData?: Record<string, any>;
   fullName?: string;
   gender?: 'Male' | 'Female' | 'Other';
+  isApproximateTime?: boolean;
 }
 
 export interface CalculationSnapshotRecord {
@@ -45,23 +47,95 @@ export class CalculationSnapshotService {
   private static memorySnapshots: Map<string, CalculationSnapshotRecord> = new Map();
 
   /**
+   * Authoritative Canonical Birth Profile Resolver
+   * Single Source of Truth: Reads user birth profile from persistent DB/memory
+   * and verifies required fields: name, birthDate, birthTime, birthPlace, latitude, longitude, timezone.
+   */
+  public static async getCanonicalBirthProfile(userId: string): Promise<{
+    isValid: boolean;
+    profile: CanonicalBirthProfile | null;
+    missingFields: string[];
+    message?: string;
+  }> {
+    if (!userId) {
+      return {
+        isValid: false,
+        profile: null,
+        missingFields: ['userId'],
+        message: 'Authentication required to resolve canonical birth profile.',
+      };
+    }
+
+    const raw: any = await AuthBootstrapService.getBirthProfile(userId);
+    if (!raw) {
+      return {
+        isValid: false,
+        profile: null,
+        missingFields: ['fullName', 'birthDate', 'birthTime', 'birthPlace', 'latitude', 'longitude'],
+        message: 'Complete your birth profile to calculate this experience.',
+      };
+    }
+
+    const missingFields: string[] = [];
+    const name = (raw.fullName || raw.name || '').trim();
+    if (!name) missingFields.push('fullName');
+    if (!raw.birthDate) missingFields.push('birthDate');
+    if (!raw.birthTime) missingFields.push('birthTime');
+    if (!raw.birthPlace) missingFields.push('birthPlace');
+    if (raw.latitude === undefined || raw.latitude === null || isNaN(Number(raw.latitude))) missingFields.push('latitude');
+    if (raw.longitude === undefined || raw.longitude === null || isNaN(Number(raw.longitude))) missingFields.push('longitude');
+
+    if (missingFields.length > 0) {
+      return {
+        isValid: false,
+        profile: null,
+        missingFields,
+        message: `Complete your birth profile to calculate this experience. Missing: ${missingFields.join(', ')}`,
+      };
+    }
+
+    const profile: CanonicalBirthProfile = {
+      fullName: name,
+      birthDate: String(raw.birthDate).trim(),
+      birthTime: String(raw.birthTime).trim(),
+      birthPlace: String(raw.birthPlace).trim(),
+      latitude: Number(raw.latitude),
+      longitude: Number(raw.longitude),
+      timezone: raw.timezone !== undefined && !isNaN(Number(raw.timezone)) ? Number(raw.timezone) : 5.5,
+      gender: raw.gender || 'Other',
+      isApproximateTime: Boolean(raw.isApproximateTime),
+      birthTimeConfidence: raw.isApproximateTime ? 'APPROXIMATE' : (raw.birthTimeConfidence || 'EXACT'),
+      locationConfidence: raw.locationConfidence || 'HIGH',
+      ayanamsha: raw.ayanamsha || 'Lahiri',
+      calculationVersion: this.ENGINE_VERSION,
+      rulesVersion: this.RULES_VERSION,
+    };
+
+    return {
+      isValid: true,
+      profile,
+      missingFields: [],
+    };
+  }
+
+  /**
    * Normalizes arbitrary user birth input into a strictly validated CanonicalBirthProfile.
    */
   public static normalizeBirthProfile(raw: any): CanonicalBirthProfile {
-    const birthDate = String(raw?.birthDate || raw?.dob || '1990-01-01').trim();
-    const birthTime = String(raw?.birthTime || raw?.tob || '12:00').trim();
-    const birthPlace = String(raw?.birthPlace || raw?.pob || raw?.location || 'New Delhi, India').trim();
-    const latitude = Number(raw?.latitude ?? raw?.lat ?? 28.6139);
-    const longitude = Number(raw?.longitude ?? raw?.lon ?? 77.2090);
-    const timezone = raw?.timezone !== undefined ? raw.timezone : 5.5;
+    const birthDate = String(raw?.birthDate || raw?.dob || '').trim();
+    const birthTime = String(raw?.birthTime || raw?.tob || '').trim();
+    const birthPlace = String(raw?.birthPlace || raw?.pob || raw?.location || '').trim();
+    const latitude = Number(raw?.latitude ?? raw?.lat ?? 0);
+    const longitude = Number(raw?.longitude ?? raw?.lon ?? 0);
+    const timezone = raw?.timezone !== undefined ? Number(raw.timezone) : 5.5;
 
     return {
       birthDate,
       birthTime,
       birthPlace,
-      latitude: isNaN(latitude) ? 28.6139 : latitude,
-      longitude: isNaN(longitude) ? 77.2090 : longitude,
-      timezone: timezone,
+      latitude: isNaN(latitude) ? 0 : latitude,
+      longitude: isNaN(longitude) ? 0 : longitude,
+      timezone: isNaN(timezone) ? 5.5 : timezone,
       timezoneSource: raw?.timezoneSource || 'IANA',
       locationSource: raw?.locationSource || 'OpenStreetMap_Nominatim',
       ayanamsha: raw?.ayanamsha || 'Lahiri',
@@ -200,3 +274,6 @@ export class CalculationSnapshotService {
     return record;
   }
 }
+
+export const getCanonicalBirthProfile = (userId: string) => CalculationSnapshotService.getCanonicalBirthProfile(userId);
+

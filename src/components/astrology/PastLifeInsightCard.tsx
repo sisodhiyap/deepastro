@@ -166,7 +166,7 @@ export const PastLifeInsightCard: React.FC<PastLifeInsightCardProps> = ({
   };
 
   return (
-    <div id="past-soul-journey-card-root" className="w-full max-w-5xl mx-auto rounded-3xl bg-gradient-to-b from-[#090E1C] via-[#060813] to-[#030409] border-2 border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.18)] text-slate-100 font-sans relative overflow-hidden p-6 sm:p-10 select-none">
+    <div id="past-soul-journey-card-root" className="w-full min-w-0 max-w-5xl mx-auto rounded-3xl bg-gradient-to-b from-[#090E1C] via-[#060813] to-[#030409] border-2 border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.18)] text-slate-100 font-sans relative overflow-hidden p-6 sm:p-10 select-none break-words">
       {/* Background Radiance */}
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />

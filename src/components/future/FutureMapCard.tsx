@@ -167,7 +167,7 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
   const rawMonths = Array.isArray(forecast.monthForecasts) ? forecast.monthForecasts : [];
 
   return (
-    <div id="future-map-card-root" className="w-full max-w-6xl mx-auto rounded-3xl bg-gradient-to-b from-[#080D1A] via-[#050813] to-[#030408] border-2 border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.15)] text-[#F8FAFC] font-sans relative overflow-hidden p-4 sm:p-8 lg:p-10 select-none">
+    <div id="future-map-card-root" className="w-full min-w-0 max-w-6xl mx-auto rounded-3xl bg-gradient-to-b from-[#080D1A] via-[#050813] to-[#030408] border-2 border-amber-500/30 shadow-[0_0_80px_rgba(245,158,11,0.15)] text-[#F8FAFC] font-sans relative overflow-hidden p-4 sm:p-8 lg:p-10 select-none break-words">
       {/* Cosmic Nebula Glow Overlays */}
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />

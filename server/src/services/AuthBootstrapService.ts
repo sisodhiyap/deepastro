@@ -253,6 +253,14 @@ export class AuthBootstrapService {
     };
 
     try {
+      // Ensure user exists in users table to satisfy foreign key constraint birth_profiles_user_id_fkey
+      await pool.query(
+        `INSERT INTO users (id, email, password_hash, role, is_verified, created_at, updated_at)
+         VALUES ($1, $2, 'AUTO_PERSISTED', 'CLIENT', true, NOW(), NOW())
+         ON CONFLICT (id) DO NOTHING`,
+        [record.userId, `${record.userId}@deepastro.internal`]
+      );
+
       await pool.query(
         `INSERT INTO birth_profiles (id, user_id, full_name, birth_date, birth_time, birth_place, latitude, longitude, timezone, gender, is_approximate_time, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())

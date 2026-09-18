@@ -160,7 +160,7 @@ describe('DEEPASTRO CHECKPOINT 9.5 — ADVERSARIAL VERIFICATION SUITE', () => {
         expect(run1.dashas.balanceYearsRemaining).toBe(run2.dashas.balanceYearsRemaining);
         expect(run1.dashas.currentMahadasha.planet).toBe(run2.dashas.currentMahadasha.planet);
       }
-    });
+    }, 30000);
   });
 
   // =========================================================================

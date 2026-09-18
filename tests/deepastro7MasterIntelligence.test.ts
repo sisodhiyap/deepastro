@@ -15,6 +15,7 @@ import app from '../server/src/index.js';
 import jwt from 'jsonwebtoken';
 import { db } from '../server/src/database/db.js';
 import { CalculationSnapshotService, CanonicalBirthProfile } from '../server/src/services/CalculationSnapshotService.js';
+import { VedicAstroEngine } from '../server/src/astrology/VedicAstroEngine.js';
 import { PastLifeIntelligenceEngine } from '../server/src/intelligence/pastlife/index.js';
 import { CosmicFutureIntelligenceEngine } from '../server/src/intelligence/future/CosmicFutureIntelligenceEngine.js';
 import { FutureConsentEngine } from '../server/src/intelligence/future/FutureConsentEngine.js';
@@ -63,6 +64,26 @@ describe('DEEPASTRO 7.0: Master Past & Future Intelligence Integration', () => {
     latitude: 18.9220,
     longitude: 72.8347,
     timezone: 5.5,
+  };
+
+  const profileD: CanonicalBirthProfile = {
+    fullName: 'Seeker Delta',
+    birthDate: '1992-04-12',
+    birthTime: '08:15', // Same time as Alpha, different location
+    birthPlace: 'London, UK',
+    latitude: 51.5074,
+    longitude: -0.1278,
+    timezone: 0.0,
+  };
+
+  const profileE: CanonicalBirthProfile = {
+    fullName: 'Seeker Epsilon',
+    birthDate: '2001-01-01',
+    birthTime: '00:05',
+    birthPlace: 'New York, USA',
+    latitude: 40.7128,
+    longitude: -74.0060,
+    timezone: -5.0,
   };
 
   const userA = 'usr_7_alpha_001';
@@ -168,5 +189,93 @@ describe('DEEPASTRO 7.0: Master Past & Future Intelligence Integration', () => {
     expect(res.body.card.title).toBe('YOUR FUTURE MAP');
     expect(res.body.card.actionButtons.length).toBe(8);
     expect(res.body.provenance.calculationFingerprint).toBeDefined();
+  });
+
+  // Section 25: 5-User Golden Matrix
+  it('6. 5-User Golden Matrix: Profiles A, B, C, D, E produce distinct astronomical calculations, D9, D60, and determinism on repeat', () => {
+    const profiles = [profileA, profileB, profileC, profileD, profileE];
+    const fingerprints = profiles.map(p => CalculationSnapshotService.generateFingerprint(p));
+
+    // 1. All 5 fingerprints must be mutually distinct
+    const uniqueFingerprints = new Set(fingerprints);
+    expect(uniqueFingerprints.size).toBe(5);
+
+    // 2. Determinism check: repeating fingerprint calculation for each user yields identical hash
+    profiles.forEach((p, idx) => {
+      const repeated = CalculationSnapshotService.generateFingerprint(p);
+      expect(repeated).toBe(fingerprints[idx]);
+    });
+
+    // 3. Compute astronomical charts for all 5 profiles and verify D1, D9, D60
+    const charts = profiles.map(p => VedicAstroEngine.calculateKundli({
+      name: p.fullName || 'Seeker',
+      birthDate: p.birthDate,
+      birthTime: p.birthTime,
+      birthPlace: p.birthPlace,
+      latitude: p.latitude,
+      longitude: p.longitude,
+      timezone: Number(p.timezone),
+    }));
+
+    charts.forEach((chart) => {
+      expect(chart).toBeDefined();
+      expect(chart.ascendant).toBeDefined();
+      expect(chart.ascendant.degrees).toBeGreaterThanOrEqual(0);
+      expect(chart.ascendant.degrees).toBeLessThan(360);
+      expect(chart.vargas).toBeDefined();
+      expect(chart.vargas.d9_navamsa).toBeDefined();
+      expect(chart.vargas.d9_navamsa.length).toBeGreaterThanOrEqual(9);
+      expect(chart.shodashvargas?.d60_shashtiamsha).toBeDefined();
+      expect(chart.shodashvargas?.d60_shashtiamsha.length).toBeGreaterThanOrEqual(9);
+    });
+
+    // 4. Ascendant degrees and houses must differ across diverse profiles
+    expect(charts[0].ascendant.degrees).not.toBe(charts[1].ascendant.degrees);
+    expect(charts[0].ascendant.degrees).not.toBe(charts[3].ascendant.degrees); // Alpha vs Delta (different location)
+    expect(charts[0].ascendant.degrees).not.toBe(charts[2].ascendant.degrees); // Alpha vs Gamma (different time)
+  });
+
+  // Section 4: Authoritative Resolver Test
+  it('7. Canonical Birth Resolver: getCanonicalBirthProfile resolves complete profiles and blocks incomplete inputs without synthetic fallbacks', async () => {
+    // A. Complete profile resolution
+    db.birthProfiles.set('bp_test_full', {
+      id: 'bp_test_full',
+      userId: 'usr_full_001',
+      fullName: 'Real Native',
+      birthDate: '1995-07-20',
+      birthTime: '14:20',
+      birthPlace: 'Bengaluru, India',
+      latitude: 12.9716,
+      longitude: 77.5946,
+      timezone: 5.5,
+      gender: 'Female',
+    } as any);
+
+    const resolved = await CalculationSnapshotService.getCanonicalBirthProfile('usr_full_001');
+    expect(resolved.isValid).toBe(true);
+    expect(resolved.profile?.fullName).toBe('Real Native');
+    expect(resolved.profile?.latitude).toBe(12.9716);
+
+    // B. Missing birth profile
+    const emptyResolved = await CalculationSnapshotService.getCanonicalBirthProfile('usr_non_existent');
+    expect(emptyResolved.isValid).toBe(false);
+    expect(emptyResolved.message).toContain('Complete your birth profile');
+
+    // C. Incomplete profile (missing coordinates)
+    db.birthProfiles.set('bp_test_inc', {
+      id: 'bp_test_inc',
+      userId: 'usr_incomplete_002',
+      fullName: 'Incomplete Native',
+      birthDate: '1995-07-20',
+      birthTime: '14:20',
+      birthPlace: 'Unknown Place',
+      latitude: NaN,
+      longitude: NaN,
+    } as any);
+
+    const incResolved = await CalculationSnapshotService.getCanonicalBirthProfile('usr_incomplete_002');
+    expect(incResolved.isValid).toBe(false);
+    expect(incResolved.missingFields).toContain('latitude');
+    expect(incResolved.missingFields).toContain('longitude');
   });
 });

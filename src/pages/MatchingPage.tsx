@@ -14,8 +14,8 @@ export const MatchingPage: React.FC = () => {
       birthDate: saved?.birthDate || '',
       birthTime: saved?.birthTime || '',
       birthPlace: saved?.birthPlace || '',
-      latitude: saved?.latitude ? String(saved.latitude) : '28.6139',
-      longitude: saved?.longitude ? String(saved.longitude) : '77.2090',
+      latitude: saved?.latitude ? String(saved.latitude) : '',
+      longitude: saved?.longitude ? String(saved.longitude) : '',
       timezone: saved?.timezone ? String(saved.timezone) : '5.5',
       gender: saved?.gender || 'Male',
     };
@@ -26,8 +26,8 @@ export const MatchingPage: React.FC = () => {
     birthDate: '',
     birthTime: '',
     birthPlace: '',
-    latitude: '19.0760',
-    longitude: '72.8777',
+    latitude: '',
+    longitude: '',
     timezone: '5.5',
     gender: 'Female',
   });
@@ -41,6 +41,10 @@ export const MatchingPage: React.FC = () => {
   const runMatchingWith = async (aData = partnerA, bData = partnerB) => {
     if (!aData.birthDate || !aData.birthTime || !bData.birthDate || !bData.birthTime) {
       setErrorMessage('Please enter both birth date and birth time for Partner A and Partner B.');
+      return;
+    }
+    if (!aData.latitude || !aData.longitude || !bData.latitude || !bData.longitude) {
+      setErrorMessage('Please select birthplaces with valid coordinates for both Partner A and Partner B.');
       return;
     }
 

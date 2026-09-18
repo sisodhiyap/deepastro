@@ -21,13 +21,6 @@ function createAuthToken(userId: string, email: string = `${userId}@deepastro.te
 }
 
 describe('DEEPASTRO 6.4: Past Life API Contract & Dynamic Engine', () => {
-  const userId = 'past-life-test-user-001';
-  let token: string;
-
-  beforeAll(() => {
-    token = createAuthToken(userId);
-  });
-
   it('1. Rejects unauthenticated request with 401 and structured JSON error', async () => {
     const res = await request(app)
       .post('/api/intelligence/past-life/generate')
@@ -40,9 +33,11 @@ describe('DEEPASTRO 6.4: Past Life API Contract & Dynamic Engine', () => {
   });
 
   it('2. Returns 400 and structured JSON when birth profile is incomplete', async () => {
+    const incompleteUserId = `past-life-incomplete-${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const incompleteToken = createAuthToken(incompleteUserId);
     const res = await request(app)
       .post('/api/intelligence/past-life/generate')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${incompleteToken}`)
       .send({ format: 'insight_card' });
 
     expect(res.status).toBe(400);
@@ -53,9 +48,11 @@ describe('DEEPASTRO 6.4: Past Life API Contract & Dynamic Engine', () => {
   });
 
   it('3. Successfully generates past-life reading with valid birth profile in payload', async () => {
+    const validUserId = `past-life-valid-${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const validToken = createAuthToken(validUserId);
     const res = await request(app)
       .post('/api/intelligence/past-life/generate')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${validToken}`)
       .send({
         format: 'insight_card',
         birthProfile: {
