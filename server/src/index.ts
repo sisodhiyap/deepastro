@@ -1,4 +1,4 @@
-﻿import verifyReportRoutes from './routes/verifyReportRoutes.js';
+import verifyReportRoutes from './routes/verifyReportRoutes.js';
 import futureRoutes from './routes/futureRoutes.js';
 /**
  * DeepAstro Master API Server
@@ -131,12 +131,13 @@ app.use('/api/personalization', personalizationRoutes);
 app.use('/api/learning', learningRoutes);
 app.use('/api/admin/self-learning-lab', adminLearningRoutes);
 app.use('/api/brain', brainRoutes);
+app.use('/api/intelligence/past-life', pastLifeRoutes);
+app.use('/intelligence/past-life', pastLifeRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/future', futureRoutes);
 app.use('/api/verify', verifyReportRoutes);
 app.use('/future', futureRoutes);
 app.use('/verify', verifyReportRoutes);
-app.use('/api/intelligence/past-life', pastLifeRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/decision', intelligenceRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
