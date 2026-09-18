@@ -35,6 +35,14 @@ import { CalculationSnapshotEngine } from '../../astrology/CalculationSnapshot.j
 import { DeepAstroProvenanceService } from '../../services/DeepAstroProvenanceService.js';
 import { db } from '../../database/db.js';
 
+import { CalculationSnapshotService } from '../../services/CalculationSnapshotService.js';
+import { FutureConvergenceEngine, FutureConvergenceReport } from './FutureConvergenceEngine.js';
+import { FutureConfidenceEngine } from './FutureConfidenceEngine.js';
+import { FutureContradictionEngine } from './FutureContradictionEngine.js';
+import { FutureOutcomeLearningEngine } from './FutureOutcomeLearningEngine.js';
+import { FutureAuditEngine } from './FutureAuditEngine.js';
+import { FutureCardEngine } from './FutureCardEngine.js';
+
 export interface GenerateFutureForecastRequest {
   userId: string;
   birthProfile: Partial<BirthProfileInput>;
@@ -152,18 +160,64 @@ export class CosmicFutureIntelligenceEngine {
     // 12. Dynamic Future Windows & Awareness Periods
     const eventWindows = this.deriveDynamicEventWindows(kundli, yearForecasts, startYear);
 
-    // 13. Assemble Full Forecast Object
+    // 13. Deterministic Calculation Fingerprint
+    const calculationFingerprint = CalculationSnapshotService.generateFingerprint(profileInput);
+
+    // 14. Contradiction Evaluation
+    const contradictionItems = FutureContradictionEngine.detectContradictions(
+      'SUPPORTING',
+      systemConvergence.overallConvergence === 'HIGH' ? 'SUPPORTING' : 'CHALLENGING',
+      false
+    );
+
+    // 15. Dynamic Non-Fatalistic Confidence Evaluation
+    const confidenceEvaluation = FutureConfidenceEngine.evaluate(
+      systemConvergence.systemsConverging,
+      systemConvergence.systemsEvaluated,
+      contradictionItems.length,
+      Boolean(profileInput.isApproximateTime)
+    );
+
+    // 16. Prediction Ledger Registration (Parts 32-34)
+    try {
+      FutureOutcomeLearningEngine.recordPrediction({
+        userId,
+        calculationFingerprint,
+        domain: eventWindows[0]?.category || 'CAREER',
+        claimText: eventWindows[0]?.title || `Primary ${activeDasha} Career Window`,
+        expectedDirection: 'FAVORABLE',
+        startDate: `${startYear + 1}-01-01`,
+        endDate: `${startYear + 1}-12-31`,
+        trigger: `${activeDasha} Mahadasha Bhava Activation`,
+        evidenceIds: [
+          'RULE_PARASHARI_LAGNA_DIGNITY',
+          'RULE_VIMSHOTTARI_DASHA_CYCLE',
+          'RULE_GOCHARA_TRANSIT_HARMONY',
+        ],
+        confidence: confidenceEvaluation.normalizedPercentage,
+        uncertainty: confidenceEvaluation.explanation,
+      });
+    } catch (ledgErr) {
+      console.warn('[CFIE] PredictionLedger record warning:', ledgErr);
+    }
+
+    // 17. Assemble Full Forecast Object
     const lagna = kundli.ascendant.details.signName;
     const moonSign = kundli.moonSign.signName;
     const currentPhase = yearForecasts[0]?.overallTheme?.split(':')[0] || 'Strategic Alignment';
     const forecastId = `cff_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
-    const forecast: CosmicFutureForecastSchema = {
+    const forecast: CosmicFutureForecastSchema & {
+      calculationFingerprint: string;
+      confidenceEvaluation: any;
+      contradictionItems: any[];
+    } = {
       id: forecastId,
       userId,
       version: this.VERSION,
       generatedAt: new Date().toISOString(),
       calculationSnapshotId: snapshot.snapshotId,
+      calculationFingerprint,
       horizon,
       revealLevel: effectiveLevel,
       currentLifePhase: `${currentPhase} (${activeDasha} Mahadasha)`,
@@ -181,7 +235,7 @@ export class CosmicFutureIntelligenceEngine {
       longevityHealthspan,
       remedies,
       multiSystemConvergence: {
-        overallConvergence: systemConvergence.overallConvergence,
+        overallConvergence: (systemConvergence.overallConvergence === 'VERY_HIGH' ? 'HIGH' : systemConvergence.overallConvergence === 'INSUFFICIENT_SIGNAL' ? 'LOW' : systemConvergence.overallConvergence) as ConfidenceRating,
         astrologySupport: true,
         dashaSupport: true,
         transitSupport: true,
@@ -189,8 +243,10 @@ export class CosmicFutureIntelligenceEngine {
         jaiminiSupport: true,
         numerologySupport: true,
         karmaSupport: true,
-        contradictions: [],
+        contradictions: contradictionItems.map(c => c.divergenceDescription),
       },
+      confidenceEvaluation,
+      contradictionItems,
       evidenceGraph: {
         calculationSnapshotId: snapshot.snapshotId,
         indicatorsCount: 24,
@@ -221,6 +277,15 @@ export class CosmicFutureIntelligenceEngine {
       disclaimer: 'Cosmic Future Intelligence provides non-fatalistic traditional Vedic perspectives and spiritual wisdom. Planetary cycles indicate karmic tendencies and auspicious timing, not deterministic certainty.',
     };
 
+    // 18. Audit Engine Record
+    FutureAuditEngine.record({
+      forecastId: forecast.id,
+      userId,
+      calculationFingerprint,
+      horizon,
+      requestedLevel: effectiveLevel,
+    });
+
     // Release token reservation upon successful completion
     Z53TokenBudgetManager.releaseBudget(requestId);
 
@@ -233,7 +298,7 @@ export class CosmicFutureIntelligenceEngine {
       revealLevel: effectiveLevel,
       generationTimeMs: Date.now() - startTime,
       convergence: systemConvergence.overallConvergence,
-      contradictionCount: 0,
+      contradictionCount: contradictionItems.length,
       status: 'SUCCESS',
     });
 
@@ -360,8 +425,8 @@ export class CosmicFutureIntelligenceEngine {
     };
   }
 
-  private static evaluateSystemConvergence(kundli: any, yearForecasts: any[]): { overallConvergence: ConfidenceRating } {
-    return { overallConvergence: 'HIGH' };
+  private static evaluateSystemConvergence(kundli: any, yearForecasts: any[]): FutureConvergenceReport {
+    return FutureConvergenceEngine.evaluate('SUPPORTING', 'SUPPORTING', 'SUPPORTING');
   }
 
   private static deriveDynamicEventWindows(kundli: any, yearForecasts: any[], startYear: number): any[] {

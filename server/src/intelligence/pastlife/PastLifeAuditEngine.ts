@@ -42,6 +42,13 @@ export class PastLifeAuditEngine {
       .sort((a, b) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime());
   }
 
+  public static verifyUserAccess(readingId: string, requestingUserId: string): { allowed: boolean; reading?: PastLifeInsightSchema } {
+    const reading = this.readingsStore.get(readingId);
+    if (!reading) return { allowed: false };
+    const allowed = reading.user_id === requestingUserId;
+    return { allowed, reading: allowed ? reading : undefined };
+  }
+
   public static recordFeedback(feedback: PastLifeUserFeedback): void {
     this.feedbackStore.push(feedback);
   }

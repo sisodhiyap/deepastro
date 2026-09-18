@@ -86,8 +86,18 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
       data: result.data,
       card: cardPayload,
       provenance: {
+        calculationFingerprint: result.provenance?.calculationFingerprint || result.data.calculationFingerprint,
+        sources: result.provenance?.sources || [
+          'Vedic Ephemeris (Swiss Lahiri)',
+          'Jaimini Sutras (Chara Karakas)',
+          'KP Cuspal Sublords (12th & 8th Houses)',
+          'Navamsha (D9) & Shashtiamsa (D60)',
+          'Pythagorean & Vedic Numerology Cycles',
+          'Classical Puranic Canon (Vishnu Purana, Bhagavata)',
+        ],
         engineVersion: PastLifeIntelligenceEngine.VERSION,
         knowledgeVersion: PastLifeIntelligenceEngine.KNOWLEDGE_VERSION,
+        generatedAt: result.data.generated_at,
         confidence: result.data.confidence,
         astrologicalIndicatorsCount: result.data.astrological_indicators?.length || 0,
         vedicReferencesCount: result.data.vedic_references?.length || 0,

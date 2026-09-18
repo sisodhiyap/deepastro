@@ -8,39 +8,119 @@ import crypto from 'crypto';
 import { dbClient } from '../database/postgres.js';
 import { BirthProfileInput } from '../astrology/VedicAstroEngine.js';
 
+export interface CanonicalBirthProfile {
+  birthDate: string; // YYYY-MM-DD
+  birthTime: string; // HH:mm or HH:mm:ss
+  birthPlace: string;
+  latitude: number;
+  longitude: number;
+  timezone: number | string;
+  timezoneSource?: string;
+  locationSource?: string;
+  ayanamsha?: string;
+  calculationVersion?: string;
+  rulesVersion?: string;
+  birthTimeConfidence?: 'EXACT' | 'APPROXIMATE' | 'RECTIFIED';
+  locationConfidence?: 'HIGH' | 'MEDIUM' | 'LOW';
+  historicalTimezoneData?: Record<string, any>;
+  fullName?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+}
+
 export interface CalculationSnapshotRecord {
   id: string;
   auth_user_id: string;
   birth_profile_id?: string;
   calculation_fingerprint: string;
   engine_version: string;
+  rules_version: string;
   calculated_at: string;
   payload: any;
   created_at: string;
 }
 
 export class CalculationSnapshotService {
-  private static ENGINE_VERSION = 'VedicEngine_v2.0_SwissLahiri';
+  public static readonly ENGINE_VERSION = 'VedicEngine_v2.0_SwissLahiri';
+  public static readonly RULES_VERSION = 'JyotishRules_v7.0_Parashara';
   private static memorySnapshots: Map<string, CalculationSnapshotRecord> = new Map();
 
   /**
-   * Generates a deterministic SHA-256 fingerprint for astrological birth input.
-   * Does NOT incorporate user full name so name changes don't cause false re-fingerprinting,
-   * but DO incorporate all astronomical parameters.
+   * Normalizes arbitrary user birth input into a strictly validated CanonicalBirthProfile.
    */
-  public static generateFingerprint(input: BirthProfileInput, ayanamsa: string = 'Lahiri'): string {
+  public static normalizeBirthProfile(raw: any): CanonicalBirthProfile {
+    const birthDate = String(raw?.birthDate || raw?.dob || '1990-01-01').trim();
+    const birthTime = String(raw?.birthTime || raw?.tob || '12:00').trim();
+    const birthPlace = String(raw?.birthPlace || raw?.pob || raw?.location || 'New Delhi, India').trim();
+    const latitude = Number(raw?.latitude ?? raw?.lat ?? 28.6139);
+    const longitude = Number(raw?.longitude ?? raw?.lon ?? 77.2090);
+    const timezone = raw?.timezone !== undefined ? raw.timezone : 5.5;
+
+    return {
+      birthDate,
+      birthTime,
+      birthPlace,
+      latitude: isNaN(latitude) ? 28.6139 : latitude,
+      longitude: isNaN(longitude) ? 77.2090 : longitude,
+      timezone: timezone,
+      timezoneSource: raw?.timezoneSource || 'IANA',
+      locationSource: raw?.locationSource || 'OpenStreetMap_Nominatim',
+      ayanamsha: raw?.ayanamsha || 'Lahiri',
+      calculationVersion: this.ENGINE_VERSION,
+      rulesVersion: this.RULES_VERSION,
+      birthTimeConfidence: raw?.isApproximateTime ? 'APPROXIMATE' : (raw?.birthTimeConfidence || 'EXACT'),
+      locationConfidence: raw?.locationConfidence || 'HIGH',
+      fullName: raw?.fullName || raw?.name || 'Cosmic Native',
+      gender: raw?.gender || 'Other',
+    };
+  }
+
+  /**
+   * Generates a deterministic SHA-256 fingerprint for astrological birth input.
+   * Incorporates all astronomical calculation and rule parameters.
+   */
+  public static generateFingerprint(input: BirthProfileInput | CanonicalBirthProfile, ayanamsa: string = 'Lahiri'): string {
+    const isApprox = Boolean(
+      (input as any).isApproximateTime ||
+      (input as any).birthTimeConfidence === 'APPROXIMATE'
+    );
+    const tzStr = typeof input.timezone === 'number'
+      ? input.timezone.toFixed(2)
+      : String(input.timezone || '5.5');
+
     const canonical = [
-      input.birthDate,
-      input.birthTime,
-      Boolean(input.isApproximateTime) ? 'APPROX' : 'EXACT',
-      Number(input.latitude).toFixed(4),
-      Number(input.longitude).toFixed(4),
-      Number(input.timezone).toFixed(2),
-      ayanamsa,
+      String(input.birthDate || '').trim(),
+      String(input.birthTime || '').trim(),
+      isApprox ? 'APPROX' : 'EXACT',
+      Number(input.latitude || 0).toFixed(4),
+      Number(input.longitude || 0).toFixed(4),
+      tzStr,
+      ayanamsa || (input as any).ayanamsha || 'Lahiri',
       this.ENGINE_VERSION,
+      this.RULES_VERSION,
     ].join(':::');
 
     return crypto.createHash('sha256').update(canonical).digest('hex');
+  }
+
+  /**
+   * Invalidates stale calculation snapshots for a user across memory and database upon mutation.
+   */
+  public static async invalidateUserCalculations(authUserId: string): Promise<void> {
+    for (const key of this.memorySnapshots.keys()) {
+      if (key.startsWith(`${authUserId}:::`)) {
+        this.memorySnapshots.delete(key);
+      }
+    }
+    if (dbClient.isLive()) {
+      try {
+        await dbClient.query(
+          `DELETE FROM calculation_snapshots WHERE auth_user_id = $1;`,
+          [authUserId]
+        );
+      } catch (err) {
+        console.warn('[SnapshotService] Error invalidating snapshots in DB:', err);
+      }
+    }
   }
 
   /**
@@ -87,6 +167,7 @@ export class CalculationSnapshotService {
       birth_profile_id: birthProfileId,
       calculation_fingerprint: fingerprint,
       engine_version: this.ENGINE_VERSION,
+      rules_version: this.RULES_VERSION,
       calculated_at: now,
       payload,
       created_at: now,

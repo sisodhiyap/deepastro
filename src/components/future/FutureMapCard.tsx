@@ -184,8 +184,8 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
               <span className="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-amber-100 font-serif">
                 DeepAstro
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-bold">
-                PREMIUM
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-[10px] font-bold">
+                CANONICAL ACCESS
               </span>
             </div>
             <div className="text-[10px] uppercase font-mono tracking-widest text-amber-400/80">
@@ -681,6 +681,32 @@ export const FutureMapCard: React.FC<FutureMapCardProps> = ({
           <div>Verification ID: <span className="text-amber-300">{forecast.provenance.verificationId || 'VF_AUTHENTICATED'}</span></div>
         </div>
       )}
+
+      {/* 8 ACTION BUTTONS GRID (Part 28) */}
+      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
+        {[
+          { id: 'why_forecast', label: 'Why This Forecast', icon: HelpCircle, color: 'text-amber-300', action: () => setEvidenceDrawerOpen(true) },
+          { id: 'view_evidence', label: 'View Evidence', icon: BookOpen, color: 'text-cyan-300', action: () => setEvidenceDrawerOpen(true) },
+          { id: 'view_contradictions', label: 'Contradictions', icon: AlertTriangle, color: 'text-rose-300', action: () => setEvidenceDrawerOpen(true) },
+          { id: 'monthly_view', label: 'Monthly View', icon: Calendar, color: 'text-emerald-300', action: () => setSelectedMonthIndex(0) },
+          { id: 'compare_years', label: 'Compare Years', icon: Layers, color: 'text-blue-300', action: () => setReportModalOpen(true) },
+          { id: 'save_forecast', label: 'Save Forecast', icon: Star, color: 'text-yellow-300', action: () => alert('Forecast bookmarked in your active timeline.') },
+          { id: 'generate_report', label: 'Generate Report', icon: FileText, color: 'text-purple-300', action: () => setReportModalOpen(true) },
+          { id: 'ask_astrobot', label: 'Ask AstroBot', icon: MessageSquare, color: 'text-pink-300', action: () => onAskAstroBot && onAskAstroBot(`What are the key predictions for ${selectedYearData.year}?`) },
+        ].map((btn) => {
+          const Icon = btn.icon;
+          return (
+            <button
+              key={btn.id}
+              onClick={btn.action}
+              className="px-3 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 hover:border-slate-500 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer text-slate-200"
+            >
+              <Icon className={`w-3.5 h-3.5 ${btn.color}`} />
+              <span className="truncate">{btn.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* BOTTOM ACTION CTA BAR */}
       <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80 pt-6">

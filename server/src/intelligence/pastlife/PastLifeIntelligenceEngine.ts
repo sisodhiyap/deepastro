@@ -1,11 +1,17 @@
 import crypto from 'crypto';
 import { PastLifeInputEngine, ValidatedPastLifeInput } from './PastLifeInputEngine.js';
+import { PastLifeCalculationAdapter } from './PastLifeCalculationAdapter.js';
 import { PastLifeAstrologyEngine } from './PastLifeAstrologyEngine.js';
+import { PastLifeVargaEngine } from './PastLifeVargaEngine.js';
+import { PastLifeJaiminiEngine } from './PastLifeJaiminiEngine.js';
+import { PastLifeKPEngine } from './PastLifeKPEngine.js';
 import { PastLifeNumerologyEngine } from './PastLifeNumerologyEngine.js';
 import { PastLifeKarmaEngine } from './PastLifeKarmaEngine.js';
 import { PastLifeVedicKnowledgeEngine } from './PastLifeVedicKnowledgeEngine.js';
+import { PastLifePuranicKnowledgeEngine } from './PastLifePuranicKnowledgeEngine.js';
 import { VishnuPuranaKnowledgeAdapter } from './VishnuPuranaKnowledgeAdapter.js';
 import { PastLifeEvidenceEngine } from './PastLifeEvidenceEngine.js';
+import { PastLifeConvergenceEngine } from './PastLifeConvergenceEngine.js';
 import { PastLifeContradictionEngine } from './PastLifeContradictionEngine.js';
 import { PastLifeConfidenceEngine } from './PastLifeConfidenceEngine.js';
 import { PastLifePatternEngine } from './PastLifePatternEngine.js';
@@ -23,8 +29,8 @@ import {
 import { BirthProfileRecord } from '../../database/db.js';
 
 export class PastLifeIntelligenceEngine {
-  public static readonly VERSION = '1.0.0-soultrace';
-  public static readonly KNOWLEDGE_VERSION = '6.0.4-canon';
+  public static readonly VERSION = '2.0.0-soultrace';
+  public static readonly KNOWLEDGE_VERSION = '7.0.0-canon';
 
   public static generate(
     userId: string,
@@ -32,7 +38,19 @@ export class PastLifeIntelligenceEngine {
     request?: PastLifeGenerationRequest
   ): {
     success: boolean;
-    data?: PastLifeInsightSchema;
+    data?: PastLifeInsightSchema & {
+      convergence?: any;
+      calculationFingerprint?: string;
+      vargaEvaluation?: any;
+      jaiminiEvaluation?: any;
+      kpEvaluation?: any;
+    };
+    provenance?: {
+      calculationFingerprint: string;
+      sources: string[];
+      engineVersion: string;
+      generatedAt: string;
+    };
     error?: string;
     missingFields?: string[];
   } {
@@ -48,43 +66,72 @@ export class PastLifeIntelligenceEngine {
 
     const input = validation.data;
 
-    // 2. Consume immutable calculation core & Jaimini
+    // 2. Canonical Calculation Adaptation & Deterministic Fingerprint
+    const calculatedSnapshot = PastLifeCalculationAdapter.adapt(input);
+    const fingerprint = calculatedSnapshot.fingerprint;
+
+    // 3. Varga Engine (D1, D9 Navamsha, D60 Shashtiamsa)
+    const vargaEval = PastLifeVargaEngine.evaluate(calculatedSnapshot);
+
+    // 4. Jaimini Engine (Chara Karakas, Karakamsha)
+    const jaiminiEval = PastLifeJaiminiEngine.evaluate(calculatedSnapshot);
+
+    // 5. KP Engine (12th & 8th house cuspal sublords)
+    const kpEval = PastLifeKPEngine.evaluate(calculatedSnapshot);
+
+    // 6. Astrology Engine analysis
     const astro = PastLifeAstrologyEngine.analyze(input);
 
-    // 3. Consume numerology engine
+    // 7. Numerology Engine
     const num = PastLifeNumerologyEngine.analyze(input);
 
-    // 4. Synthesize karmic indicators
+    // 8. Karmic synthesis
     const karma = PastLifeKarmaEngine.analyze(astro, num);
 
-    // 5. Gather authentic textual knowledge
+    // 9. Classical Vedic & Puranic textual knowledge
     const vedicSources = PastLifeVedicKnowledgeEngine.getReferencesForIndicators(
       astro.atmakarakaData.planet,
       astro.ketuData.house
     );
-    const puranaKnowledge = VishnuPuranaKnowledgeAdapter.getPhilosophicalInsight(karma.themes[0] || 'Dharma');
+    const puranaNodes = PastLifePuranicKnowledgeEngine.getPuranicContext(karma.themes[0] || 'Dharma');
+    const puranaReferences = puranaNodes.map(p => ({
+      sourceId: p.purana.toLowerCase().replace(/\s+/g, '_'),
+      title: `${p.purana}: ${p.section}`,
+      authorOrTradition: 'Classical Puranic Literature',
+      philosophicalTheme: p.corePrinciple,
+      provenance: p.provenance,
+    }));
 
-    // 6. Multi-system evidence compilation
+    // 10. Multi-system evidence compilation
     const evidence = PastLifeEvidenceEngine.compileEvidence(astro, num);
 
-    // 7. Contradiction reasoning
+    // 11. Multi-system convergence matrix
+    const convergence = PastLifeConvergenceEngine.evaluateConvergence({
+      astroIndicators: astro.indicators,
+      vargaSignals: vargaEval.supportingSignals,
+      jaiminiSignals: jaiminiEval.signals,
+      kpSignals: kpEval.kpSignals,
+      numerologyIndicators: num.indicators,
+    });
+
+    // 12. Contradiction reasoning
     const contradictionResult = PastLifeContradictionEngine.evaluate(evidence);
 
-    // 8. Confidence determination
+    // 13. Confidence determination
     const confidence = PastLifeConfidenceEngine.calculate(
       astro,
       num,
       contradictionResult.isMixedArchetype
     );
 
-    // 9. Archetype pattern matching
+    // 14. Archetype pattern matching
     const archetype = PastLifePatternEngine.determineArchetype(
       astro,
       num,
       contradictionResult.isMixedArchetype
     );
 
-    // 10. Generate calibrated narrative
+    // 15. Calibrated narrative generation
     const narrative = PastLifeNarrativeEngine.generate(
       input.fullName,
       archetype,
@@ -93,7 +140,7 @@ export class PastLifeIntelligenceEngine {
       request?.language || 'en'
     );
 
-    // 11. Visual theme and artwork prompt
+    // 16. Visual theme and artwork prompt
     const visualTheme = PastLifeVisualThemeEngine.selectTheme(archetype.primary, astro.ketuData.house);
     const artworkPrompt = PastLifeVisualPromptEngine.buildPrompt(
       archetype.primary,
@@ -102,22 +149,30 @@ export class PastLifeIntelligenceEngine {
       astro.atmakarakaData.planet
     );
 
-    // 12. Personalization
+    // 17. Personalization
     PastLifePersonalizationEngine.personalize(input, karma.themes, karma.connections);
 
     // Build immutable provenance hash
-    const hashData = `${input.userId}_${input.birthDate}_${input.birthTime}_${astro.kundli.fingerprint}_${this.VERSION}`;
+    const hashData = `${input.userId}_${input.birthDate}_${input.birthTime}_${fingerprint}_${this.VERSION}`;
     const hash = crypto.createHash('sha256').update(hashData).digest('hex').substring(0, 16);
     const readingId = `soul_${Date.now()}_${hash.substring(0, 8)}`;
+    const nowIso = new Date().toISOString();
 
-    const schema: PastLifeInsightSchema = {
+    const schema: PastLifeInsightSchema & {
+      convergence: any;
+      calculationFingerprint: string;
+      vargaEvaluation: any;
+      jaiminiEvaluation: any;
+      kpEvaluation: any;
+    } = {
       id: readingId,
       user_id: input.userId,
-      generated_at: new Date().toISOString(),
-      calculation_snapshot_id: `snap_${astro.kundli.fingerprint}`,
+      generated_at: nowIso,
+      calculation_snapshot_id: `snap_${fingerprint}`,
+      calculationFingerprint: fingerprint,
       interpretation_status: 'COMPLETE',
       classification: 'PAST LIFE INSIGHT — TRADITIONAL / SPIRITUAL INTERPRETATION',
-      epistemic_notice: 'Past-life insights are traditional spiritual interpretations derived from the user\'s provided birth data and DeepAstro\'s astrological and knowledge systems; they are not verified historical facts.',
+      epistemic_notice: 'Past-life insights are traditional spiritual interpretations derived from the user\'s real astronomical birth coordinates and DeepAstro\'s classical calculation core; they are not empirically provable historical records.',
       confidence,
       archetype,
       setting: {
@@ -150,7 +205,7 @@ export class PastLifeIntelligenceEngine {
       relationships: [
         'Mentorship with demanding yet compassionate classical teachers.',
         'Karmic soul bonds with seekers sharing mutual philosophical aspirations.',
-        'Protective responsibility toward younger or vulnerable companions.',
+        'Protective responsibility toward companions reflecting Darakaraka themes.',
       ],
       unfinished_lessons: karma.unfinishedLessons,
       karmic_patterns: karma.patterns,
@@ -159,7 +214,7 @@ export class PastLifeIntelligenceEngine {
       astrological_indicators: astro.indicators,
       numerology_indicators: num.indicators,
       vedic_references: vedicSources,
-      purana_references: puranaKnowledge.references,
+      purana_references: puranaReferences,
       contradictions: contradictionResult.contradictions,
       uncertainty_notes: confidence.uncertainty_notes,
       narrative: {
@@ -175,22 +230,39 @@ export class PastLifeIntelligenceEngine {
         artwork_prompt: artworkPrompt,
         atmosphere: visualTheme.atmosphere,
       },
+      convergence,
+      vargaEvaluation: vargaEval,
+      jaiminiEvaluation: jaiminiEval,
+      kpEvaluation: kpEval,
       provenance: {
         engine_version: this.VERSION,
-        calculation_version: '6.0.4',
+        calculation_version: '7.0.0',
         knowledge_version: this.KNOWLEDGE_VERSION,
-        rag_version: '2.0.0',
+        rag_version: '3.0.0',
         hash,
       },
-      version: '1.0',
+      version: '2.0',
     };
 
-    // 13. Record audit trail
+    // 18. Record audit trail
     PastLifeAuditEngine.record(schema);
 
     return {
       success: true,
       data: schema,
+      provenance: {
+        calculationFingerprint: fingerprint,
+        sources: [
+          'Vedic Ephemeris (Swiss Lahiri)',
+          'Jaimini Sutras (Chara Karakas)',
+          'KP Cuspal Sublords (12th & 8th Houses)',
+          'Navamsha (D9) & Shashtiamsa (D60)',
+          'Pythagorean & Vedic Numerology Cycles',
+          'Classical Puranic Canon (Vishnu Purana, Bhagavata)',
+        ],
+        engineVersion: this.VERSION,
+        generatedAt: nowIso,
+      },
     };
   }
 
@@ -199,22 +271,32 @@ export class PastLifeIntelligenceEngine {
     if (!reading) {
       return { success: false, error: 'READING_NOT_FOUND' };
     }
-    // IDOR Protection: only reading owner or authorized caller may access
-    if (reading.user_id !== requestingUserId) {
+    const audit = PastLifeAuditEngine.verifyUserAccess(readingId, requestingUserId);
+    if (!audit.allowed) {
       return { success: false, error: 'ACCESS_DENIED' };
     }
     return { success: true, data: reading };
+  }
+
+  public static submitFeedback(feedback: PastLifeUserFeedback): { success: boolean; error?: string } {
+    PastLifeAuditEngine.recordFeedback(feedback);
+    return { success: true };
+  }
+
+  public static recordFeedback(feedback: PastLifeUserFeedback): { success: boolean; error?: string } {
+    return this.submitFeedback(feedback);
   }
 
   public static getUserHistory(userId: string): PastLifeInsightSchema[] {
     return PastLifeAuditEngine.getUserReadings(userId);
   }
 
-  public static recordFeedback(feedback: PastLifeUserFeedback): void {
-    PastLifeAuditEngine.recordFeedback(feedback);
-  }
-
-  public static getObservatoryMetrics() {
+  public static getObservatoryMetrics(): {
+    totalReadings: number;
+    feedbackCount: number;
+    averageConfidence: string;
+    archetypeDistribution: Record<string, number>;
+  } {
     return PastLifeAuditEngine.getObservatoryMetrics();
   }
 }

@@ -23,6 +23,7 @@ import { db } from '../database/db.js';
 import { VedicAstroEngine, BirthProfileInput } from '../astrology/VedicAstroEngine.js';
 import { pool } from '../database/postgres.js';
 import { FutureRevealLevel, ForecastHorizon } from '../intelligence/future/CosmicFutureTypes.js';
+import { FutureCardEngine } from '../intelligence/future/FutureCardEngine.js';
 
 const router = Router();
 
@@ -179,11 +180,19 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
     });
 
     const futureMapData = CosmicFutureIntelligenceEngine.toFutureMapData(forecast);
+    const cardPayload = FutureCardEngine.formatForFutureMapCard(forecast);
 
     return res.json({
       success: true,
       data: futureMapData,
-      provenance: futureMapData.provenance,
+      forecast,
+      card: cardPayload,
+      provenance: {
+        ...futureMapData.provenance,
+        calculationFingerprint: (forecast as any).calculationFingerprint || futureMapData.provenance?.calculationFingerprint,
+        engineVersion: CosmicFutureIntelligenceEngine.VERSION,
+        generatedAt: forecast.generatedAt,
+      },
       disclaimer: forecast.disclaimer,
     });
   } catch (err: any) {
