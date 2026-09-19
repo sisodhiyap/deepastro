@@ -170,6 +170,7 @@ router.get('/latest', requireAuth, (req: AuthenticatedRequest, res: Response) =>
     }
     const latest = history[history.length - 1];
     return res.status(200).json({
+      success: true,
       status: 'SUCCESS',
       reading: latest,
       insightCard: PastLifeCardEngine.formatForInsightCard(latest),
