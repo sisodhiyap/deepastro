@@ -37,8 +37,8 @@ function verifyMasterPasscode(candidate: unknown): boolean {
   return false;
 }
 
-// POST /api/auth/register
-router.post('/register', async (req: Request, res: Response) => {
+// POST /api/auth/register & POST /api/auth/signup
+const registerHandler = async (req: Request, res: Response) => {
   try {
     const { email, password, fullName } = req.body;
 
@@ -82,8 +82,6 @@ router.post('/register', async (req: Request, res: Response) => {
       role: 'CLIENT',
     });
 
-
-
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email, role: newUser.role },
       JWT_SECRET,
@@ -105,7 +103,10 @@ router.post('/register', async (req: Request, res: Response) => {
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to complete registration.', details: err.message });
   }
-});
+};
+
+router.post('/register', registerHandler);
+router.post('/signup', registerHandler);
 
 // POST /api/auth/login
 router.post('/login', async (req: Request, res: Response) => {

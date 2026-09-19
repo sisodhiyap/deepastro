@@ -23,9 +23,9 @@ router.use((_req, res, next) => {
   next();
 });
 
-// 1. POST /api/intelligence/past-life/generate
+// 1. POST /api/intelligence/past-life & /api/intelligence/past-life/generate
 // Open to authenticated users and direct birth profiles without paywall or sign-in blocks
-router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+const generatePastLifeHandler = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId || req.body?.userId || (req.body?.birthProfile ? `usr_guest_${Date.now()}` : null);
     if (!userId && !req.body?.birthProfile) {
@@ -136,7 +136,10 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
       },
     });
   }
-});
+};
+
+router.post('/', optionalAuth, generatePastLifeHandler);
+router.post('/generate', optionalAuth, generatePastLifeHandler);
 
 // 2. GET /api/intelligence/past-life/history
 router.get('/history', requireAuth, (req: AuthenticatedRequest, res: Response) => {

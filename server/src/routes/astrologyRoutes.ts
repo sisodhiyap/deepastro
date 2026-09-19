@@ -59,8 +59,8 @@ import { pool } from '../database/postgres.js';
 const router = Router();
 const uploadKundli = multer({ limits: { fileSize: 15 * 1024 * 1024 } });
 
-// POST /api/astrology/calculate-kundli (Authoritative Server-Side Calculation Endpoint)
-router.post('/calculate-kundli', optionalAuth, (req: AuthenticatedRequest, res: Response) => {
+// POST /api/astrology/calculate-kundli & POST /api/astrology/calculate
+const calculateKundliHandler = (req: AuthenticatedRequest, res: Response) => {
   try {
     const { name, dateOfBirth, birthDate, timeOfBirth, birthTime, birthPlace, latitude, longitude, timezone, gender, isApproximateTime } = req.body;
     const finalDob = dateOfBirth || birthDate;
@@ -154,7 +154,10 @@ router.post('/calculate-kundli', optionalAuth, (req: AuthenticatedRequest, res: 
   } catch (err: any) {
     return res.status(500).json({ error: 'Calculation failed', details: err.message });
   }
-});
+};
+
+router.post('/calculate-kundli', optionalAuth, calculateKundliHandler);
+router.post('/calculate', optionalAuth, calculateKundliHandler);
 
 // GET /api/astrology/current-kundli (Authoritative Authenticated User Kundli Retrieval)
 router.get('/current-kundli', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
