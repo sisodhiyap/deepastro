@@ -153,6 +153,30 @@ router.get('/history', requireAuth, (req: AuthenticatedRequest, res: Response) =
   }
 });
 
+// 2b. GET /api/intelligence/past-life/latest - Retrieve user's latest saved reading
+router.get('/latest', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const history = PastLifeIntelligenceEngine.getUserHistory(userId);
+    if (!history || history.length === 0) {
+      return res.status(404).json({
+        status: 'NOT_FOUND',
+        error: 'NOT_FOUND',
+        message: 'No previous past life reading found on record for this account.',
+      });
+    }
+    const latest = history[history.length - 1];
+    return res.status(200).json({
+      status: 'SUCCESS',
+      reading: latest,
+      insightCard: PastLifeCardEngine.formatForInsightCard(latest),
+      soulJourney: PastLifeCardEngine.formatForSoulJourney(latest),
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: 'FETCH_ERROR', message: error.message });
+  }
+});
+
 // 3. GET /api/intelligence/past-life/:id
 router.get('/:id', requireAuth, (req: AuthenticatedRequest, res: Response) => {
   try {

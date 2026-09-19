@@ -87,7 +87,7 @@ export const TarotResponsiveLayout: React.FC<TarotResponsiveLayoutProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`w-full relative select-none ${className}`}
+      className={`w-full relative select-none overflow-x-hidden ${className}`}
       role="region"
       aria-label="Tarot Spread Interactive Arena"
     >

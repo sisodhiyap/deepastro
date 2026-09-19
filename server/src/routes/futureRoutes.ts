@@ -24,6 +24,7 @@ import { VedicAstroEngine, BirthProfileInput } from '../astrology/VedicAstroEngi
 import { pool } from '../database/postgres.js';
 import { FutureRevealLevel, ForecastHorizon } from '../intelligence/future/CosmicFutureTypes.js';
 import { FutureCardEngine } from '../intelligence/future/FutureCardEngine.js';
+import { FutureAuditEngine } from '../intelligence/future/FutureAuditEngine.js';
 
 const router = Router();
 
@@ -206,6 +207,11 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       lifeAreas: futureMapData.lifeAreas || forecast.domainForecasts,
     };
 
+    // Save forecast to persistence layer for authenticated user
+    if (req.user?.userId) {
+      await FutureAuditEngine.saveForecast(req.user.userId, mergedData);
+    }
+
     return res.json({
       success: true,
       status: 'SUCCESS',
@@ -237,6 +243,28 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
 
 router.post('/generate', optionalAuth, generateFutureHandler);
 router.post('/forecast', optionalAuth, generateFutureHandler);
+
+// GET /api/future/latest - Retrieve user's latest persistent forecast
+router.get('/latest', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const latest = await FutureAuditEngine.getLatestForecast(userId);
+    if (!latest) {
+      return res.status(404).json({
+        success: false,
+        error: 'NOT_FOUND',
+        message: 'No previous future forecast found for this cosmic account.',
+      });
+    }
+    return res.json({
+      success: true,
+      data: latest,
+      status: 'SUCCESS',
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'FETCH_ERROR', details: err.message });
+  }
+});
 
 // GET /api/future/month/:year/:month - Lazy on-demand monthly forecast
 router.get('/month/:year/:month', requireAuth, async (req: AuthenticatedRequest, res: Response) => {

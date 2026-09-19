@@ -142,13 +142,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`w-64 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-y-auto select-none shrink-0 ${className}`}
+      className={`w-64 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-hidden select-none shrink-0 ${className}`}
     >
       <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500/20 via-amber-400 to-amber-600/20 shadow-[0_0_16px_rgba(245,199,106,0.85)] pointer-events-none z-30" />
       <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/8 via-amber-500/3 to-transparent pointer-events-none blur-xl z-0" />
 
-      {/* Brand Header */}
-      <div className="relative z-10 p-5 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10">
+      {/* Brand Header (Pinned) */}
+      <div className="relative z-10 p-5 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10 shrink-0">
         <Logo size="md" showTagline={true} />
         <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-amber-300/80 px-1">
           <span>COSMIC ENGINE</span>
@@ -156,8 +156,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Navigation Sections */}
-      <div className="relative z-10 p-3 space-y-6 flex-1">
+      {/* Navigation Sections (Independent Scrollable Body) */}
+      <div className="relative z-10 p-3 space-y-6 flex-1 overflow-y-auto overflow-x-hidden">
         {sections.map((section, sIdx) => (
           <div key={sIdx} className="space-y-1">
             <div className="px-3 py-1 text-[10px] font-bold font-mono tracking-wider text-slate-500 uppercase">
@@ -194,8 +194,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* Bottom Footer */}
-      <div className="relative z-10 p-4 border-t border-slate-800/80 bg-[#06070A]/80 text-[11px] text-slate-500 space-y-1">
+      {/* Bottom Footer (Pinned) */}
+      <div className="relative z-10 p-4 border-t border-slate-800/80 bg-[#06070A]/80 text-[11px] text-slate-500 space-y-1 shrink-0">
         <div className="flex items-center justify-between text-slate-400 font-mono">
           <span>PRECISION CORE</span>
           <span className="text-emerald-400 font-semibold">100% PASS</span>

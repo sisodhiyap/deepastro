@@ -45,6 +45,7 @@ import financialRoutes from './routes/financialRoutes.js';
 import weatherRoutes from './routes/weatherRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import cosmosRoutes from './routes/cosmosRoutes.js';
+import progressRoutes from './routes/progressRoutes.js';
 
 import { DeepAstroHealthEngine } from './services/DeepAstroHealthEngine.js';
 
@@ -152,6 +153,8 @@ app.use('/api/financial', financialRoutes);
 app.use('/api/cosmos', cosmosRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/feedback', feedbackRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/progress', progressRoutes);
 
 // Direct root route aliases for resilient Vercel Serverless Function gateway compatibility
 app.use('/auth', authRoutes);
