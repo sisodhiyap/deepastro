@@ -297,45 +297,95 @@ export const getDailyTarotCard = (userId: string = 'guest'): { card: TarotCard; 
 };
 
 /**
- * Local Journal Storage Helpers
+ * Local Journal Storage Helpers (User Isolated & Universal)
  */
-export const getJournalHistory = (): TarotSession[] => {
-  if (typeof window === 'undefined' || !window.localStorage) return [];
+const memoryStorage: Record<string, string> = {};
+const memoryStorageFallback: Storage = {
+  getItem: (key: string) => memoryStorage[key] ?? null,
+  setItem: (key: string, value: string) => { memoryStorage[key] = String(value); },
+  removeItem: (key: string) => { delete memoryStorage[key]; },
+  clear: () => { Object.keys(memoryStorage).forEach((k) => delete memoryStorage[k]); },
+  key: (index: number) => Object.keys(memoryStorage)[index] ?? null,
+  get length() { return Object.keys(memoryStorage).length; },
+};
+
+const getLocalStorage = (): Storage => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return window.localStorage;
+  }
+  if (typeof localStorage !== 'undefined') {
+    return localStorage;
+  }
+  return memoryStorageFallback;
+};
+
+const getTarotStorageKey = (prefix: string, userId?: string): string => {
+  if (userId && userId !== 'guest_tarot_seeker') {
+    return `${prefix}_${userId}`;
+  }
+  const storage = getLocalStorage();
+  if (storage) {
+    const rawUser = storage.getItem('deepastro_user');
+    if (rawUser) {
+      try {
+        const u = JSON.parse(rawUser);
+        if (u?.id) return `${prefix}_${u.id}`;
+      } catch {}
+    }
+  }
+  return `${prefix}_guest`;
+};
+
+export const getJournalHistory = (userId?: string): TarotSession[] => {
+  const storage = getLocalStorage();
+  if (!storage) return [];
   try {
-    const data = window.localStorage.getItem('deepastro_tarot_journal');
+    const key = getTarotStorageKey('deepastro_tarot_journal', userId);
+    let data = storage.getItem(key);
+    if (!data && key !== 'deepastro_tarot_journal_guest') {
+      // Fallback check for un-scoped legacy items
+      data = storage.getItem('deepastro_tarot_journal');
+    }
     return data ? JSON.parse(data) : [];
   } catch {
     return [];
   }
 };
 
-export const saveToJournalStorage = (session: TarotSession) => {
-  if (typeof window === 'undefined' || !window.localStorage) return;
+export const saveToJournalStorage = (session: TarotSession, userId?: string) => {
+  const storage = getLocalStorage();
+  if (!storage) return;
   try {
-    const current = getJournalHistory();
+    const effectiveUserId = userId || session.userId;
+    const key = getTarotStorageKey('deepastro_tarot_journal', effectiveUserId);
+    const current = getJournalHistory(effectiveUserId);
     const filtered = current.filter((s) => s.sessionId !== session.sessionId);
     const updated = [session, ...filtered].slice(0, 50); // Store up to 50 readings
-    window.localStorage.setItem('deepastro_tarot_journal', JSON.stringify(updated));
+    storage.setItem(key, JSON.stringify(updated));
   } catch {
     // Storage full
   }
 };
 
-export const deleteFromJournalStorage = (sessionId: string) => {
-  if (typeof window === 'undefined' || !window.localStorage) return;
+export const deleteFromJournalStorage = (sessionId: string, userId?: string) => {
+  const storage = getLocalStorage();
+  if (!storage) return;
   try {
-    const current = getJournalHistory();
+    const key = getTarotStorageKey('deepastro_tarot_journal', userId);
+    const current = getJournalHistory(userId);
     const updated = current.filter((s) => s.sessionId !== sessionId);
-    window.localStorage.setItem('deepastro_tarot_journal', JSON.stringify(updated));
+    storage.setItem(key, JSON.stringify(updated));
   } catch {
     // Storage full
   }
 };
 
-export const toggleFavoriteJournal = (sessionId: string): boolean => {
-  if (typeof window === 'undefined' || !window.localStorage) return false;
+export const toggleFavoriteJournal = (sessionId: string, userId?: string): boolean => {
+  const storage = getLocalStorage();
+  if (!storage) return false;
   try {
-    const current = getJournalHistory();
+    const key = getTarotStorageKey('deepastro_tarot_journal', userId);
+    const current = getJournalHistory(userId);
     let newStatus = false;
     const updated = current.map((s) => {
       if (s.sessionId === sessionId) {
@@ -344,45 +394,50 @@ export const toggleFavoriteJournal = (sessionId: string): boolean => {
       }
       return s;
     });
-    window.localStorage.setItem('deepastro_tarot_journal', JSON.stringify(updated));
+    storage.setItem(key, JSON.stringify(updated));
     return newStatus;
   } catch {
     return false;
   }
 };
 
-export const getTarotReadings = (): any[] => {
+export const getTarotReadings = (userId?: string): any[] => {
+  const storage = getLocalStorage();
+  if (!storage) return [];
   try {
-    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('deepastro_tarot_readings') : null;
+    const key = getTarotStorageKey('deepastro_tarot_readings', userId);
+    const raw = storage.getItem(key);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 };
 
-export const deleteTarotReading = (sessionId: string): void => {
+export const deleteTarotReading = (sessionId: string, userId?: string): void => {
+  const storage = getLocalStorage();
+  if (!storage) return;
   try {
-    const list = getTarotReadings().filter((r: any) => r.sessionId !== sessionId);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('deepastro_tarot_readings', JSON.stringify(list));
-    }
+    const key = getTarotStorageKey('deepastro_tarot_readings', userId);
+    const list = getTarotReadings(userId).filter((r: any) => r.sessionId !== sessionId);
+    storage.setItem(key, JSON.stringify(list));
   } catch {}
 };
 
-export const toggleFavoriteTarotReading = (sessionId: string): void => {
+export const toggleFavoriteTarotReading = (sessionId: string, userId?: string): void => {
+  const storage = getLocalStorage();
+  if (!storage) return;
   try {
-    const list = getTarotReadings().map((r: any) => r.sessionId === sessionId ? { ...r, favorite: !r.favorite } : r);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('deepastro_tarot_readings', JSON.stringify(list));
-    }
+    const key = getTarotStorageKey('deepastro_tarot_readings', userId);
+    const list = getTarotReadings(userId).map((r: any) => r.sessionId === sessionId ? { ...r, favorite: !r.favorite } : r);
+    storage.setItem(key, JSON.stringify(list));
   } catch {}
 };
 
 export const addNoteToTarotReading = (sessionId: string, note: string): void => {
+  const storage = getLocalStorage();
+  if (!storage) return;
   try {
     const list = getTarotReadings().map((r: any) => r.sessionId === sessionId ? { ...r, notes: note } : r);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('deepastro_tarot_readings', JSON.stringify(list));
-    }
+    storage.setItem('deepastro_tarot_readings', JSON.stringify(list));
   } catch {}
 };

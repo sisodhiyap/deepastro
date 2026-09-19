@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Sparkles, Menu, ShieldCheck, User, Activity, RefreshCw, Key, CheckCircle2, XCircle, LogIn, LogOut } from 'lucide-react';
+import { Search, Bell, Sparkles, Menu, ShieldCheck, User, Activity, RefreshCw, Key, CheckCircle2, XCircle, LogIn, LogOut, MessageSquare } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle.js';
+import { FeedbackModal } from '../common/FeedbackModal.js';
 import { NavTabId } from './Sidebar.js';
 
 interface TopNavProps {
@@ -24,6 +25,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showApiModal, setShowApiModal] = useState(false);
   const [apiStatus, setApiStatus] = useState<any>(null);
   const [isTestingApis, setIsTestingApis] = useState(false);
@@ -256,6 +258,16 @@ export const TopNav: React.FC<TopNavProps> = ({
           )}
         </div>
 
+        {/* Feedback Trigger */}
+        <button
+          onClick={() => setShowFeedbackModal(true)}
+          className="p-2 rounded-xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-400/50 text-cosmic-muted hover:text-cyan-300 transition-colors"
+          title="Share Feedback / Report Observation"
+          aria-label="Share Feedback"
+        >
+          <MessageSquare className="w-4 h-4" />
+        </button>
+
         {/* Theme Toggle */}
         <ThemeToggle />
 
@@ -303,6 +315,11 @@ export const TopNav: React.FC<TopNavProps> = ({
           </div>
         )}
       </div>
+
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </header>
   );
 };

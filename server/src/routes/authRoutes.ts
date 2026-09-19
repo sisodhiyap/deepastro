@@ -421,7 +421,7 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) 
 
   const sub = db.getSubscription(userId);
 
-  if (!user && !profile) {
+  if (!user) {
     return res.status(404).json({ error: 'User not found.' });
   }
 
@@ -495,13 +495,23 @@ router.post('/birth-profile', optionalAuth, async (req: AuthenticatedRequest, re
     const lat = Number(req.body.latitude);
     const lon = Number(req.body.longitude);
     const tz = Number(req.body.timezone);
+
+    if (isNaN(lat) || isNaN(lon)) {
+      return res.status(400).json({
+        success: false,
+        code: 'BIRTH_PROFILE_INCOMPLETE',
+        missingFields: isNaN(lat) && isNaN(lon) ? ['latitude', 'longitude'] : isNaN(lat) ? ['latitude'] : ['longitude'],
+        error: 'Valid latitude and longitude coordinates are required. No synthetic fallbacks permitted.',
+      });
+    }
+
     const saved = await AuthBootstrapService.saveBirthProfile(userId, {
       fullName: req.body.fullName || req.body.name || 'Cosmic Native',
       birthDate: req.body.birthDate,
       birthTime: req.body.birthTime,
       birthPlace: req.body.birthPlace || 'Calculated Location',
-      latitude: isNaN(lat) ? 28.6139 : lat,
-      longitude: isNaN(lon) ? 77.2090 : lon,
+      latitude: lat,
+      longitude: lon,
       timezone: isNaN(tz) ? 5.5 : tz,
       gender: req.body.gender || 'Other',
       isApproximateTime: Boolean(req.body.isApproximateTime),
@@ -509,6 +519,45 @@ router.post('/birth-profile', optionalAuth, async (req: AuthenticatedRequest, re
     return res.status(201).json({ success: true, message: 'Birth profile version saved successfully for future comparison.', birthProfile: saved });
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to save birth profile version', details: err.message });
+  }
+});
+
+// DELETE /api/auth/account - permanent account deletion with complete data removal
+router.delete('/account', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    // 1. Delete from PostgreSQL individual tables gracefully
+    try { await pool.query('DELETE FROM birth_profiles WHERE user_id = $1', [userId]); } catch (e) {}
+    try { await pool.query('DELETE FROM astrology_charts WHERE user_id = $1', [userId]); } catch (e) {}
+    try { await pool.query('DELETE FROM calculation_snapshots WHERE user_id = $1', [userId]); } catch (e) {}
+    try { await pool.query('DELETE FROM profiles WHERE user_id = $1', [userId]); } catch (e) {}
+    try { await pool.query('DELETE FROM users WHERE id = $1', [userId]); } catch (e) {}
+
+    // 2. Clear from repositories and memory
+    await userRepository.deleteUser(userId);
+    await AuthBootstrapService.deleteProfile(userId);
+    db.users.delete(userId);
+    db.profiles.delete(userId);
+    db.birthProfiles.delete(userId);
+    db.calculationSnapshots.delete(userId);
+    db.entitlements.delete(userId);
+
+    // 3. If Supabase admin available and userId is a valid UUID, delete from auth.users
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (supabaseAdmin && isUuid) {
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+      } catch (sbErr) {
+        console.warn('[Account Delete] Supabase admin delete error:', sbErr);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: 'Cosmic account and all associated birth calculations permanently deleted.',
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to delete account.', details: err.message });
   }
 });
 

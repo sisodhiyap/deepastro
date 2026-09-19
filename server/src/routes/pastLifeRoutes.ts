@@ -54,14 +54,21 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
     if (profile) {
       const rawLat = (profile as any).latitude;
       const rawLon = (profile as any).longitude;
-      const lat = rawLat !== undefined && rawLat !== null && !isNaN(Number(rawLat)) ? Number(rawLat) : 28.6139;
-      const lon = rawLon !== undefined && rawLon !== null && !isNaN(Number(rawLon)) ? Number(rawLon) : 77.2090;
+      const hasLat = rawLat !== undefined && rawLat !== null && rawLat !== '' && !isNaN(Number(rawLat));
+      const hasLon = rawLon !== undefined && rawLon !== null && rawLon !== '' && !isNaN(Number(rawLon));
+      if (!hasLat || !hasLon) {
+        return res.status(400).json({
+          success: false,
+          error: 'BIRTH_PROFILE_INCOMPLETE',
+          message: 'Valid birth latitude and longitude coordinates are strictly required for authentic astronomical calculations.',
+        });
+      }
       profile = {
         ...profile,
         fullName: (profile as any).fullName || (profile as any).name || 'Cosmic Native',
-        birthPlace: (profile as any).birthPlace || (profile as any).city || 'Calculated Location',
-        latitude: lat,
-        longitude: lon,
+        birthPlace: (profile as any).birthPlace || (profile as any).city || '',
+        latitude: Number(rawLat),
+        longitude: Number(rawLon),
       };
     }
 

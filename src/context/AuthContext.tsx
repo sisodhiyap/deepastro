@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { saveBirthProfile } from '../utils/birthStorage';
+import { saveBirthProfile, clearBirthStorage } from '../utils/birthStorage';
 
 export interface UserProfile {
   id: string;
@@ -34,6 +34,7 @@ export interface AuthContextType {
   continueAsGuest: () => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   register: (fullName: string, email: string, password: string) => Promise<{ success: boolean; user?: UserProfile; error?: string }>;
   resetPassword: (email: string) => Promise<{ success: boolean; message: string; error?: string }>;
   refreshProfile: () => Promise<void>;
@@ -54,6 +55,7 @@ const AuthContext = createContext<AuthContextType>({
   continueAsGuest: async () => ({ success: false }),
   signOut: async () => {},
   logout: async () => {},
+  deleteAccount: async () => ({ success: false }),
   register: async () => ({ success: false }),
   resetPassword: async () => ({ success: false, message: '' }),
   refreshProfile: async () => {},
@@ -347,9 +349,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setToken(null);
     setUser(null);
-    localStorage.removeItem('deepastro_token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('deepastro_user');
+    clearBirthStorage();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('deepastro_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('deepastro_user');
+      localStorage.removeItem('deepastro_tarot_journal');
+      localStorage.removeItem('deepastro_tarot_readings');
+    }
+  };
+
+  const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    const activeToken = token || (typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null);
+    if (!activeToken) {
+      return { success: false, error: 'Authentication required to delete account.' };
+    }
+    try {
+      const res = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        return { success: false, error: data.error || 'Failed to delete account.' };
+      }
+      await signOut();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Connection issue during account deletion.' };
+    }
   };
 
   const isAuthenticated = !!user && !!token;
@@ -374,6 +402,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         continueAsGuest,
         signOut,
         logout: signOut,
+        deleteAccount,
         register,
         resetPassword,
         refreshProfile,

@@ -57,13 +57,18 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
     e.preventDefault();
     setSaving(true); setSaveError(null);
     try {
+      if (!form.latitude || !form.longitude) {
+        setSaveError('Please enter a birth place or provide exact latitude and longitude coordinates.');
+        setSaving(false);
+        return;
+      }
       const profileToSave = {
         name: form.fullName.trim() || 'Cosmic Native',
         birthDate: form.birthDate.trim(),
         birthTime: form.birthTime.trim(),
         birthPlace: form.birthPlace.trim() || 'Calculated Location',
-        latitude: form.latitude || '28.6139',
-        longitude: form.longitude || '77.2090',
+        latitude: form.latitude.trim(),
+        longitude: form.longitude.trim(),
         timezone: form.timezone || 'Asia/Kolkata',
         gender: form.gender || 'Male',
       };
@@ -93,8 +98,8 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
             birthDate: profileToSave.birthDate,
             birthTime: profileToSave.birthTime,
             birthPlace: profileToSave.birthPlace,
-            latitude: parseFloat(profileToSave.latitude) || 28.6139,
-            longitude: parseFloat(profileToSave.longitude) || 77.2090,
+            latitude: parseFloat(profileToSave.latitude),
+            longitude: parseFloat(profileToSave.longitude),
             timezone: profileToSave.timezone,
             gender: profileToSave.gender,
           }),
@@ -248,7 +253,15 @@ export const FutureIntelligencePage: React.FC = () => {
 
       // Read local birth profile so user's real calculation parameters seamlessly flow into future engine
       const localProfile = await getOrFetchBirthProfile();
-      if (!localProfile || !localProfile.birthDate || !localProfile.birthTime) {
+      if (
+        !localProfile ||
+        !localProfile.birthDate ||
+        !localProfile.birthTime ||
+        !localProfile.latitude ||
+        !localProfile.longitude ||
+        isNaN(parseFloat(localProfile.latitude as any)) ||
+        isNaN(parseFloat(localProfile.longitude as any))
+      ) {
         setPageState('BIRTH_PROFILE_REQUIRED');
         return;
       }
@@ -258,8 +271,8 @@ export const FutureIntelligencePage: React.FC = () => {
         birthDate: localProfile.birthDate,
         birthTime: localProfile.birthTime,
         birthPlace: localProfile.birthPlace || 'Calculated Location',
-        latitude: parseFloat(localProfile.latitude as any) || 28.6139,
-        longitude: parseFloat(localProfile.longitude as any) || 77.2090,
+        latitude: parseFloat(localProfile.latitude as any),
+        longitude: parseFloat(localProfile.longitude as any),
         timezone: localProfile.timezone || 'Asia/Kolkata',
         gender: localProfile.gender || 'Male',
       };
@@ -475,11 +488,23 @@ export const FutureIntelligencePage: React.FC = () => {
   const yearlyTimeline = forecastData?.yearForecasts || forecastData?.timeline || [];
   const monthlyTimeline = forecastData?.monthForecasts || [];
   const selectedYearObj = yearlyTimeline.find((y: any) => y.year === selectedYear) || yearlyTimeline[0];
-  const domainDict = forecastData?.domainForecasts || forecastData?.lifeAreas || {};
-  const domainList = Object.entries(domainDict).map(([domain, data]: [string, any]) => ({
-    domain,
-    ...data,
-  }));
+  const rawDomains = forecastData?.domainForecasts || forecastData?.lifeAreas || [];
+  const domainList = Array.isArray(rawDomains)
+    ? rawDomains
+    : typeof rawDomains === 'object' && rawDomains !== null
+    ? Object.entries(rawDomains).map(([domain, data]: [string, any]) => ({ domain, ...data }))
+    : [];
+
+  const getDomainData = (name: string): any => {
+    if (Array.isArray(domainList)) {
+      const match = domainList.find((d: any) => d.domain?.toUpperCase() === name.toUpperCase());
+      if (match) return match;
+    }
+    if (rawDomains && typeof rawDomains === 'object' && !Array.isArray(rawDomains)) {
+      return (rawDomains as any)[name] || (rawDomains as any)[name.toLowerCase()];
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-[#06070A] text-slate-100 py-8 px-4 md:px-8 space-y-8 font-inter">
@@ -624,12 +649,12 @@ export const FutureIntelligencePage: React.FC = () => {
                     overallTheme: forecastData?.overall10YearTheme || 'Strategic Evolution and Purpose Realization',
                     nextMajorWindow: forecastData?.nextMajorWindow?.period || 'Q3–Q4 Upcoming',
                     forecastHorizonYears: horizonYears,
-                    careerOutlook: domainDict.CAREER?.outlook || 'Structured progression through merit and disciplined skill elevation.',
-                    relationshipOutlook: domainDict.RELATIONSHIP?.outlook || 'Harmonious reciprocity supported by open, conscious communication.',
-                    financeOutlook: domainDict.FINANCE?.outlook || 'Systematic asset accumulation with prudent risk mitigation.',
-                    growthOutlook: domainDict.PERSONAL_GROWTH?.outlook || 'Internal maturation and philosophical clarity.',
-                    spiritualityOutlook: domainDict.SPIRITUALITY?.outlook || 'Deepened contemplative grounding and adherence to dharma.',
-                    healthSpanOutlook: domainDict.HEALTHSPAN?.outlook || 'Enduring vitality sustained by balanced routines and preventive self-care.',
+                    careerOutlook: getDomainData('CAREER')?.outlook || 'Dynamic progression supported by active planetary transits.',
+                    relationshipOutlook: getDomainData('RELATIONSHIP')?.outlook || getDomainData('LOVE')?.outlook || 'Harmonious reciprocity supported by open, conscious communication.',
+                    financeOutlook: getDomainData('FINANCE')?.outlook || 'Systematic asset accumulation with prudent risk mitigation.',
+                    growthOutlook: getDomainData('PERSONAL_GROWTH')?.outlook || getDomainData('GROWTH')?.outlook || 'Internal maturation and philosophical clarity.',
+                    spiritualityOutlook: getDomainData('SPIRITUALITY')?.outlook || 'Deepened contemplative grounding and adherence to dharma.',
+                    healthSpanOutlook: getDomainData('HEALTHSPAN')?.outlook || getDomainData('HEALTH')?.outlook || 'Enduring vitality sustained by balanced routines and preventive self-care.',
                     timeline: yearlyTimeline.map((y: any) => ({
                       year: y.year,
                       overallTheme: y.overallTheme,

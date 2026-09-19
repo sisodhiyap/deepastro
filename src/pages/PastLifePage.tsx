@@ -30,13 +30,18 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
     e.preventDefault();
     setSaving(true); setSaveError(null);
     try {
+      if (!form.latitude || !form.longitude) {
+        setSaveError('Please enter a birth place or provide exact latitude and longitude coordinates.');
+        setSaving(false);
+        return;
+      }
       const profileToSave = {
         name: form.fullName.trim() || 'Cosmic Native',
         birthDate: form.birthDate.trim(),
         birthTime: form.birthTime.trim(),
         birthPlace: form.birthPlace.trim() || 'Calculated Location',
-        latitude: form.latitude || '28.6139',
-        longitude: form.longitude || '77.2090',
+        latitude: form.latitude.trim(),
+        longitude: form.longitude.trim(),
         timezone: form.timezone || 'Asia/Kolkata',
         gender: form.gender || 'Male',
       };
@@ -66,8 +71,8 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
             birthDate: profileToSave.birthDate,
             birthTime: profileToSave.birthTime,
             birthPlace: profileToSave.birthPlace,
-            latitude: parseFloat(profileToSave.latitude) || 28.6139,
-            longitude: parseFloat(profileToSave.longitude) || 77.2090,
+            latitude: parseFloat(profileToSave.latitude),
+            longitude: parseFloat(profileToSave.longitude),
             timezone: profileToSave.timezone,
             gender: profileToSave.gender,
           }),
@@ -211,7 +216,15 @@ export const PastLifePage: React.FC = () => {
 
       // Read local canonical profile so user's real calculation parameters seamlessly flow into past life engine
       const localProfile = await getOrFetchBirthProfile();
-      if (!localProfile || !localProfile.birthDate || !localProfile.birthTime) {
+      if (
+        !localProfile ||
+        !localProfile.birthDate ||
+        !localProfile.birthTime ||
+        !localProfile.latitude ||
+        !localProfile.longitude ||
+        isNaN(parseFloat(localProfile.latitude as any)) ||
+        isNaN(parseFloat(localProfile.longitude as any))
+      ) {
         setNeedsBirthProfile(true);
         setLoading(false);
         return;
@@ -222,8 +235,8 @@ export const PastLifePage: React.FC = () => {
         birthDate: localProfile.birthDate,
         birthTime: localProfile.birthTime,
         birthPlace: localProfile.birthPlace || 'Calculated Location',
-        latitude: parseFloat(localProfile.latitude as any) || 28.6139,
-        longitude: parseFloat(localProfile.longitude as any) || 77.2090,
+        latitude: parseFloat(localProfile.latitude as any),
+        longitude: parseFloat(localProfile.longitude as any),
         timezone: localProfile.timezone || 'Asia/Kolkata',
         gender: localProfile.gender || 'Male',
       };

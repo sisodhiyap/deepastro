@@ -81,6 +81,15 @@ export class UserRepository {
     }
     return null;
   }
+
+  public async deleteUser(userId: string): Promise<boolean> {
+    if (this.client.isLive()) {
+      await this.client.query('DELETE FROM users WHERE id = $1;', [userId]);
+    }
+    const existed = this.memoryUsers.has(userId);
+    this.memoryUsers.delete(userId);
+    return existed;
+  }
 }
 
 export const userRepository = new UserRepository();

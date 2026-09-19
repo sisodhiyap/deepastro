@@ -175,6 +175,18 @@ export class AuthBootstrapService {
   }
 
   /**
+   * Delete user profile from PostgreSQL and memory
+   */
+  public static async deleteProfile(userId: string): Promise<void> {
+    try {
+      await pool.query('DELETE FROM profiles WHERE user_id = $1', [userId]);
+    } catch (err) {
+      console.warn('[AuthBootstrap] Error deleting profile from pg:', err);
+    }
+    db.profiles.delete(userId);
+  }
+
+  /**
    * Update profile in PostgreSQL and memory
    */
   public static async updateProfile(userId: string, updates: Partial<ProfileRecord>): Promise<ProfileRecord> {
