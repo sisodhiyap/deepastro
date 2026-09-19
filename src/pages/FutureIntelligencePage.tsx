@@ -472,10 +472,10 @@ export const FutureIntelligencePage: React.FC = () => {
     );
   }
 
-  const yearlyTimeline = forecastData?.yearForecasts || [];
+  const yearlyTimeline = forecastData?.yearForecasts || forecastData?.timeline || [];
   const monthlyTimeline = forecastData?.monthForecasts || [];
   const selectedYearObj = yearlyTimeline.find((y: any) => y.year === selectedYear) || yearlyTimeline[0];
-  const domainDict = forecastData?.domainForecasts || {};
+  const domainDict = forecastData?.domainForecasts || forecastData?.lifeAreas || {};
   const domainList = Object.entries(domainDict).map(([domain, data]: [string, any]) => ({
     domain,
     ...data,

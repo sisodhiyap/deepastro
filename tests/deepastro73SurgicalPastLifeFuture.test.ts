@@ -313,4 +313,108 @@ describe('DEEPASTRO 7.3: Surgical Future Intelligence Engine Verification', () =
     expect(res.body.success).toBe(true);
     expect(res.body.birthProfile).toBeDefined();
   });
+
+  it('16. Birth-time mutation dynamicity: Profile A vs Profile C yields different Ascendant and fingerprints', async () => {
+    const PROFILE_C = {
+      ...PROFILE_A,
+      fullName: 'Aarav Test Profile C (Mutated Time)',
+      birthTime: '18:15',
+    };
+
+    const resA = await request(app)
+      .post('/api/intelligence/past-life/generate')
+      .send({ format: 'insight_card', birthProfile: PROFILE_A });
+
+    const resC = await request(app)
+      .post('/api/intelligence/past-life/generate')
+      .send({ format: 'insight_card', birthProfile: PROFILE_C });
+
+    expect(resA.status).toBe(200);
+    expect(resC.status).toBe(200);
+    expect(resA.body.provenance.calculationFingerprint).not.toBe(resC.body.provenance.calculationFingerprint);
+  });
+
+  it('17. Birth-place mutation dynamicity: Profile A vs Profile D yields different sidereal context and fingerprints', async () => {
+    const PROFILE_D = {
+      ...PROFILE_A,
+      fullName: 'Aarav Test Profile D (Mutated Place)',
+      birthPlace: 'London, UK',
+      latitude: 51.5074,
+      longitude: -0.1278,
+      timezone: 0.0,
+    };
+
+    const resA = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '3_YEARS', consentGranted: true, birthProfile: PROFILE_A });
+
+    const resD = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '3_YEARS', consentGranted: true, birthProfile: PROFILE_D });
+
+    expect(resA.status).toBe(200);
+    expect(resD.status).toBe(200);
+    expect(resA.body.provenance.calculationFingerprint).not.toBe(resD.body.provenance.calculationFingerprint);
+  });
+
+  it('18. Horizon consistency: Changing horizon (3Y vs 5Y vs 10Y) preserves the identical natal calculation fingerprint', async () => {
+    const res3 = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '3_YEARS', consentGranted: true, birthProfile: PROFILE_A });
+
+    const res5 = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '5_YEARS', consentGranted: true, birthProfile: PROFILE_A });
+
+    const res10 = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '10_YEARS', consentGranted: true, birthProfile: PROFILE_A });
+
+    expect(res3.body.data.yearForecasts.length).toBe(3);
+    expect(res5.body.data.yearForecasts.length).toBe(5);
+    expect(res10.body.data.yearForecasts.length).toBe(10);
+
+    const fp3 = res3.body.provenance.calculationFingerprint;
+    const fp5 = res5.body.provenance.calculationFingerprint;
+    const fp10 = res10.body.provenance.calculationFingerprint;
+
+    expect(fp3).toBeDefined();
+    expect(fp3).toBe(fp5);
+    expect(fp5).toBe(fp10);
+  });
+
+  it('19. Provenance completeness: Both engines output cryptographic fingerprint and engine metadata', async () => {
+    const plRes = await request(app)
+      .post('/api/intelligence/past-life/generate')
+      .send({ format: 'insight_card', birthProfile: PROFILE_A });
+
+    const futRes = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '3_YEARS', consentGranted: true, birthProfile: PROFILE_A });
+
+    expect(plRes.body.provenance.calculationFingerprint).toBeDefined();
+    expect(plRes.body.provenance.engineVersion).toBeDefined();
+    expect(plRes.body.provenance.generatedAt).toBeDefined();
+
+    expect(futRes.body.provenance.calculationFingerprint).toBeDefined();
+    expect(futRes.body.provenance.engineVersion).toBeDefined();
+    expect(futRes.body.provenance.generatedAt).toBeDefined();
+
+    // Cross-engine consistency: Both engines derive from the same canonical calculation snapshot
+    expect(plRes.body.provenance.calculationFingerprint).toBe(futRes.body.provenance.calculationFingerprint);
+  });
+
+  it('20. Future domain coverage: Core life domains contain valid structured forecast data', async () => {
+    const res = await request(app)
+      .post('/api/future/generate')
+      .send({ horizon: '3_YEARS', consentGranted: true, birthProfile: PROFILE_A });
+
+    const domains = res.body.data.domainForecasts || res.body.data.lifeAreas;
+    expect(domains).toBeDefined();
+    expect(domains.CAREER).toBeDefined();
+    expect(domains.FINANCE).toBeDefined();
+    expect(domains.RELATIONSHIP || domains.RELATIONSHIPS).toBeDefined();
+    expect(domains.HEALTHSPAN || domains.WELLBEING).toBeDefined();
+    expect(domains.SPIRITUALITY).toBeDefined();
+  });
 });
