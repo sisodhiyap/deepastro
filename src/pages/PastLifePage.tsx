@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, History, RefreshCw, AlertCircle, Share2, Printer, Compass, Layers, MapPin, Calendar, Clock, User } from 'lucide-react';
 import { PastLifeInsightCard } from '../components/astrology/PastLifeInsightCard';
 import { SoulJourneyCard } from '../components/astrology/SoulJourneyCard';
+import { DeepSoulJourneyCard, SoulJourneyModuleId } from '../components/astrology/DeepSoulJourneyCard';
+import { KarmicPatternsCard } from '../components/astrology/KarmicPatternsCard';
+import { SoulLessonsCard } from '../components/astrology/SoulLessonsCard';
+import { LifePurposeCard } from '../components/astrology/LifePurposeCard';
 import { getBirthProfile, getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
 
 // --- Inline Birth Profile Form ---
@@ -179,7 +183,8 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
 
 // --- Main Page ---
 export const PastLifePage: React.FC = () => {
-  const [format, setFormat] = useState<'insight_card' | 'soul_journey'>('insight_card');
+  const [format, setFormat] = useState<'insight_card' | 'soul_journey'>('soul_journey');
+  const [activeModule, setActiveModule] = useState<SoulJourneyModuleId>('karmic_patterns');
   const [loading, setLoading] = useState(false);
   const [reading, setReading] = useState<any>(null);
   const [cardData, setCardData] = useState<any>(null);
@@ -353,11 +358,11 @@ export const PastLifePage: React.FC = () => {
       {/* Top Header & Navigation Bar */}
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-400 tracking-wider uppercase">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>SOULTRACE ENGINE v1.0</span>
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-400 tracking-wider uppercase">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span>SOULTRACE ENGINE v2.0</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-100">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-sky-300 to-indigo-200">
             Past Life Intelligence & Soul Journey
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
@@ -369,31 +374,31 @@ export const PastLifePage: React.FC = () => {
         <div className="flex items-center gap-3">
           {/* Format Toggle */}
           <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs">
-            {(['insight_card', 'soul_journey'] as const).map((f) => (
+            {(['soul_journey', 'insight_card'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => { setFormat(f); if (!needsBirthProfile) fetchPastLife(f); }}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${format === f ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-500 hover:text-slate-300'}`}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${format === f ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 hover:text-slate-300'}`}
               >
-                {f === 'insight_card' ? <><Compass className="inline w-3 h-3 mr-1" />Card</> : <><Layers className="inline w-3 h-3 mr-1" />Journey</>}
+                {f === 'soul_journey' ? <><Layers className="inline w-3 h-3 mr-1" />Journey</> : <><Compass className="inline w-3 h-3 mr-1" />Dossier</>}
               </button>
             ))}
           </div>
           <button
             onClick={() => { setReading(null); setCardData(null); fetchPastLife(); }}
             disabled={loading || needsBirthProfile}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold transition-all disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />Refresh
           </button>
-          <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold transition-all">
+          <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer">
             <History className="w-3 h-3" />History
           </button>
-          <button onClick={handlePrint} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 transition-all">
+          <button onClick={handlePrint} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 transition-all cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           {reading && (
-            <button onClick={handleShare} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 transition-all">
+            <button onClick={handleShare} className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 transition-all cursor-pointer">
               <Share2 className="w-4 h-4" />
             </button>
           )}
@@ -406,7 +411,7 @@ export const PastLifePage: React.FC = () => {
           <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest mb-3">Past Readings</div>
           {history.map((h: any, i: number) => (
             <div key={i} className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-              <span className="text-amber-300 font-semibold">{h.archetype?.primary || 'Soul Reading'}</span>
+              <span className="text-cyan-300 font-semibold">{h.archetype?.primary || 'Soul Reading'}</span>
               <span className="text-slate-500">{h.generatedAt ? new Date(h.generatedAt).toLocaleDateString() : ''}</span>
             </div>
           ))}
@@ -414,13 +419,13 @@ export const PastLifePage: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {loading && (
           <div className="py-24 text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-400/40 flex items-center justify-center animate-spin">
-              <Sparkles className="w-8 h-8 text-amber-400" />
+            <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center animate-spin">
+              <Sparkles className="w-8 h-8 text-cyan-400" />
             </div>
-            <div className="text-sm font-mono text-amber-300">
+            <div className="text-sm font-mono text-cyan-300">
               CONSULTING IMMUTABLE CALCULATION CORE & JAIMINI SUTRAS...
             </div>
             <p className="text-xs text-slate-500">
@@ -449,11 +454,83 @@ export const PastLifePage: React.FC = () => {
         )}
 
         {!loading && !error && !needsBirthProfile && reading && (
-          <div>
-            {format === 'insight_card' && cardData ? (
-              <PastLifeInsightCard data={cardData} onExportPdf={handlePrint} onShare={handleShare} />
+          <div className="space-y-10">
+            {format === 'soul_journey' ? (
+              <div className="space-y-10">
+                {/* Hero Feature Card: Deep Soul Journey */}
+                <DeepSoulJourneyCard
+                  activeModule={activeModule}
+                  onSelectModule={(mod) => {
+                    setActiveModule(mod);
+                    setTimeout(() => {
+                      const el = document.getElementById('soul-journey-active-module');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }}
+                  onExploreClick={() => {
+                    const el = document.getElementById('soul-journey-active-module');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  fingerprint={reading.calculationFingerprint || reading.calculation_snapshot_id}
+                />
+
+                {/* Active Interactive Module */}
+                <div id="soul-journey-active-module" className="pt-2">
+                  {activeModule === 'karmic_patterns' && (
+                    <KarmicPatternsCard
+                      data={reading.soulJourneyModules?.karmicPatterns || {}}
+                      userProfile={reading.user_profile_summary}
+                      onExploreInfluences={() => {
+                        setActiveModule('past_life_influences');
+                        setTimeout(() => {
+                          const el = document.getElementById('soul-journey-active-module');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }, 50);
+                      }}
+                      onNavigateToKundli={() => {
+                        window.location.hash = '#/kundli';
+                      }}
+                    />
+                  )}
+
+                  {activeModule === 'past_life_influences' && (
+                    <SoulJourneyCard schema={reading} onExportPdf={handlePrint} />
+                  )}
+
+                  {activeModule === 'soul_lessons' && (
+                    <SoulLessonsCard
+                      data={reading.soulJourneyModules?.soulLessons || {}}
+                      onExploreNext={() => {
+                        setActiveModule('life_purpose');
+                        setTimeout(() => {
+                          const el = document.getElementById('soul-journey-active-module');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }, 50);
+                      }}
+                    />
+                  )}
+
+                  {activeModule === 'life_purpose' && (
+                    <LifePurposeCard
+                      data={reading.soulJourneyModules?.lifePurpose || {}}
+                      onReturnToJourney={() => {
+                        setActiveModule('karmic_patterns');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
             ) : (
-              <SoulJourneyCard schema={reading} onExportPdf={handlePrint} />
+              <PastLifeInsightCard
+                data={cardData || reading}
+                onExportPdf={handlePrint}
+                onShare={handleShare}
+                onExploreSoulJourney={() => {
+                  setFormat('soul_journey');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
             )}
 
             {/* User Resonance Feedback Panel */}
@@ -468,7 +545,7 @@ export const PastLifePage: React.FC = () => {
                     onClick={() => handleFeedback(choice)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       feedbackSent === choice
-                        ? 'bg-emerald-500 text-black font-bold'
+                        ? 'bg-cyan-500 text-black font-bold'
                         : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
                     }`}
                   >
@@ -477,7 +554,7 @@ export const PastLifePage: React.FC = () => {
                 ))}
               </div>
               {feedbackSent && (
-                <div className="text-[11px] text-emerald-400 font-mono">
+                <div className="text-[11px] text-cyan-400 font-mono">
                   Thank you! Your feedback is recorded as an interpretive signal.
                 </div>
               )}

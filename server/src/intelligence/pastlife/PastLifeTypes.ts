@@ -187,6 +187,62 @@ export interface PastLifeInsightSchema {
     hash: string;
   };
 
+  soulJourneyModules?: {
+    karmicPatterns: {
+      narrative: string;
+      dominantTheme: { planet: string; sanskritName: string; keywords: string; explanation: string };
+      karmicAxis: { axis: string; nodes: string; themes: string; balance: string };
+      keyPatterns: Array<{
+        id: string;
+        theme: string;
+        evidence: string;
+        strength: 'Strong' | 'Moderate' | 'Mild';
+        icon: string;
+      }>;
+      relatedPlanets: Array<{
+        name: string;
+        signification: string;
+        house: number;
+        sign: string;
+        degree?: number;
+      }>;
+      influencedHouses: Array<{
+        house: number;
+        title: string;
+        significance: string;
+      }>;
+      insightQuote: {
+        quote: string;
+        author: string;
+      };
+    };
+    pastLifeInfluences: {
+      archetype: string;
+      setting: { environment: string; period: string; region: string; description: string };
+      narrative: { title: string; summary: string; story: string; soul_message: string };
+      currentLifeConnections: PastLifeCurrentLifeConnection[];
+      astrologicalIndicators: PastLifeAstrologicalIndicator[];
+      vedicReferences: PastLifeSourceReference[];
+      puranaReferences: PastLifeSourceReference[];
+    };
+    soulLessons: {
+      primaryLesson: { title: string; reason: string; indicators: string[] };
+      secondaryLessons: Array<{ title: string; reason: string; indicators: string[] }>;
+      supportingPlanets: Array<{ planet: string; role: string; placement: string }>;
+      supportingHouses: number[];
+      dashaContext: string;
+      practicalReflection: string;
+    };
+    lifePurpose: {
+      coreDirection: { title: string; explanation: string; indicators: string[] };
+      careerAndContribution: { title: string; explanation: string; indicators: string[] };
+      growthDirection: { title: string; explanation: string; indicators: string[] };
+      currentDashaContext: string;
+      transitContext: string;
+      practicalReflection: string;
+    };
+  };
+
   version: string;
 }
 

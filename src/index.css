@@ -44,16 +44,29 @@ body {
   color: var(--text-main);
   font-family: 'Geist', 'Inter', system-ui, sans-serif;
   overflow-x: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  writing-mode: horizontal-tb;
+}
+
+/* Enforce horizontal-tb text safety globally across headings and buttons */
+h1, h2, h3, h4, h5, h6, button, a, p, span, label {
+  writing-mode: horizontal-tb;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  white-space: normal;
+  overflow-wrap: break-word;
   word-break: normal;
 }
 
-/* Ensure cards never overflow their parents */
+/* Ensure cards never overflow their parents and never crush text vertically */
 .card-safe {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 /* Internal scrollable table container that preserves layout without viewport overflow */
