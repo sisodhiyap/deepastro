@@ -76,15 +76,15 @@ export const TopNav: React.FC<TopNavProps> = ({
   }, []);
 
   return (
-    <header className="h-16 shrink-0 border-b border-cosmic-border bg-cosmic-surface/90 backdrop-blur-xl px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-50 select-none w-full">
-      <div className="flex items-center gap-3 sm:gap-4 flex-1">
+    <header className="h-16 shrink-0 border-b border-cosmic-border bg-cosmic-surface/90 backdrop-blur-xl px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-50 select-none w-full max-w-full">
+      <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
         {/* Mobile menu toggle */}
         <button
           onClick={onToggleMobileMenu}
           aria-label="Open Mobile Menu"
-          className="lg:hidden p-2 rounded-xl border border-cosmic-border bg-cosmic-card text-cosmic-text hover:border-cyan-400/60"
+          className="lg:hidden p-2.5 rounded-xl border border-cosmic-border bg-cosmic-card text-cosmic-text hover:border-cyan-400/60 touch-target-min flex items-center justify-center shrink-0"
         >
-          <Menu className="w-4 h-4" />
+          <Menu className="w-5 h-5" />
         </button>
 
         {/* Global Search Bar */}
@@ -101,7 +101,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         {/* Live Cosmic Weather Quick Pill */}
         {livePanchang && (
-          <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border border-cosmic-border bg-cosmic-card/40 text-xs text-cosmic-muted">
+          <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full border border-cosmic-border bg-cosmic-card/40 text-xs text-cosmic-muted shrink-0">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             <span className="font-semibold text-cosmic-text">{livePanchang.vara?.name}:</span>
             <span className="text-cyan-400 font-bold">{livePanchang.tithi?.name}</span>
@@ -112,7 +112,7 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Upgrade Pill for Free Users */}
         {userPlan === 'FREE' && (
           <button
@@ -129,13 +129,13 @@ export const TopNav: React.FC<TopNavProps> = ({
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             aria-label="Notifications"
-            className="p-2 rounded-xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-400/50 transition-colors relative text-cosmic-text"
+            className="p-2 rounded-xl border border-cosmic-border bg-cosmic-surface hover:border-cyan-400/50 transition-colors relative text-cosmic-text touch-target-min flex items-center justify-center"
           >
             <Bell className="w-4 h-4 text-cosmic-muted" />
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-cosmic-border bg-cosmic-surface p-4 shadow-2xl z-50 animate-float space-y-3">
+            <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border border-cosmic-border bg-cosmic-surface p-4 shadow-2xl z-50 animate-float space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-cosmic-border/60">
                 <span className="text-xs font-bold text-cosmic-text uppercase tracking-wider">Cosmic Alerts</span>
                 <span className="text-[10px] text-cosmic-muted font-semibold">Live Telemetry</span>
@@ -158,7 +158,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             }}
             aria-label="API Status"
             title="API Connections & key.env Status"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition-all shadow-glow-emerald/20"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-bold transition-all shadow-glow-emerald/20 touch-target-min"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <Key className="w-3 h-3 text-emerald-400" />
@@ -166,7 +166,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           </button>
 
           {showApiModal && (
-            <div className="absolute right-0 mt-2 w-96 rounded-2xl border border-cosmic-border bg-cosmic-surface p-4 shadow-2xl z-50 animate-float space-y-3">
+            <div className="absolute right-0 mt-2 w-[min(24rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border border-cosmic-border bg-cosmic-surface p-4 shadow-2xl z-50 animate-float space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-cosmic-border/60">
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-cyan-400" />

@@ -151,8 +151,8 @@ export const MatchingPage: React.FC = () => {
             <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Groom / Primary</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="col-span-1 sm:col-span-2">
               <label className="text-cosmic-muted block mb-1 font-semibold">Full Name</label>
               <input
                 type="text"
@@ -180,7 +180,7 @@ export const MatchingPage: React.FC = () => {
                 className="w-full bg-cosmic-card border border-cosmic-border rounded-xl px-3 py-2 text-cosmic-text focus:outline-none focus:border-cyan-400"
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <PlaceSelector
                 value={partnerA.birthPlace}
                 latitude={partnerA.latitude}
@@ -210,8 +210,8 @@ export const MatchingPage: React.FC = () => {
             <span className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">Bride / Partner</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="col-span-1 sm:col-span-2">
               <label className="text-cosmic-muted block mb-1 font-semibold">Full Name</label>
               <input
                 type="text"

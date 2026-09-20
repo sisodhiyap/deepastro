@@ -507,7 +507,7 @@ export const FutureIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#06070A] text-slate-100 py-8 px-4 md:px-8 space-y-8 font-inter">
+    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 px-3 sm:px-6 md:px-8 space-y-6 sm:space-y-8 font-inter w-full max-w-full overflow-x-hidden">
       {/* Header Bar */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div className="space-y-1">
@@ -515,7 +515,7 @@ export const FutureIntelligencePage: React.FC = () => {
             <Compass className="w-4 h-4" />
             <span>DeepAstro CFIE v1.0.0 • Pro Intelligence</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black font-satoshi tracking-tight bg-gradient-to-r from-slate-100 via-cyan-200 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-satoshi tracking-tight bg-gradient-to-r from-slate-100 via-cyan-200 to-blue-400 bg-clip-text text-transparent">
             FUTURE INTELLIGENCE
           </h1>
           <p className="text-xs text-slate-400">
@@ -684,11 +684,11 @@ export const FutureIntelligencePage: React.FC = () => {
             {/* VIEW 2: YEARLY FORECAST */}
             {activeView === 'years' && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-bold">
                     Select Forecast Year ({horizonYears}-Year Horizon)
                   </div>
-                  <div className="flex gap-1.5 overflow-x-auto">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
                     {yearlyTimeline.map((y: any) => (
                       <button
                         key={y.year}

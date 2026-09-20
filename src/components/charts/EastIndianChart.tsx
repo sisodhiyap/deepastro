@@ -21,12 +21,11 @@ export const EastIndianChart: React.FC<EastIndianChartProps> = ({
   }
 
   return (
-    <div className={`relative flex flex-col items-center select-none ${className}`}>
+    <div className={`relative w-full max-w-[420px] flex flex-col items-center select-none ${className}`}>
       <svg
         viewBox="0 0 400 400"
-        width={size}
-        height={size}
-        className="w-full max-w-[420px] aspect-square rounded-2xl border border-cosmic-border bg-cosmic-surface/90 shadow-cosmic-card"
+        style={{ width: '100%', maxWidth: size, height: 'auto', aspectRatio: '1 / 1' }}
+        className="w-full aspect-square rounded-2xl border border-cosmic-border bg-cosmic-surface/90 shadow-cosmic-card"
       >
         {/* Outer Square */}
         <rect x="10" y="10" width="380" height="380" fill="none" stroke="currentColor" strokeWidth="2" className="text-cosmic-border" />

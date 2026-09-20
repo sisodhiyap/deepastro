@@ -26,8 +26,8 @@ interface PlanetaryTableProps {
 
 export const PlanetaryTable: React.FC<PlanetaryTableProps> = ({ planets, className = '' }) => {
   return (
-    <div className={`overflow-x-auto rounded-2xl border border-cosmic-border bg-cosmic-surface shadow-cosmic-card ${className}`}>
-      <table className="w-full text-left text-xs border-collapse">
+    <div className={`table-responsive overflow-x-auto rounded-2xl border border-cosmic-border bg-cosmic-surface shadow-cosmic-card ${className}`}>
+      <table className="w-full min-w-[580px] text-left text-xs border-collapse">
         <thead>
           <tr className="border-b border-cosmic-border bg-cosmic-card/80 text-cosmic-muted uppercase tracking-wider font-semibold">
             <th className="py-3.5 px-4">Planet (Graha)</th>

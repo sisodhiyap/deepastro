@@ -51,42 +51,43 @@ export const CosmicSOSModal: React.FC<CosmicSOSModalProps> = ({ isOpen, onClose,
   const dashaLord = chartContext?.dashas?.currentMahadasha?.planet || 'Karmic Ruler';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-gradient-to-b from-cosmic-card via-cosmic-surface to-[#0a0f1d] border border-red-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-red-950/40 text-cosmic-text overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto bg-gradient-to-b from-cosmic-card via-cosmic-surface to-[#0a0f1d] border border-red-500/30 rounded-3xl p-4 sm:p-8 shadow-2xl shadow-red-950/40 text-cosmic-text my-auto">
         {/* Glow ambient */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-cosmic-border pb-4 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse shrink-0">
               <ShieldAlert className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl sm:text-2xl font-display font-extrabold tracking-tight text-white">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-2xl font-display font-extrabold tracking-tight text-white truncate">
                   Cosmic SOS First Aid
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-500/20 text-red-300 border border-red-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-500/20 text-red-300 border border-red-500/40 shrink-0">
                   Instant Calm
                 </span>
               </div>
-              <p className="text-xs text-cosmic-muted">
+              <p className="text-xs text-cosmic-muted truncate">
                 Immediate planetary stabilization, guided breathwork, and Vedic pacification.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-cosmic-muted hover:text-white hover:bg-cosmic-border/60 transition-colors"
+            aria-label="Close Cosmic SOS Modal"
+            className="p-2 rounded-xl text-cosmic-muted hover:text-white hover:bg-cosmic-border/60 transition-colors touch-target-min flex items-center justify-center shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 mt-5 border-b border-cosmic-border/50 pb-3 relative z-10">
+        <div className="flex items-center gap-2 mt-4 sm:mt-5 border-b border-cosmic-border/50 pb-3 relative z-10 overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => setActiveTab('calm')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${

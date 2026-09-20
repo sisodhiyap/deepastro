@@ -26,7 +26,8 @@ import {
   TrendingUp,
   LineChart,
   Binary,
-  Radio
+  Radio,
+  X
 } from 'lucide-react';
 import { Logo } from '../brand/Logo.js';
 
@@ -71,6 +72,7 @@ interface SidebarProps {
   onSelectTab: (tab: NavTabId) => void;
   userPlan?: string;
   className?: string;
+  onClose?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -78,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   userPlan = 'FREE',
   className = '',
+  onClose,
 }) => {
   const { isAdmin } = useAuth();
   const allSections = [
@@ -148,8 +151,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/8 via-amber-500/3 to-transparent pointer-events-none blur-xl z-0" />
 
       {/* Brand Header (Pinned) */}
-      <div className="relative z-10 p-5 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10 shrink-0">
-        <Logo size="md" showTagline={true} />
+      <div className="relative z-10 p-4 sm:p-5 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10 shrink-0">
+        <div className="flex items-center justify-between">
+          <Logo size="md" showTagline={true} />
+          {onClose && (
+            <button
+              onClick={onClose}
+              aria-label="Close Navigation"
+              className="lg:hidden p-1.5 rounded-lg border border-amber-500/30 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors touch-target-min flex items-center justify-center"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
         <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-amber-300/80 px-1">
           <span>COSMIC ENGINE</span>
           <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold">v6.0</span>
@@ -170,18 +184,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all group ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all group min-h-[40px] ${
                     isActive
                       ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 shadow-sm shadow-amber-950/40 font-semibold'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                    <span>{item.label}</span>
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-amber-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                    <span className="truncate text-left leading-normal">{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold shrink-0 ml-1.5 ${
                       isActive ? 'bg-amber-400 text-black' : 'bg-slate-800 text-slate-400 border border-slate-700'
                     }`}>
                       {item.badge}

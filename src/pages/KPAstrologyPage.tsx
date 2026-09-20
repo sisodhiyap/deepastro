@@ -267,8 +267,8 @@ export const KPAstrologyPage: React.FC = () => {
               <span className="text-xs text-cyan-300 font-mono">Sign Lord → Star Lord → Sub Lord (CSL) → Sub-Sub Lord</span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto table-responsive">
+              <table className="w-full min-w-[700px] text-left text-xs">
                 <thead className="bg-[#1A1F2B] text-slate-400 border-b border-[#2A3441]">
                   <tr>
                     <th className="p-3">House / Cusp</th>

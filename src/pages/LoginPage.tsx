@@ -116,7 +116,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       {/* ============================================================ */}
       {/* LEFT PANEL: Hero Cosmic Artwork Poster (~52% width on desktop)*/}
       {/* ============================================================ */}
-      <div className="relative w-full lg:w-[52%] xl:w-[54%] min-h-[360px] sm:min-h-[480px] lg:min-h-screen bg-[#07090e] overflow-hidden flex items-center justify-center">
+      <div className="relative w-full lg:w-[52%] xl:w-[54%] min-h-[200px] sm:min-h-[340px] lg:min-h-screen bg-[#07090e] overflow-hidden flex items-center justify-center shrink-0">
         {/* Crisp Poster Artwork with embedded branding and graphics */}
         <img
           src="/images/deepastro-cosmic-login.webp"
@@ -137,15 +137,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
       {/* ============================================================ */}
       {/* RIGHT PANEL: Sleek Cosmic Sign-In Card (~48% width)         */}
       {/* ============================================================ */}
-      <div className="w-full lg:w-[48%] xl:w-[46%] min-h-screen bg-[#07090e] flex flex-col justify-between items-center px-6 sm:px-10 lg:px-12 py-6 sm:py-8 relative z-10">
+      <div className="w-full lg:w-[48%] xl:w-[46%] min-h-0 lg:min-h-screen bg-[#07090e] flex flex-col justify-between items-center px-4 sm:px-10 lg:px-12 py-4 sm:py-8 relative z-10">
         {/* Top Bar: Home Link, Language & Member Toggle */}
-        <div className="w-full max-w-[440px] flex items-center justify-between text-xs pt-1">
+        <div className="w-full max-w-[440px] flex items-center justify-between text-xs pt-1 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {onNavigateLanding && (
               <button
                 type="button"
                 onClick={onNavigateLanding}
-                className="text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-800/50"
+                className="text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-800/50 touch-target-min"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Home</span>
@@ -211,11 +211,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
         </div>
 
         {/* Center Card */}
-        <div className="w-full max-w-[440px] my-auto py-6">
-          <div className="bg-[#0c101a]/95 border border-[#1a2333] rounded-[24px] p-7 sm:p-9 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.06)] backdrop-blur-xl">
+        <div className="w-full max-w-[440px] my-auto py-4 sm:py-6">
+          <div className="bg-[#0c101a]/95 border border-[#1a2333] rounded-[24px] p-5 sm:p-9 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.06)] backdrop-blur-xl">
             {/* Heading */}
             <div className="text-center sm:text-left mb-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">
                 {viewMode === 'signin' ? 'Welcome to DeepAstro' : viewMode === 'register' ? 'Create Your Account' : 'Reset Password'}
               </h1>
               <p className="text-xs sm:text-sm text-slate-400 mt-2">

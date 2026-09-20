@@ -59,8 +59,10 @@ const generatePastLifeHandler = async (req: AuthenticatedRequest, res: Response)
       if (!hasLat || !hasLon) {
         return res.status(400).json({
           success: false,
-          error: 'BIRTH_PROFILE_INCOMPLETE',
+          error: 'PAST_LIFE_ANALYSIS_UNAVAILABLE',
+          code: 'BIRTH_PROFILE_INCOMPLETE',
           message: 'Valid birth latitude and longitude coordinates are strictly required for authentic astronomical calculations.',
+          missingFields: [!hasLat ? 'latitude' : '', !hasLon ? 'longitude' : ''].filter(Boolean),
         });
       }
       profile = {

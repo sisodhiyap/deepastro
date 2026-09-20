@@ -113,30 +113,31 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
       <div 
-        className="relative w-full max-w-lg rounded-2xl bg-[#111827] border border-cyan-500/30 text-slate-100 p-6 shadow-2xl shadow-cyan-950/40"
+        className="relative w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-[#111827] border border-cyan-500/30 text-slate-100 p-4 sm:p-6 shadow-2xl shadow-cyan-950/40 my-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-title"
       >
         <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
               <MessageSquare className="w-4 h-4 text-cyan-400" />
             </div>
-            <div>
-              <h2 id="feedback-title" className="text-base font-bold text-slate-100 font-satoshi">
+            <div className="min-w-0">
+              <h2 id="feedback-title" className="text-base font-bold text-slate-100 font-satoshi truncate">
                 Share Platform Feedback
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-400 truncate">
                 Help us refine calculations, UI precision, and user experience
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            aria-label="Close Feedback Modal"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors touch-target-min flex items-center justify-center shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
@@ -152,7 +153,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-semibold text-slate-400 mb-1 uppercase tracking-wider">
                   Module

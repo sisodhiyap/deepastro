@@ -61,13 +61,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl border border-cosmic-border bg-cosmic-surface shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="relative w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 sm:p-8 rounded-3xl border border-cosmic-border bg-cosmic-surface shadow-2xl space-y-6 my-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-4 right-4 p-2 rounded-xl text-cosmic-muted hover:text-cosmic-text hover:bg-cosmic-card/60 transition-colors"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-xl text-cosmic-muted hover:text-cosmic-text hover:bg-cosmic-card/60 transition-colors touch-target-min flex items-center justify-center"
         >
           <X className="w-5 h-5" />
         </button>

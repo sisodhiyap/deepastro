@@ -354,7 +354,7 @@ export const PastLifePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#04060B] text-slate-100 p-4 sm:p-8 space-y-8">
+    <div className="min-h-screen bg-[#04060B] text-slate-100 p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden">
       {/* Top Header & Navigation Bar */}
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>

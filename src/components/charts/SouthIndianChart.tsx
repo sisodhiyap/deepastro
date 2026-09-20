@@ -32,10 +32,10 @@ export const SouthIndianChart: React.FC<SouthIndianChartProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`relative flex flex-col items-center select-none ${className}`}>
+    <div className={`relative w-full max-w-[420px] flex flex-col items-center select-none ${className}`}>
       <div
-        style={{ width: size, height: size }}
-        className="w-full max-w-[420px] aspect-square rounded-2xl border border-cosmic-border bg-cosmic-surface/90 shadow-cosmic-card grid grid-cols-4 grid-rows-4 p-1 gap-1"
+        style={{ width: '100%', maxWidth: size, height: 'auto', aspectRatio: '1 / 1' }}
+        className="aspect-square rounded-2xl border border-cosmic-border bg-cosmic-surface/90 shadow-cosmic-card grid grid-cols-4 grid-rows-4 p-1 gap-1"
       >
         {SOUTH_GRID_CELLS.map((cell) => {
           const isAsc = cell.signIndex === ascendantSignIndex;

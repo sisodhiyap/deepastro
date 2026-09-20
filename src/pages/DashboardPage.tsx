@@ -687,8 +687,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto table-responsive">
+              <table className="w-full min-w-[480px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-cosmic-border/60 text-[10px] uppercase font-bold text-cosmic-muted">
                     <th className="pb-2">Graha</th>
