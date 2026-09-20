@@ -35,7 +35,10 @@ import {
   Plus,
   Trash2,
   Check,
-  Info
+  Info,
+  ThumbsUp,
+  ThumbsDown,
+  X
 } from 'lucide-react';
 import { FutureConsentModal } from '../components/future/FutureConsentModal';
 import { getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
@@ -220,7 +223,9 @@ export type FutureTabId =
   | 'calculation';
 
 export const FutureIntelligencePage: React.FC = () => {
-  const [pageState, setPageState] = useState<'GENERATING' | 'READY' | 'BIRTH_PROFILE_REQUIRED' | 'CONSENT_REQUIRED' | 'ERROR'>('GENERATING');
+  const [pageState, setPageState] = useState<
+    'GENERATING' | 'READY' | 'SUCCESS' | 'BIRTH_PROFILE_REQUIRED' | 'CONSENT_REQUIRED' | 'AUTH_REQUIRED' | 'PREMIUM_REQUIRED' | 'ERROR'
+  >('GENERATING');
   const [forecastData, setForecastData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FutureTabId>('overview');
@@ -232,6 +237,11 @@ export const FutureIntelligencePage: React.FC = () => {
   const [progressItems, setProgressItems] = useState<any[]>([]);
   const [newGoalText, setNewGoalText] = useState('');
   const [addingGoal, setAddingGoal] = useState(false);
+  const [activeImproveModalDomain, setActiveImproveModalDomain] = useState<any | null>(null);
+  const [feedbackStatus, setFeedbackStatus] = useState<'IDLE' | 'SUBMITTING' | 'SUBMITTED'>('IDLE');
+  const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [showFeedbackComment, setShowFeedbackComment] = useState(false);
 
   const fetchForecast = async (overrideConsentLevel?: number) => {
     setPageState('GENERATING');
@@ -439,6 +449,102 @@ export const FutureIntelligencePage: React.FC = () => {
         setProgressItems(items => items.filter(i => i.id !== id));
       }
     } catch {}
+  };
+
+  const handleOpenImproveDomain = (domainKey: string) => {
+    const existing = improvementPlan?.domainActions?.find((a: any) => a.domain === domainKey.toUpperCase());
+    if (existing) {
+      setActiveImproveModalDomain(existing);
+      return;
+    }
+
+    const domainTitles: Record<string, string> = {
+      CAREER: 'Career & Professional Mastery',
+      WEALTH: 'Wealth Accumulation & Financial Discipline',
+      FINANCE: 'Wealth Accumulation & Financial Discipline',
+      RELATIONSHIPS: 'Relationships & Conscious Communication',
+      RELATIONSHIP: 'Relationships & Conscious Communication',
+      HEALTH: 'Health & Vitality Optimization',
+      WELLNESS: 'Health & Vitality Optimization',
+      LONGEVITY: 'Vitality Preservation & Longevity Indicators',
+      TIMELINE: `Year ${selectedYear} Strategic Optimization`,
+    };
+
+    const dasha = forecastData?.currentDasha?.majorPlanet || 'Parashari Cycle';
+    const fallbackAction = {
+      domain: domainKey.toUpperCase(),
+      domainTitle: domainTitles[domainKey.toUpperCase()] || `${domainKey} Domain Optimization`,
+      astrologicalIndicator: `Active Vimshottari ${dasha} transit resonance aligned with birth chart planetary dignity.`,
+      whatUserCanControl: 'Daily focused discipline, conscious emotional regulation, strategic preparation, and ethical decision-making.',
+      practicalAction: `Establish a consistent weekly milestone schedule for ${domainKey.toLowerCase()} expansion and review quarterly indicators.`,
+      timeWindow: 'Optimal astrological window: Next 3 to 12 months',
+      traditionalRemedy: 'Daily morning contemplation, Gayatri mantra recitation, and purposeful seva (charitable contribution).',
+      whatToAvoid: 'Impulsive decisions under transitional planetary periods; reactive emotional responses.',
+      progressMilestone: `Achieve 60 days of disciplined alignment in ${domainKey.toLowerCase()} goals.`,
+      priority: 'HIGH',
+      evidence: 'Vimshottari Dasha + Gochara Real-Time Transits + Bhavaphala Chart Matrix',
+      confidence: 84,
+      uncertainty: 'Free-will choices and external macroeconomic factors dynamically shape outcomes.',
+    };
+
+    setActiveImproveModalDomain(fallbackAction);
+  };
+
+  const handleAdoptAction = async (title: string, category: string = 'ACTION') => {
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const res = await fetch('/api/future/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          category,
+          title,
+          status: 'IN_PROGRESS',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.item) {
+          setProgressItems(prev => [data.item, ...prev]);
+        }
+      }
+      setActiveImproveModalDomain(null);
+      setActiveTab('action_plan');
+    } catch {}
+  };
+
+  const handleSubmitFeedback = async (rating: number) => {
+    setFeedbackRating(rating);
+    setFeedbackStatus('SUBMITTING');
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const message = feedbackText.trim()
+        ? feedbackText.trim()
+        : (rating >= 4 ? 'User found Future Intelligence 8.0 helpful and empowering.' : 'User reported Future Intelligence 8.0 could be improved.');
+
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          module: 'future-intelligence',
+          category: rating >= 4 ? 'general' : 'confusing_result',
+          message,
+          rating,
+          calculationFingerprint: forecastData?.calculationFingerprint || 'fp_future_8',
+          engineVersion: '8.0.0-cfie',
+          appVersion: '8.0.0',
+        }),
+      });
+      setFeedbackStatus('SUBMITTED');
+    } catch {
+      setFeedbackStatus('SUBMITTED');
+    }
   };
 
   useEffect(() => {
@@ -1008,7 +1114,14 @@ export const FutureIntelligencePage: React.FC = () => {
                       <span className="text-xs font-mono uppercase text-cyan-400 font-bold">YEAR PROFILE</span>
                       <h4 className="text-2xl font-black font-satoshi text-white">{selectedYearObj.year}</h4>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleOpenImproveDomain('TIMELINE')}
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-cyan-500/20 transition-all"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Improve {selectedYearObj.year}</span>
+                      </button>
                       <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
                         Active Dasha: {selectedYearObj.activeDasha || 'Parashari Cycle'}
                       </span>
@@ -1060,14 +1173,23 @@ export const FutureIntelligencePage: React.FC = () => {
             {activeTab === 'career' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
-                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400">
-                      <Briefcase className="w-5 h-5" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400">
+                        <Briefcase className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold font-satoshi text-white">Career & Purpose Cycle Engine</h3>
+                        <p className="text-xs text-slate-400">Evaluated from 10th House, D10 Dashamsha, Saturn, and Vimshottari cycles.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold font-satoshi text-white">Career & Purpose Cycle Engine</h3>
-                      <p className="text-xs text-slate-400">Evaluated from 10th House, D10 Dashamsha, Saturn, and Vimshottari cycles.</p>
-                    </div>
+                    <button
+                      onClick={() => handleOpenImproveDomain('CAREER')}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all self-start sm:self-auto"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Improve Career</span>
+                    </button>
                   </div>
 
                   <div className="text-sm text-slate-300 leading-relaxed font-medium">
@@ -1119,14 +1241,23 @@ export const FutureIntelligencePage: React.FC = () => {
             {activeTab === 'wealth' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
-                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
-                      <Coins className="w-5 h-5" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                        <Coins className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold font-satoshi text-white">Year-by-Year Wealth Cycle Engine</h3>
+                        <p className="text-xs text-slate-400">Derived from 2nd house (Dhana), 11th house (Labha), and Jupiter transit cycles.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold font-satoshi text-white">Year-by-Year Wealth Cycle Engine</h3>
-                      <p className="text-xs text-slate-400">Derived from 2nd house (Dhana), 11th house (Labha), and Jupiter transit cycles.</p>
-                    </div>
+                    <button
+                      onClick={() => handleOpenImproveDomain('WEALTH')}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all self-start sm:self-auto"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Improve Wealth</span>
+                    </button>
                   </div>
 
                   <div className="text-sm text-slate-300 leading-relaxed font-medium">
@@ -1166,14 +1297,23 @@ export const FutureIntelligencePage: React.FC = () => {
             {activeTab === 'relationships' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
-                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-400/30 flex items-center justify-center text-pink-400">
-                      <Heart className="w-5 h-5" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-400/30 flex items-center justify-center text-pink-400">
+                        <Heart className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold font-satoshi text-white">Relationship & Harmony Engine</h3>
+                        <p className="text-xs text-slate-400">Evaluated from 7th house, Venus, Jupiter, Moon, and D9 Navamsha harmony.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold font-satoshi text-white">Relationship & Harmony Engine</h3>
-                      <p className="text-xs text-slate-400">Evaluated from 7th house, Venus, Jupiter, Moon, and D9 Navamsha harmony.</p>
-                    </div>
+                    <button
+                      onClick={() => handleOpenImproveDomain('RELATIONSHIPS')}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-pink-500/20 transition-all self-start sm:self-auto"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Improve Relationships</span>
+                    </button>
                   </div>
 
                   <div className="text-sm text-slate-300 leading-relaxed font-medium">
@@ -1205,14 +1345,23 @@ export const FutureIntelligencePage: React.FC = () => {
             {activeTab === 'health' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
-                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
-                      <Sprout className="w-5 h-5" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                        <Sprout className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold font-satoshi text-white">Health & Wellness Tendency Engine</h3>
+                        <p className="text-xs text-slate-400">Evaluated from 6th/8th/12th houses, Sun, Moon, and D30 Trimsamsha.</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold font-satoshi text-white">Health & Wellness Tendency Engine</h3>
-                      <p className="text-xs text-slate-400">Evaluated from 6th/8th/12th houses, Sun, Moon, and D30 Trimsamsha.</p>
-                    </div>
+                    <button
+                      onClick={() => handleOpenImproveDomain('WELLNESS')}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all self-start sm:self-auto"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Improve Vitality</span>
+                    </button>
                   </div>
 
                   <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-emerald-200">
@@ -1246,14 +1395,23 @@ export const FutureIntelligencePage: React.FC = () => {
             {activeTab === 'longevity' && (
               <div className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
-                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-400">
-                      <InfinityIcon className="w-5 h-5" />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-400">
+                        <InfinityIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold font-satoshi text-white">Longevity Indicators & Vitality Profile</h3>
+                        <p className="text-xs text-slate-400">Traditional Jyotish qualitative factors (8th house condition, Lagna lord, Saturn Ayushkaraka).</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold font-satoshi text-white">Longevity Indicators & Vitality Profile</h3>
-                      <p className="text-xs text-slate-400">Traditional Jyotish qualitative factors (8th house condition, Lagna lord, Saturn Ayushkaraka).</p>
-                    </div>
+                    <button
+                      onClick={() => handleOpenImproveDomain('WELLNESS')}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-500/20 transition-all self-start sm:self-auto"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Improve Vitality</span>
+                    </button>
                   </div>
 
                   <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 text-xs text-purple-200">
@@ -1531,6 +1689,60 @@ export const FutureIntelligencePage: React.FC = () => {
                     </button>
                   </div>
 
+                  {/* Generated Domain Actions */}
+                  {improvementPlan?.domainActions && improvementPlan.domainActions.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
+                          RECOMMENDED DOMAIN ACTIONS ({improvementPlan.domainActions.length})
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                          Click to view 9-point architecture or adopt into habit tracking
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {improvementPlan.domainActions.map((act: any, idx: number) => (
+                          <div
+                            key={idx}
+                            className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 hover:border-cyan-500/30 transition-all flex flex-col justify-between space-y-3"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                                  {act.domain}
+                                </span>
+                                <span className="text-[10px] font-mono text-emerald-400">
+                                  Conf: {act.confidence || 82}%
+                                </span>
+                              </div>
+                              <h4 className="text-xs font-bold text-white">{act.domainTitle}</h4>
+                              <p className="text-[11px] text-slate-300 leading-snug line-clamp-2">
+                                {act.practicalAction}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+                              <button
+                                onClick={() => setActiveImproveModalDomain(act)}
+                                className="flex-1 py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold transition-all text-center"
+                              >
+                                View 9-Point Plan
+                              </button>
+                              <button
+                                onClick={() => handleAdoptAction(act.practicalAction, 'ACTION')}
+                                className="py-1.5 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[11px] font-bold transition-all flex items-center gap-1"
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>Adopt</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Add New Goal / Habit Form */}
                   <form onSubmit={handleAddProgress} className="flex gap-2">
                     <input
@@ -1688,6 +1900,70 @@ export const FutureIntelligencePage: React.FC = () => {
             )}
           </>
         )}
+        {/* PHASE 22: USER FEEDBACK LOOP */}
+        <div className="rounded-3xl bg-[#0e1422] border border-slate-800 p-6 space-y-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <h4 className="text-sm font-bold font-satoshi text-white">Was this Future Intelligence analysis useful?</h4>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">Your input tunes our interpretation clarity without altering immutable celestial calculations.</p>
+            </div>
+
+            {feedbackStatus === 'SUBMITTED' ? (
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold bg-emerald-950/30 border border-emerald-500/30 px-3.5 py-2 rounded-xl">
+                <Check className="w-4 h-4" />
+                <span>Thank you for your feedback!</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowFeedbackComment(true);
+                    handleSubmitFeedback(5);
+                  }}
+                  disabled={feedbackStatus === 'SUBMITTING'}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1A1F2B] hover:bg-emerald-950/40 hover:border-emerald-500/40 border border-slate-800 text-slate-300 hover:text-emerald-300 text-xs font-bold transition-all"
+                >
+                  <ThumbsUp className="w-3.5 h-3.5" />
+                  <span>Helpful</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowFeedbackComment(true);
+                    handleSubmitFeedback(2);
+                  }}
+                  disabled={feedbackStatus === 'SUBMITTING'}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1A1F2B] hover:bg-rose-950/40 hover:border-rose-500/40 border border-slate-800 text-slate-300 hover:text-rose-300 text-xs font-bold transition-all"
+                >
+                  <ThumbsDown className="w-3.5 h-3.5" />
+                  <span>Not Helpful</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {showFeedbackComment && feedbackStatus !== 'SUBMITTED' && (
+            <div className="pt-2 flex gap-2">
+              <input
+                type="text"
+                placeholder="Optional: What could be better or clearer?"
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                className="flex-1 bg-[#0d1117] border border-slate-700 rounded-xl px-4 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+              />
+              <button
+                onClick={() => handleSubmitFeedback(feedbackRating || 4)}
+                disabled={feedbackStatus === 'SUBMITTING'}
+                className="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs"
+              >
+                Submit Note
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* 5. FOOTER TRUST BANNER */}
         <div className="border-t border-slate-800/80 pt-6 pb-4">
@@ -1722,6 +1998,122 @@ export const FutureIntelligencePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 9-Point Domain Improvement Modal */}
+      {activeImproveModalDomain && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-3xl bg-[#0e1422] border border-cyan-500/40 p-6 sm:p-8 space-y-6 shadow-2xl shadow-cyan-500/10 max-h-[90vh] overflow-y-auto">
+            {/* Header with Title & Close button */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400">
+                  FUTURE OPTIMIZATION • 9-POINT ACTION ARCHITECTURE
+                </span>
+                <h3 className="text-xl font-bold font-satoshi text-white mt-1">
+                  Improve: {activeImproveModalDomain.domainTitle}
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveImproveModalDomain(null)}
+                className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 9 Structured Points */}
+            <div className="space-y-4 text-xs">
+              {/* 1. What Calculation Indicates */}
+              <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800 space-y-1">
+                <div className="font-mono font-bold uppercase text-cyan-300 text-[10px] flex items-center gap-1.5">
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>1. What the Calculation Indicates</span>
+                </div>
+                <p className="text-slate-200 leading-relaxed">{activeImproveModalDomain.astrologicalIndicator}</p>
+              </div>
+
+              {/* 2. What is Within User's Control */}
+              <div className="p-4 rounded-2xl bg-[#111827] border border-slate-800 space-y-1">
+                <div className="font-mono font-bold uppercase text-blue-300 text-[10px] flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5" />
+                  <span>2. What is Within Your Sovereign Control</span>
+                </div>
+                <p className="text-slate-200 leading-relaxed">{activeImproveModalDomain.whatUserCanControl}</p>
+              </div>
+
+              {/* 3. Constructive Action & 4. Best Timing Window */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-4 rounded-2xl bg-[#111827] border border-emerald-500/20 space-y-1">
+                  <div className="font-mono font-bold uppercase text-emerald-400 text-[10px] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>3. Constructive Action</span>
+                  </div>
+                  <p className="text-slate-200">{activeImproveModalDomain.practicalAction}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#111827] border border-purple-500/20 space-y-1">
+                  <div className="font-mono font-bold uppercase text-purple-400 text-[10px] flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>4. Best Timing Window</span>
+                  </div>
+                  <p className="text-slate-200">{activeImproveModalDomain.timeWindow}</p>
+                </div>
+              </div>
+
+              {/* 5. Traditional Remedy & 6. What to Avoid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-4 rounded-2xl bg-[#111827] border border-pink-500/20 space-y-1">
+                  <div className="font-mono font-bold uppercase text-pink-400 text-[10px] flex items-center gap-1.5">
+                    <Flower2 className="w-3.5 h-3.5" />
+                    <span>5. Traditional Remedy</span>
+                  </div>
+                  <p className="text-slate-200">{activeImproveModalDomain.traditionalRemedy}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#111827] border border-amber-500/20 space-y-1">
+                  <div className="font-mono font-bold uppercase text-amber-400 text-[10px] flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>6. What to Avoid</span>
+                  </div>
+                  <p className="text-slate-200">{activeImproveModalDomain.whatToAvoid || activeImproveModalDomain.potentialChallenge}</p>
+                </div>
+              </div>
+
+              {/* 7. Evidence, 8. Confidence, 9. Uncertainty */}
+              <div className="p-4 rounded-2xl bg-[#161f33] border border-slate-700/80 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                  <span className="font-mono text-[10px] uppercase text-cyan-300 font-bold">
+                    7. Calculation Evidence: {activeImproveModalDomain.evidence}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
+                    8. Confidence: {activeImproveModalDomain.confidence || 82}%
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  <strong className="text-amber-400">9. Uncertainty Boundaries:</strong> {activeImproveModalDomain.uncertainty}
+                </div>
+              </div>
+            </div>
+
+            {/* Action CTA */}
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2 border-t border-slate-800">
+              <button
+                onClick={() => setActiveImproveModalDomain(null)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => handleAdoptAction(activeImproveModalDomain.practicalAction, 'ACTION')}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+              >
+                <Target className="w-3.5 h-3.5" />
+                <span>Adopt Action & Track in Plan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ethical Consent Modal */}
       <FutureConsentModal
