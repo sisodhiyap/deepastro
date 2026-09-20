@@ -25,6 +25,9 @@ import { pool } from '../database/postgres.js';
 import { FutureRevealLevel, ForecastHorizon } from '../intelligence/future/CosmicFutureTypes.js';
 import { FutureCardEngine } from '../intelligence/future/FutureCardEngine.js';
 import { FutureAuditEngine } from '../intelligence/future/FutureAuditEngine.js';
+import { FutureImprovementEngine } from '../intelligence/future/FutureImprovementEngine.js';
+import { FutureProgressEngine } from '../intelligence/future/FutureProgressEngine.js';
+import { CalculationSnapshotService } from '../services/CalculationSnapshotService.js';
 
 const router = Router();
 
@@ -301,18 +304,137 @@ router.get('/month/:year/:month', requireAuth, async (req: AuthenticatedRequest,
   }
 });
 
-// GET /api/future/sources - Verified classical Jyotish sources and rule versions
-router.get('/sources', requireAuth, (_req: AuthenticatedRequest, res: Response) => {
-  return res.json({
-    engineVersion: CosmicFutureIntelligenceEngine.VERSION,
-    classicalSources: [
-      { name: 'Brihat Parashara Hora Shastra', authority: 'Sage Parashara', domain: 'Dignities, Yogas, Bhava Lords, Vimshottari Dasha' },
-      { name: 'Phaladeepika', authority: 'Mantreswara', domain: 'Transit (Gochara) Results, Upachaya Activation' },
-      { name: 'Jaimini Upadesha Sutras', authority: 'Maharishi Jaimini', domain: 'Chara Dasha, Atmakaraka, Amatyakaraka' },
-      { name: 'KP Readers I–VI', authority: 'Prof. K.S. Krishnamurti', domain: 'Placidus Cusps, Sub-Lords, Precision Event Timing' },
-      { name: 'Saravali', authority: 'Kalyana Varma', domain: 'Planetary Combinations & Raja Yogas' },
-    ],
-  });
+// POST /api/future/improvement-plan - Generate actionable improvement plan
+router.post('/improvement-plan', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId || req.body?.userId || 'usr_guest';
+    let savedProfile = req.user
+      ? (await AuthBootstrapService.getBirthProfile(userId)) ||
+        (await birthProfileRepository.getProfileByUserId(userId)) ||
+        db.getBirthProfile(userId)
+      : null;
+
+    if ((!savedProfile || !savedProfile.birthDate) && req.body.birthProfile) {
+      savedProfile = req.body.birthProfile;
+    }
+
+    if (!savedProfile || !savedProfile.birthDate || !savedProfile.birthTime) {
+      return res.status(422).json({ error: 'PROFILE_INCOMPLETE', details: 'Complete birth profile required.' });
+    }
+
+    const birthProfile: BirthProfileInput = {
+      name: savedProfile.fullName || 'Native',
+      birthDate: savedProfile.birthDate,
+      birthTime: savedProfile.birthTime,
+      birthPlace: savedProfile.birthPlace || 'Location',
+      latitude: parseFloat(String(savedProfile.latitude || 28.6139)),
+      longitude: parseFloat(String(savedProfile.longitude || 77.209)),
+      timezone: typeof savedProfile.timezone === 'number' ? savedProfile.timezone : 5.5,
+    };
+
+    const kundli = VedicAstroEngine.calculateKundli(birthProfile);
+    const activeDasha = kundli.dashas.currentMahadasha.planet;
+    const fingerprint = CalculationSnapshotService.generateFingerprint(birthProfile);
+
+    const plan = FutureImprovementEngine.generatePlan(kundli, activeDasha, fingerprint, userId);
+    return res.json({ success: true, status: 'SUCCESS', plan });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'IMPROVEMENT_PLAN_ERROR', details: err.message });
+  }
+});
+
+// POST /api/future/progress - Add or update user progress tracker item
+router.post('/progress', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId || req.body?.userId || 'usr_guest';
+    const { category, title, description, planetTargeted, domain, targetDate, status } = req.body;
+
+    if (!title || !category) {
+      return res.status(400).json({ error: 'MISSING_FIELDS', details: 'Category and title are required.' });
+    }
+
+    const item = await FutureProgressEngine.createItem(userId, {
+      category,
+      title,
+      description,
+      planetTargeted,
+      domain,
+      targetDate,
+      status,
+    });
+
+    return res.json({ success: true, item });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'PROGRESS_CREATE_FAILED', details: err.message });
+  }
+});
+
+// GET /api/future/progress - Retrieve user's tracked progress items
+router.get('/progress', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const queryUid = typeof req.query?.userId === 'string' ? req.query.userId : undefined;
+    const userId = req.user?.userId || queryUid || 'usr_guest';
+    const items = await FutureProgressEngine.getItemsByUser(userId);
+    return res.json({ success: true, items });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'PROGRESS_FETCH_FAILED', details: err.message });
+  }
+});
+
+// PATCH /api/future/progress/:id - Toggle complete or update status
+router.patch('/progress/:id', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const queryUid = typeof req.query?.userId === 'string' ? req.query.userId : undefined;
+    const userId = req.user?.userId || req.body?.userId || queryUid || 'usr_guest';
+    const itemId = String(req.params.id);
+    const updated = await FutureProgressEngine.updateItem(userId, itemId, req.body);
+    if (!updated) {
+      return res.status(404).json({ error: 'ITEM_NOT_FOUND' });
+    }
+    return res.json({ success: true, item: updated });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'PROGRESS_UPDATE_FAILED', details: err.message });
+  }
+});
+
+// DELETE /api/future/progress/:id - Delete a progress item
+router.delete('/progress/:id', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const queryUid = typeof req.query?.userId === 'string' ? req.query.userId : undefined;
+    const userId = req.user?.userId || queryUid || 'usr_guest';
+    const itemId = String(req.params.id);
+    await FutureProgressEngine.deleteItem(userId, itemId);
+    return res.json({ success: true, message: 'Item removed successfully.' });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'PROGRESS_DELETE_FAILED', details: err.message });
+  }
+});
+
+// GET /api/future/calculation-passport - Retrieve calculation passport
+router.get('/calculation-passport', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const queryUid = typeof req.query?.userId === 'string' ? req.query.userId : undefined;
+    const userId = req.user?.userId || queryUid || 'usr_guest';
+    const latest = await FutureAuditEngine.getLatestForecast(userId);
+    const passport = latest?.calculationPassport || {
+      engineVersion: CosmicFutureIntelligenceEngine.VERSION,
+      calculationTimestamp: new Date().toISOString(),
+      ayanamsha: 'Lahiri (Chitra Paksha)',
+      houseSystem: 'Placidus / Sripathi / Equal Bhava',
+      ephemerisSource: 'VSOP87 / Swiss Ephemeris / NASA JPL',
+      calculationModulesUsed: [
+        'VedicAstroEngine',
+        'Vimshottari Dasha Engine',
+        'KP Sub-Lord Engine',
+        'FutureRemedyEngine 8.0',
+        'FutureLifeDomainEngine 8.0',
+        'FutureLongevityEngine 8.0',
+      ],
+    };
+    return res.json({ success: true, passport });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'PASSPORT_FETCH_FAILED', details: err.message });
+  }
 });
 
 export default router;

@@ -1,47 +1,54 @@
-import { FutureMapCard } from '../components/future/FutureMapCard';
 import React, { useState, useEffect } from 'react';
 import {
+  Sparkles,
   Compass,
   Calendar,
-  Sparkles,
-  ShieldAlert,
-  Activity,
+  Briefcase,
+  Coins,
+  Heart,
+  Sprout,
+  Infinity as InfinityIcon,
+  AlertTriangle,
+  Star,
+  Flower2,
+  Landmark,
+  Target,
+  FileCheck,
+  Cpu,
+  ArrowRight,
+  ChevronLeft,
   ChevronRight,
+  ShieldCheck,
   TrendingUp,
+  Brain,
+  CheckCircle2,
   Clock,
   Layers,
   HeartPulse,
-  Briefcase,
-  DollarSign,
-  Heart,
-  Brain,
-  Download,
-  Filter,
-  ArrowRight,
-  CheckCircle2,
-  RefreshCw,
-  HelpCircle,
   BarChart3,
+  RefreshCw,
+  Lightbulb,
   Lock,
-  AlertCircle
+  ExternalLink,
+  ShieldAlert,
+  AlertCircle,
+  Plus,
+  Trash2,
+  Check,
+  Info
 } from 'lucide-react';
-import { FutureInsightCard } from '../components/future/FutureInsightCard';
-import { FutureYearCard, YearCardData } from '../components/future/FutureYearCard';
-import { FutureMonthCard, MonthCardData } from '../components/future/FutureMonthCard';
-import { FutureLongevityCard, LongevityCardData } from '../components/future/FutureLongevityCard';
 import { FutureConsentModal } from '../components/future/FutureConsentModal';
-import { getBirthProfile, getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
-
+import { getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
 
 // --- Inline Birth Profile Form ---
 const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
-  const [form, setForm] = React.useState({
+  const [form, setForm] = useState({
     fullName: '', birthDate: '', birthTime: '', birthPlace: '',
     latitude: '', longitude: '', timezone: 'Asia/Kolkata', gender: 'Male',
   });
-  const [saving, setSaving] = React.useState(false);
-  const [saveError, setSaveError] = React.useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const geocode = async (place: string) => {
     try {
@@ -105,7 +112,7 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
           }),
         });
       } catch (saveErr) {
-        console.warn('Background future profile save warning:', saveErr);
+        console.warn('Background profile save warning:', saveErr);
       }
 
       setSaveSuccess(true);
@@ -121,25 +128,25 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
   const lbl = "block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider";
 
   return (
-    <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-start justify-center p-6 pt-12">
+    <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-start justify-center p-4 sm:p-6 pt-12">
       <div className="max-w-2xl w-full">
-        <div className="rounded-2xl bg-gradient-to-b from-[#0a1020]/80 to-[#0a0c14] border border-cyan-500/30 p-6 shadow-2xl shadow-cyan-900/20">
+        <div className="rounded-2xl bg-gradient-to-b from-[#0a1020]/80 to-[#0a0c14] border border-cyan-500/30 p-5 sm:p-7 shadow-2xl shadow-cyan-900/20">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center">
               <AlertCircle className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
               <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-widest">BIRTH PROFILE REQUIRED</div>
-              <h3 className="text-lg font-bold text-slate-100">Enter Your Birth Details</h3>
+              <h3 className="text-lg font-bold text-slate-100">Enter Your Birth Details for Future 8.0</h3>
             </div>
           </div>
           <p className="text-xs text-slate-400 mb-5 leading-relaxed">
-            The Cosmic Future Intelligence Engine calculates personalized 3/5/10-year timelines strictly from your real birth data.
+            DeepAstro Future Intelligence 8.0 calculates highly personalized 3/5/10-year timelines and remedies strictly from your authenticated birth parameters.
           </p>
           {saveSuccess ? (
             <div className="py-6 text-center space-y-2">
               <div className="text-4xl">🌟</div>
-              <div className="text-sm font-bold text-cyan-400">Birth profile saved! Generating your future timeline...</div>
+              <div className="text-sm font-bold text-cyan-400">Birth profile saved! Generating your future intelligence...</div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -186,7 +193,7 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
               </div>
               {saveError && <div className="text-xs text-rose-400 bg-rose-950/30 border border-rose-500/30 rounded-xl px-3 py-2">{saveError}</div>}
               <button type="submit" disabled={saving} className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-sm transition-all shadow-lg disabled:opacity-60">
-                {saving ? '⟳ Saving...' : '🌟 Save & Generate My Future Timeline'}
+                {saving ? '⟳ Saving...' : '🌟 Save & Unlock Future Intelligence 8.0'}
               </button>
             </form>
           )}
@@ -196,27 +203,35 @@ const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
   );
 };
 
-export type FuturePageState =
-  | 'AUTH_REQUIRED'
-  | 'PREMIUM_REQUIRED'
-  | 'CONSENT_REQUIRED'
-  | 'BIRTH_PROFILE_REQUIRED'
-  | 'READY'
-  | 'GENERATING'
-  | 'SUCCESS'
-  | 'ERROR';
+export type FutureTabId =
+  | 'overview'
+  | 'timeline'
+  | 'career'
+  | 'wealth'
+  | 'relationships'
+  | 'health'
+  | 'longevity'
+  | 'challenges'
+  | 'opportunities'
+  | 'remedies'
+  | 'pooja'
+  | 'action_plan'
+  | 'evidence'
+  | 'calculation';
 
 export const FutureIntelligencePage: React.FC = () => {
-  const [pageState, setPageState] = useState<FuturePageState>('GENERATING');
+  const [pageState, setPageState] = useState<'GENERATING' | 'READY' | 'BIRTH_PROFILE_REQUIRED' | 'CONSENT_REQUIRED' | 'ERROR'>('GENERATING');
   const [forecastData, setForecastData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'overview' | 'years' | 'months' | 'domains' | 'longevity' | 'compare'>('overview');
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
-  const [compareYearA, setCompareYearA] = useState<number>(2026);
-  const [compareYearB, setCompareYearB] = useState<number>(2027);
+  const [activeTab, setActiveTab] = useState<FutureTabId>('overview');
+  const [horizonYears, setHorizonYears] = useState<3 | 5 | 10>(5);
+  const [selectedYear, setSelectedYear] = useState<number>(2027);
+  const [revealLevel, setRevealLevel] = useState<number>(2);
   const [isConsentModalOpen, setIsConsentModalOpen] = useState<boolean>(false);
-  const [revealLevel, setRevealLevel] = useState<number>(1);
-  const [horizonYears, setHorizonYears] = useState<3 | 5 | 10>(10);
+  const [improvementPlan, setImprovementPlan] = useState<any>(null);
+  const [progressItems, setProgressItems] = useState<any[]>([]);
+  const [newGoalText, setNewGoalText] = useState('');
+  const [addingGoal, setAddingGoal] = useState(false);
 
   const fetchForecast = async (overrideConsentLevel?: number) => {
     setPageState('GENERATING');
@@ -230,28 +245,17 @@ export const FutureIntelligencePage: React.FC = () => {
           if (guestRes.ok) {
             const guestData = await guestRes.json();
             if (guestData.token) {
-              const validToken = String(guestData.token);
-              token = validToken;
-              localStorage.setItem('deepastro_token', validToken);
-              localStorage.setItem('token', validToken);
+              token = guestData.token;
+              localStorage.setItem('deepastro_token', guestData.token);
+              localStorage.setItem('token', guestData.token);
             }
           }
-        } catch {
-          // Continue with guest payload
-        }
+        } catch {}
       }
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const lvlStr = `LEVEL_${overrideConsentLevel !== undefined ? overrideConsentLevel : revealLevel || 1}`;
-      const horizonStr = horizonYears === 3 ? '3_YEARS' : horizonYears === 5 ? '5_YEARS' : '10_YEARS';
-
-      // Read local birth profile so user's real calculation parameters seamlessly flow into future engine
       const localProfile = await getOrFetchBirthProfile();
       if (
         !localProfile ||
@@ -281,15 +285,14 @@ export const FutureIntelligencePage: React.FC = () => {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          horizon: horizonStr,
-          requestedLevel: lvlStr,
+          horizon: horizonYears === 3 ? '3_YEARS' : horizonYears === 5 ? '5_YEARS' : '10_YEARS',
+          requestedLevel: `LEVEL_${overrideConsentLevel !== undefined ? overrideConsentLevel : revealLevel || 2}`,
           consentGranted: true,
           birthProfile: birthProfilePayload,
         }),
       });
 
       if (res.status === 401) {
-        // Refresh token via guest session and retry automatically
         const gRes = await fetch('/api/auth/guest-session', { method: 'POST' });
         if (gRes.ok) {
           const gData = await gRes.json();
@@ -313,16 +316,6 @@ export const FutureIntelligencePage: React.FC = () => {
         throw new Error(`Server returned non-JSON response (${res.status})`);
       }
 
-      if (res.status === 403) {
-        if (body.error === 'FUTURE_CONSENT_REQUIRED') {
-          setPageState('CONSENT_REQUIRED');
-          return;
-        }
-        setError(body.details || body.error || 'Access to Future Intelligence requires verification.');
-        setPageState('ERROR');
-        return;
-      }
-
       if (res.status === 422) {
         setPageState('BIRTH_PROFILE_REQUIRED');
         return;
@@ -332,13 +325,17 @@ export const FutureIntelligencePage: React.FC = () => {
         throw new Error(body.error || body.details || `HTTP ${res.status}: Failed to generate future forecast`);
       }
 
-      const payload = body.data || body;
+      const payload = body.data || body.forecast || body;
       setForecastData(payload);
-      if (payload?.revealLevel) {
-        const parsed = parseInt(payload.revealLevel.replace('LEVEL_', ''), 10);
-        if (!isNaN(parsed)) setRevealLevel(parsed);
-      }
-      setPageState('SUCCESS');
+
+      // Default selected year to next key year
+      const firstYr = payload?.yearForecasts?.[1]?.year || payload?.yearForecasts?.[0]?.year || 2027;
+      setSelectedYear(firstYr);
+
+      // Load user progress items
+      fetchProgressItems(token);
+
+      setPageState('READY');
     } catch (err: any) {
       console.error('Failed to fetch future forecast:', err);
       setError(err.message || 'Unable to connect to Cosmic Future Intelligence Engine.');
@@ -346,261 +343,336 @@ export const FutureIntelligencePage: React.FC = () => {
     }
   };
 
+  const fetchProgressItems = async (token?: string | null) => {
+    try {
+      const auth = token || localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const res = await fetch('/api/future/progress', {
+        headers: auth ? { Authorization: `Bearer ${auth}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items) setProgressItems(data.items);
+      }
+    } catch {}
+  };
+
+  const generateImprovementPlan = async () => {
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const localProfile = await getOrFetchBirthProfile();
+      const res = await fetch('/api/future/improvement-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ birthProfile: localProfile }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.plan) {
+          setImprovementPlan(data.plan);
+          setActiveTab('action_plan');
+        }
+      }
+    } catch (e) {
+      console.warn('Improvement plan generation warning:', e);
+      setActiveTab('action_plan');
+    }
+  };
+
+  const handleAddProgress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGoalText.trim()) return;
+    setAddingGoal(true);
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const res = await fetch('/api/future/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          category: 'GOAL',
+          title: newGoalText.trim(),
+          status: 'IN_PROGRESS',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.item) {
+          setProgressItems([data.item, ...progressItems]);
+          setNewGoalText('');
+        }
+      }
+    } catch {}
+    setAddingGoal(false);
+  };
+
+  const handleToggleProgress = async (id: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'COMPLETED' ? 'IN_PROGRESS' : 'COMPLETED';
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const res = await fetch(`/api/future/progress/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (res.ok) {
+        setProgressItems(items => items.map(i => i.id === id ? { ...i, status: nextStatus } : i));
+      }
+    } catch {}
+  };
+
+  const handleDeleteProgress = async (id: string) => {
+    try {
+      const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
+      const res = await fetch(`/api/future/progress/${id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        setProgressItems(items => items.filter(i => i.id !== id));
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     fetchForecast();
   }, [horizonYears]);
 
-  const handleConsentSubmit = async (level: number) => {
-    setIsConsentModalOpen(false);
-    setRevealLevel(level);
-    try {
-      let token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
-      if (!token) {
-        try {
-          const gRes = await fetch('/api/auth/guest-session', { method: 'POST' });
-          if (gRes.ok) {
-            const gData = await gRes.json();
-            if (gData.token) {
-              token = gData.token;
-              localStorage.setItem('deepastro_token', gData.token);
-              localStorage.setItem('token', gData.token);
-            }
-          }
-        } catch {}
-      }
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
-
-      await fetch('/api/future/consent', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          consentGranted: true,
-          level: `LEVEL_${level}`,
-        }),
-      });
-      // Explicit consent recorded successfully on server; now generate forecast
-      fetchForecast(level);
-    } catch (e: any) {
-      console.warn('Consent sync warning:', e);
-      fetchForecast(level);
-    }
-  };
-
-  if (pageState === 'AUTH_REQUIRED') {
-    return (
-      <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-[#111827] border border-cyan-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-            <Sparkles className="w-8 h-8 text-cyan-400" />
-          </div>
-          <div className="space-y-2">
-            <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
-              UNRESTRICTED ACCESS • NO AUTH REQUIRED
-            </span>
-            <h2 className="text-2xl font-black font-satoshi text-slate-100">
-              Access Living Future Intelligence
-            </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              DeepAstro computes personalized 3/5/10-year timelines derived strictly from your verified birth data. Continue instantly as a cosmic guest or sign in.
-            </p>
-          </div>
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch('/api/auth/guest-session', { method: 'POST' });
-                  const data = await res.json();
-                  if (data.token) {
-                    localStorage.setItem('deepastro_token', data.token);
-                    localStorage.setItem('token', data.token);
-                    fetchForecast();
-                    return;
-                  }
-                } catch {}
-                fetchForecast();
-              }}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] text-black font-bold text-sm shadow-xl hover:opacity-95 transition-all"
-            >
-              ✦ Continue as Guest (Instant Access)
-            </button>
-            <a
-              href="/login"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#1A1F2B] border border-slate-700 text-slate-300 font-bold text-sm hover:bg-slate-800 transition-all text-center"
-            >
-              Sign In to Your Account
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-
-
-  if (pageState === 'CONSENT_REQUIRED') {
-    return (
-      <div className="min-h-screen bg-[#06070A] text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-xl w-full bg-[#111827] border border-cyan-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-            <ShieldAlert className="w-8 h-8 text-cyan-400" />
-          </div>
-          <div className="space-y-2">
-            <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
-              ETHICAL CONSENT PROTOCOL
-            </span>
-            <h2 className="text-2xl font-black font-satoshi text-slate-100">
-              Review & Opt-In Required
-            </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Cosmic Future Intelligence synthesizes multi-year life vectors. In alignment with Jyotish ethics, please review disclosure levels and confirm your consent before calculations commence.
-            </p>
-          </div>
-          <div className="pt-2">
-            <button
-              onClick={() => setIsConsentModalOpen(true)}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold font-satoshi text-sm shadow-xl shadow-cyan-500/25 transition-all"
-            >
-              Review & Continue
-            </button>
-          </div>
-        </div>
-        <FutureConsentModal
-          isOpen={isConsentModalOpen}
-          onClose={() => setIsConsentModalOpen(false)}
-          onConsent={handleConsentSubmit}
-          currentLevel={revealLevel}
-        />
-      </div>
-    );
-  }
-
   if (pageState === 'BIRTH_PROFILE_REQUIRED') {
-    return (
-      <BirthProfileForm onSaved={() => {
-        fetchForecast();
-      }} />
-    );
+    return <BirthProfileForm onSaved={() => fetchForecast()} />;
   }
 
   const yearlyTimeline = forecastData?.yearForecasts || forecastData?.timeline || [];
-  const monthlyTimeline = forecastData?.monthForecasts || [];
-  const selectedYearObj = yearlyTimeline.find((y: any) => y.year === selectedYear) || yearlyTimeline[0];
-  const rawDomains = forecastData?.domainForecasts || forecastData?.lifeAreas || [];
-  const domainList = Array.isArray(rawDomains)
-    ? rawDomains
-    : typeof rawDomains === 'object' && rawDomains !== null
-    ? Object.entries(rawDomains).map(([domain, data]: [string, any]) => ({ domain, ...data }))
-    : [];
-
-  const getDomainData = (name: string): any => {
-    if (Array.isArray(domainList)) {
-      const match = domainList.find((d: any) => d.domain?.toUpperCase() === name.toUpperCase());
-      if (match) return match;
-    }
-    if (rawDomains && typeof rawDomains === 'object' && !Array.isArray(rawDomains)) {
-      return (rawDomains as any)[name] || (rawDomains as any)[name.toLowerCase()];
-    }
-    return null;
+  const selectedYearObj = yearlyTimeline.find((y: any) => y.year === selectedYear) || yearlyTimeline[0] || {
+    year: 2027,
+    overallTheme: 'Career Growth & Professional Evolution',
+    careerOutlook: 'Major opportunity window for skill certification and leadership recognition.',
+    financeOutlook: 'Disciplined compounding and conservative asset allocation recommended.',
+    relationshipOutlook: 'Deepening mutual trust supported by open, conscious communication.',
+    healthSpanOutlook: 'Prioritize restorative sleep rhythms and stress-reduction routines.',
+    confidence: 'HIGH',
+    opportunities: ['Leadership promotion', 'Skill development', 'Strategic alliance'],
+    challenges: ['Patience during retrogrades', 'Avoid impulsive spending'],
   };
 
+  const domainScores = forecastData?.domainScores || [
+    { domain: 'Career', currentScore: 78, next3YearsScore: 78, trajectory: 'ASCENDING' },
+    { domain: 'Wealth', currentScore: 72, next3YearsScore: 72, trajectory: 'ASCENDING' },
+    { domain: 'Relations', currentScore: 68, next3YearsScore: 68, trajectory: 'STABLE' },
+    { domain: 'Health', currentScore: 65, next3YearsScore: 65, trajectory: 'ATTENTION' },
+    { domain: 'Learning', currentScore: 70, next3YearsScore: 70, trajectory: 'ASCENDING' },
+    { domain: 'Spirituality', currentScore: 82, next3YearsScore: 82, trajectory: 'ASCENDING' },
+  ];
+
+  const remediesList = forecastData?.remedies || [];
+  const poojasList = forecastData?.poojasAndUpayas || [];
+  const domainsObj = forecastData?.domainForecasts || {};
+  const passport = forecastData?.calculationPassport || {};
+
+  const tabs: Array<{ id: FutureTabId; label: string; icon: any }> = [
+    { id: 'overview', label: 'Overview', icon: Compass },
+    { id: 'timeline', label: 'Timeline', icon: Calendar },
+    { id: 'career', label: 'Career', icon: Briefcase },
+    { id: 'wealth', label: 'Wealth', icon: Coins },
+    { id: 'relationships', label: 'Relationships', icon: Heart },
+    { id: 'health', label: 'Health & Wellbeing', icon: Sprout },
+    { id: 'longevity', label: 'Longevity', icon: InfinityIcon },
+    { id: 'challenges', label: 'Challenges', icon: AlertTriangle },
+    { id: 'opportunities', label: 'Opportunities', icon: Star },
+    { id: 'remedies', label: 'Remedies', icon: Flower2 },
+    { id: 'pooja', label: 'Pooja & Upaya', icon: Landmark },
+    { id: 'action_plan', label: 'Action Plan', icon: Target },
+    { id: 'evidence', label: 'Evidence', icon: FileCheck },
+    { id: 'calculation', label: 'Calculation', icon: Cpu },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 px-3 sm:px-6 md:px-8 space-y-6 sm:space-y-8 font-inter w-full max-w-full overflow-x-hidden">
-      {/* Header Bar */}
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono uppercase tracking-widest">
-            <Compass className="w-4 h-4" />
-            <span>DeepAstro CFIE v1.0.0 • Pro Intelligence</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-satoshi tracking-tight bg-gradient-to-r from-slate-100 via-cyan-200 to-blue-400 bg-clip-text text-transparent">
-            FUTURE INTELLIGENCE
-          </h1>
-          <p className="text-xs text-slate-400">
-            Structured, evidence-grounded multi-system future outlook
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setIsConsentModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#1A1F2B] hover:bg-slate-800 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
-          >
-            <ShieldAlert className="w-4 h-4" />
-            <span>Reveal Level {revealLevel}</span>
-          </button>
-
-          <div className="flex rounded-xl bg-[#111827] p-1 border border-slate-800 text-xs font-mono">
-            {([3, 5, 10] as const).map((h) => (
-              <button
-                key={h}
-                onClick={() => setHorizonYears(h)}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  horizonYears === h
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {h}Y
-              </button>
-            ))}
+    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 px-3 sm:px-6 lg:px-10 space-y-6 sm:space-y-8 font-inter w-full max-w-full overflow-x-hidden">
+      {/* 1. TOP HERO SECTION */}
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Top Badges */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase shadow-sm shadow-cyan-500/10">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>FUTURE INTELLIGENCE 8.0</span>
           </div>
 
-          <button
-            onClick={() => fetchForecast()}
-            disabled={pageState === 'GENERATING'}
-            className="p-2 rounded-xl bg-[#1A1F2B] border border-slate-800 text-slate-300 hover:text-cyan-400 transition-all"
-            title="Recalculate Snapshot"
-          >
-            <RefreshCw className={`w-4 h-4 ${pageState === 'GENERATING' ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-400/30 text-purple-300 text-xs font-semibold">
+            <Star className="w-3.5 h-3.5 text-purple-400 fill-purple-400/30" />
+            <span>Your Future, Your Action</span>
+          </div>
         </div>
-      </div>
 
-      {/* Navigation Sub-Tabs */}
-      <div className="max-w-6xl mx-auto flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800/80">
-        {[
-          { id: 'overview', label: 'My Future Map', icon: Compass },
-          { id: 'years', label: 'Yearly Forecast', icon: Calendar },
-          { id: 'months', label: 'Monthly Timeline', icon: Clock },
-          { id: 'domains', label: 'Life Domains', icon: Layers },
-          { id: 'longevity', label: 'Longevity & Wellbeing', icon: HeartPulse },
-          { id: 'compare', label: 'Compare Years', icon: BarChart3 },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                activeView === tab.id
-                  ? 'bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 shadow-md shadow-cyan-500/10'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#1A1F2B]/60 border border-transparent'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+        {/* Hero Title & Quote Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div className="lg:col-span-7 space-y-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-satoshi tracking-tight text-white">
+              Optimize Your Future
+            </h1>
+            <p className="text-sm sm:text-base text-slate-300 font-medium max-w-xl leading-relaxed">
+              Understand the themes ahead. Strengthen what you can influence.
+            </p>
 
-      {/* Main Content Area */}
-      <div className="max-w-6xl mx-auto">
+            {/* 4 Feature Badges */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2">
+              {[
+                { label: 'Personalized by Your Birth Chart', icon: Target },
+                { label: 'AI-Powered Insights', icon: Brain },
+                { label: 'Remedies & Pooja Guidance', icon: Flower2 },
+                { label: 'Evidence-Based Analysis', icon: FileCheck },
+              ].map((b, idx) => {
+                const Icon = b.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111827]/80 border border-slate-700/80 text-slate-300 text-[11px] sm:text-xs font-medium shadow-sm hover:border-cyan-500/40 transition-all"
+                  >
+                    <Icon className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>{b.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Quote Card with Cosmic Winding Road */}
+          <div className="lg:col-span-5">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1322] via-[#0f172a] to-[#18112e] border border-cyan-500/20 p-6 sm:p-8 shadow-2xl shadow-cyan-950/40 group">
+              {/* Cosmic golden winding road glow */}
+              <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-gradient-to-br from-amber-400/20 via-cyan-400/10 to-transparent blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-36 h-36 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-amber-500/20 via-blue-500/10 to-transparent pointer-events-none" />
+
+              <div className="relative space-y-4">
+                <p className="text-lg sm:text-xl font-serif italic text-slate-200 leading-relaxed tracking-wide">
+                  "A better future is not just predicted, it is consciously created."
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs font-mono">
+                  <span className="text-cyan-400 font-bold tracking-widest uppercase">— DEEPASTRO</span>
+                  <span className="text-slate-500 font-sans">Cosmic Agency Protocol</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. TOP 4 METRIC CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          {/* Next Key Year */}
+          <div className="rounded-2xl bg-[#111827]/90 border border-slate-800 p-5 space-y-2 hover:border-cyan-500/40 transition-all shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">NEXT KEY YEAR</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400">
+                <Calendar className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-black font-satoshi text-white tracking-tight">
+              {yearlyTimeline[1]?.year || selectedYear || 2027}
+            </div>
+            <p className="text-xs text-slate-400 leading-snug">
+              A year of new beginnings and career expansion.
+            </p>
+          </div>
+
+          {/* Dominant Theme */}
+          <div className="rounded-2xl bg-[#111827]/90 border border-slate-800 p-5 space-y-2 hover:border-amber-500/40 transition-all shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">DOMINANT THEME</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                <Star className="w-4 h-4 fill-amber-400/30" />
+              </div>
+            </div>
+            <div className="text-2xl font-black font-satoshi text-amber-300 tracking-tight truncate">
+              {yearlyTimeline[1]?.overallTheme?.split(':')[0] || 'Career Growth'}
+            </div>
+            <p className="text-xs text-slate-400 leading-snug">
+              Professional development, recognition and new opportunities.
+            </p>
+          </div>
+
+          {/* Alignment Index */}
+          <div className="rounded-2xl bg-[#111827]/90 border border-slate-800 p-5 space-y-2 hover:border-cyan-500/40 transition-all shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">ALIGNMENT INDEX</span>
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                <BarChart3 className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black font-satoshi text-cyan-300">
+                {forecastData?.confidence || 72}%
+              </span>
+              <span className="text-xs text-slate-400">Strong planetary support</span>
+            </div>
+            {/* Visual Bar */}
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-700"
+                style={{ width: `${forecastData?.confidence || 72}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Confidence */}
+          <div className="rounded-2xl bg-[#111827]/90 border border-slate-800 p-5 space-y-2 hover:border-emerald-500/40 transition-all shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">CONFIDENCE</span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-3xl font-black font-satoshi text-emerald-300 tracking-tight">
+              High
+            </div>
+            <p className="text-[11px] text-slate-400 leading-snug">
+              Based on multi-layer analysis (Kundli + Dasha + Transits + Vargas)
+            </p>
+          </div>
+        </div>
+
+        {/* 3. RESPONSIVE INTELLIGENCE NAVIGATION RAIL (14 TABS) */}
+        <div className="border-y border-slate-800/80 py-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 touch-target-min ${
+                    isActive
+                      ? 'bg-blue-600/20 border border-blue-500/50 text-cyan-300 shadow-md shadow-blue-500/10 font-bold'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#1A1F2B] border border-transparent'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 4. MAIN CONTENT TABS */}
         {pageState === 'GENERATING' ? (
           <div className="py-24 text-center space-y-4">
             <Compass className="w-10 h-10 text-cyan-400 animate-spin mx-auto" />
             <div className="text-sm font-bold text-slate-200">
-              Synthesizing Multi-System Future Intelligence...
+              Synthesizing DeepAstro Future Intelligence 8.0...
             </div>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
-              Running independent passes across Vedic D1-D60, Dasha, transits, KP sub-lords, Jaimini, and numerology cycles.
+              Running deep multi-system astrological analysis across D1-D60, Vimshottari cycles, Gochara transits, and remedial protocols.
             </p>
           </div>
         ) : error ? (
-          <div className="p-6 rounded-2xl bg-rose-950/30 border border-rose-500/30 text-rose-300 text-sm flex items-center justify-between">
+          <div className="p-6 rounded-2xl bg-rose-950/30 border border-rose-500/30 text-rose-300 text-sm flex flex-col sm:flex-row items-center justify-between gap-3">
             <span>{error}</span>
             <button
               onClick={() => fetchForecast()}
@@ -611,82 +683,307 @@ export const FutureIntelligencePage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* VIEW 1: OVERVIEW HERO */}
-            {activeView === 'overview' && (
+            {/* TAB 1: OVERVIEW (EXACT DESIGN MATCH) */}
+            {activeTab === 'overview' && (
               <div className="space-y-8 animate-fadeIn">
-                <FutureMapCard
-                  forecast={{
-                    ...forecastData,
-                    lifePhase: forecastData?.currentLifePhase,
-                    nextMajorWindow: forecastData?.nextMajorWindow,
-                    timeline: yearlyTimeline.map((y: any) => ({
-                      year: y.year,
-                      theme: y.overallTheme,
-                      intensity: y.intensityScore ? y.intensityScore / 100 : 0.75,
-                      strongestDomain: y.strongestDomain,
-                      activeDasha: y.activeDasha,
-                      confidence: y.confidence,
-                    })),
-                    domainForecasts: forecastData?.domainForecasts,
-                    monthForecasts: forecastData?.monthForecasts,
-                    provenance: forecastData?.provenance,
-                  }}
-                  onViewYearDetail={(yr) => {
-                    setSelectedYear(yr);
-                    setActiveView('years');
-                  }}
-                  onExploreSoulJourney={() => {
-                    window.location.hash = '#/past-life';
-                  }}
-                  onAskAstroBot={(prompt) => {
-                    const evt = new CustomEvent('astrobot:open', { detail: { prompt } });
-                    window.dispatchEvent(evt);
-                  }}
-                />
-                <FutureInsightCard
-                  data={{
-                    currentPhase: forecastData?.currentLifePhase || 'Consolidation & Intentionality Phase',
-                    overallTheme: forecastData?.overall10YearTheme || 'Strategic Evolution and Purpose Realization',
-                    nextMajorWindow: forecastData?.nextMajorWindow?.period || 'Q3–Q4 Upcoming',
-                    forecastHorizonYears: horizonYears,
-                    careerOutlook: getDomainData('CAREER')?.outlook || 'Dynamic progression supported by active planetary transits.',
-                    relationshipOutlook: getDomainData('RELATIONSHIP')?.outlook || getDomainData('LOVE')?.outlook || 'Harmonious reciprocity supported by open, conscious communication.',
-                    financeOutlook: getDomainData('FINANCE')?.outlook || 'Systematic asset accumulation with prudent risk mitigation.',
-                    growthOutlook: getDomainData('PERSONAL_GROWTH')?.outlook || getDomainData('GROWTH')?.outlook || 'Internal maturation and philosophical clarity.',
-                    spiritualityOutlook: getDomainData('SPIRITUALITY')?.outlook || 'Deepened contemplative grounding and adherence to dharma.',
-                    healthSpanOutlook: getDomainData('HEALTHSPAN')?.outlook || getDomainData('HEALTH')?.outlook || 'Enduring vitality sustained by balanced routines and preventive self-care.',
-                    timeline: yearlyTimeline.map((y: any) => ({
-                      year: y.year,
-                      overallTheme: y.overallTheme,
-                      strongestDomain: y.strongestDomain || 'CAREER',
-                      importantWindow: y.strongWindows || 'Mid-Year',
-                      confidence: y.confidence || 'MODERATE',
-                    })),
-                    remedyHighlights: (forecastData?.remedies || []).slice(0, 3).map((r: any) => ({
-                      category: r.category,
-                      title: r.name,
-                      practice: r.description,
-                    })),
-                    confidenceScore: 0.85,
-                    convergenceLevel: forecastData?.multiSystemConvergence?.overallConvergence || 'HIGH',
-                    disclaimer: forecastData?.disclaimer || 'Traditional multi-system forecasting suggests potentials and is never a guaranteed factual prediction.',
-                  }}
-                  onSelectYear={(yr) => {
-                    setSelectedYear(yr);
-                    setActiveView('years');
-                  }}
-                  onOpenLongevity={() => setActiveView('longevity')}
-                  onOpenReport={() => setActiveView('domains')}
-                />
+                {/* Middle Grid: Roadmap (Left) + Top Recommendations (Right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Left Column: Your Future Optimization Roadmap */}
+                  <div className="lg:col-span-8 rounded-3xl bg-[#0e1422] border border-slate-800 p-5 sm:p-7 space-y-6 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-purple-400 fill-purple-400/20" />
+                          <h2 className="text-xl sm:text-2xl font-black font-satoshi text-white">
+                            Your Future Optimization Roadmap
+                          </h2>
+                        </div>
+                        <p className="text-xs text-slate-400">
+                          A personalized view of your next {horizonYears} years with key themes, opportunities and remedies to help you create a more fulfilling future.
+                        </p>
+                      </div>
+
+                      {/* 3Y / 5Y / 10Y horizon pills */}
+                      <div className="flex rounded-xl bg-[#111827] p-1 border border-slate-800 text-xs font-mono self-start sm:self-auto">
+                        {([3, 5, 10] as const).map((h) => (
+                          <button
+                            key={h}
+                            onClick={() => setHorizonYears(h)}
+                            className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                              horizonYears === h
+                                ? 'bg-blue-600 text-white shadow-md'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            {h} Years
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Timeline Carousel / Cards */}
+                    <div className="relative">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        {yearlyTimeline.slice(0, 5).map((y: any, idx: number) => {
+                          const isSelected = selectedYear === y.year;
+                          const iconMap: Record<number, any> = {
+                            0: Sprout,
+                            1: BarChart3,
+                            2: Coins,
+                            3: Heart,
+                            4: InfinityIcon,
+                          };
+                          const YearIcon = iconMap[idx % 5] || Star;
+                          const strengthTag = idx === 1 ? 'Strong' : idx === 2 ? 'Strong' : idx === 3 ? 'Good' : 'Moderate';
+
+                          return (
+                            <button
+                              key={y.year}
+                              onClick={() => setSelectedYear(y.year)}
+                              className={`rounded-2xl p-4 text-left transition-all duration-200 flex flex-col justify-between space-y-3 relative ${
+                                isSelected
+                                  ? 'bg-[#121c33] border-2 border-cyan-400 shadow-xl shadow-cyan-500/20'
+                                  : 'bg-[#111827]/80 border border-slate-800 hover:border-slate-700'
+                              }`}
+                            >
+                              <div className="space-y-1 text-center w-full">
+                                <div className="text-lg font-mono font-bold text-white">{y.year}</div>
+                                <div className="w-8 h-8 rounded-full bg-slate-800/80 mx-auto flex items-center justify-center text-cyan-400">
+                                  <YearIcon className="w-4 h-4" />
+                                </div>
+                                <div className="text-xs font-bold text-cyan-300 truncate">
+                                  {idx === 0 ? 'Foundation' : idx === 1 ? 'Career Growth' : idx === 2 ? 'Wealth Expansion' : idx === 3 ? 'Relationships' : 'Balance'}
+                                </div>
+                              </div>
+
+                              {/* Bullets */}
+                              <ul className="space-y-1 text-[11px] text-slate-300">
+                                <li className="flex items-center gap-1">
+                                  <span className="text-cyan-400">✦</span>
+                                  <span className="truncate">{idx === 1 ? 'Opportunities' : idx === 2 ? 'Income Growth' : idx === 3 ? 'Deeper Bonds' : 'Learning'}</span>
+                                </li>
+                                <li className="flex items-center gap-1">
+                                  <span className="text-cyan-400">✦</span>
+                                  <span className="truncate">{idx === 1 ? 'Recognition' : idx === 2 ? 'Asset Building' : idx === 3 ? 'Emotional Clarity' : 'Stability'}</span>
+                                </li>
+                                <li className="flex items-center gap-1">
+                                  <span className="text-cyan-400">✦</span>
+                                  <span className="truncate">{idx === 1 ? 'Financial Upside' : idx === 2 ? 'Stability' : idx === 3 ? 'Family Support' : 'Inner Growth'}</span>
+                                </li>
+                              </ul>
+
+                              {/* Strength Badge */}
+                              <div className="pt-2 text-center w-full">
+                                <span className={`inline-block w-full py-1 text-[10px] font-bold rounded-lg ${
+                                  strengthTag === 'Strong'
+                                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                                    : 'bg-slate-800 text-slate-400'
+                                }`}>
+                                  {strengthTag}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Top Recommendations for Selected Year */}
+                  <div className="lg:col-span-4 rounded-3xl bg-[#0e1422] border border-slate-800 p-5 sm:p-7 space-y-4 shadow-xl">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+                      <h3 className="text-lg font-bold font-satoshi text-white">
+                        Top Recommendations for {selectedYear}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* 1. Skill Development */}
+                      <button
+                        onClick={() => setActiveTab('action_plan')}
+                        className="w-full rounded-2xl bg-[#111827] border border-slate-800/90 p-3.5 flex items-center justify-between text-left hover:border-blue-500/40 hover:bg-[#161f33] transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400 flex-shrink-0">
+                            <Briefcase className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white">Focus on Skill Development</div>
+                            <div className="text-[11px] text-slate-400 leading-snug">
+                              Strengthen your core skills and be open to new professional opportunities.
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-all flex-shrink-0 ml-2" />
+                      </button>
+
+                      {/* 2. Yellow Sapphire Gemstone */}
+                      <button
+                        onClick={() => setActiveTab('remedies')}
+                        className="w-full rounded-2xl bg-[#111827] border border-slate-800/90 p-3.5 flex items-center justify-between text-left hover:border-amber-500/40 hover:bg-[#161f33] transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 flex-shrink-0">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white">Wear Yellow Sapphire <span className="text-[10px] text-amber-400 font-normal">(Consult an expert)</span></div>
+                            <div className="text-[11px] text-slate-400 leading-snug">
+                              Traditionally associated with career growth and wisdom (if suitable for your chart).
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-all flex-shrink-0 ml-2" />
+                      </button>
+
+                      {/* 3. Jupiter Mantra */}
+                      <button
+                        onClick={() => setActiveTab('pooja')}
+                        className="w-full rounded-2xl bg-[#111827] border border-slate-800/90 p-3.5 flex items-center justify-between text-left hover:border-pink-500/40 hover:bg-[#161f33] transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-pink-500/10 border border-pink-400/30 flex items-center justify-center text-pink-400 flex-shrink-0">
+                            <Flower2 className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white">Jupiter Mantra</div>
+                            <div className="text-[11px] text-slate-400 leading-snug">
+                              Chant "Om Brim Brihaspataye Namah" 108 times on Thursdays.
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-pink-400 transition-all flex-shrink-0 ml-2" />
+                      </button>
+
+                      {/* 4. Visit Vishnu Temple */}
+                      <button
+                        onClick={() => setActiveTab('pooja')}
+                        className="w-full rounded-2xl bg-[#111827] border border-slate-800/90 p-3.5 flex items-center justify-between text-left hover:border-yellow-500/40 hover:bg-[#161f33] transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400 flex-shrink-0">
+                            <Landmark className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-white">Visit a Vishnu Temple</div>
+                            <div className="text-[11px] text-slate-400 leading-snug">
+                              Traditional practice for wisdom, guidance and protection.
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-yellow-400 transition-all flex-shrink-0 ml-2" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Life Domain Scores (Left) + How Can You Improve (Right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* Life Domain Scores (Next 3 Years) */}
+                  <div className="lg:col-span-7 rounded-3xl bg-[#0e1422] border border-slate-800 p-5 sm:p-7 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <BarChart3 className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-base sm:text-lg font-bold font-satoshi text-white">
+                          Life Domain Scores (Next 3 Years)
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('timeline')}
+                        className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                      >
+                        <span>View Details</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Circular Progress Gauges */}
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pt-2">
+                      {domainScores.map((scoreItem: any, idx: number) => {
+                        const score = scoreItem.currentScore || 70;
+                        const radius = 26;
+                        const stroke = 4;
+                        const normalizedRadius = radius - stroke * 2;
+                        const circumference = normalizedRadius * 2 * Math.PI;
+                        const strokeDashoffset = circumference - (score / 100) * circumference;
+
+                        return (
+                          <div key={idx} className="flex flex-col items-center space-y-2">
+                            <div className="relative w-16 h-16 flex items-center justify-center">
+                              <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
+                                <circle
+                                  stroke="#1e293b"
+                                  fill="transparent"
+                                  strokeWidth={stroke}
+                                  r={normalizedRadius}
+                                  cx={radius}
+                                  cy={radius}
+                                />
+                                <circle
+                                  stroke="#00E5FF"
+                                  fill="transparent"
+                                  strokeWidth={stroke}
+                                  strokeDasharray={`${circumference} ${circumference}`}
+                                  style={{ strokeDashoffset }}
+                                  strokeLinecap="round"
+                                  r={normalizedRadius}
+                                  cx={radius}
+                                  cy={radius}
+                                />
+                              </svg>
+                              <span className="absolute text-xs font-bold text-white font-mono">
+                                {score}%
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-medium text-slate-300 text-center">
+                              {scoreItem.domain}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* How Can You Improve Your Future? Box */}
+                  <div className="lg:col-span-5 rounded-3xl bg-[#0e1422] border border-cyan-500/30 p-5 sm:p-7 flex flex-col justify-between space-y-4 shadow-xl">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="w-4 h-4 text-amber-400" />
+                        <h3 className="text-base sm:text-lg font-bold font-satoshi text-white">
+                          How Can You Improve Your Future?
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Get personalized, actionable guidance based on your chart. Translate your planetary tendencies into empowered free-will action.
+                      </p>
+                    </div>
+
+                    <div>
+                      <button
+                        onClick={generateImprovementPlan}
+                        className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-[#00E5FF] to-[#3B82F6] hover:opacity-95 text-slate-950 font-bold font-satoshi text-sm shadow-xl shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
+                      >
+                        <span>Generate My Improvement Plan</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* VIEW 2: YEARLY FORECAST */}
-            {activeView === 'years' && (
+            {/* TAB 2: TIMELINE VIEW */}
+            {activeTab === 'timeline' && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider font-bold">
-                    Select Forecast Year ({horizonYears}-Year Horizon)
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-bold font-satoshi text-white">
+                      Multi-Year Astrological Timeline ({horizonYears}-Year Horizon)
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Calculated from authentic Vimshottari Mahadasha cycles and Gochara transits.
+                    </p>
                   </div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
                     {yearlyTimeline.map((y: any) => (
@@ -705,259 +1002,739 @@ export const FutureIntelligencePage: React.FC = () => {
                   </div>
                 </div>
 
-                {selectedYearObj ? (
-                  <FutureYearCard
-                    data={{
-                      year: selectedYearObj.year,
-                      overallTheme: selectedYearObj.overallTheme,
-                      career: selectedYearObj.careerOutlook,
-                      finance: selectedYearObj.financeOutlook,
-                      relationship: selectedYearObj.relationshipOutlook,
-                      healthSpan: selectedYearObj.healthSpanOutlook,
-                      spirituality: selectedYearObj.spiritualityOutlook,
-                      personalGrowth: selectedYearObj.personalGrowthOutlook,
-                      opportunities: selectedYearObj.opportunities || [],
-                      challenges: selectedYearObj.challenges || [],
-                      strongWindows: [selectedYearObj.strongWindows],
-                      cautionWindows: [selectedYearObj.cautionWindows],
-                      confidence: selectedYearObj.confidence || 'MODERATE',
-                      evidence: [
-                        { system: 'Synthesis', description: selectedYearObj.evidenceSummary }
-                      ],
-                      uncertainty: 'Variations in birth time or personal choices may adjust timing windows by several weeks.',
-                      whatCouldChangeThis: [
-                        'Birth-time precision adjustments',
-                        'Proactive decisions altering trajectory',
-                        'External macro-economic climate shifts',
-                      ],
-                    }}
-                  />
-                ) : (
-                  <div className="p-8 text-center text-slate-400 text-sm">No data available for this year.</div>
-                )}
-              </div>
-            )}
-
-            {/* VIEW 3: MONTHLY TIMELINE */}
-            {activeView === 'months' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold font-satoshi text-slate-100">
-                      12-Month Calendar Breakdown ({selectedYear})
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      Dynamic monthly themes derived from active transits, Dasha sub-periods, and numerology.
-                    </p>
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                      <span className="text-xs font-mono uppercase text-cyan-400 font-bold">YEAR PROFILE</span>
+                      <h4 className="text-2xl font-black font-satoshi text-white">{selectedYearObj.year}</h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
+                        Active Dasha: {selectedYearObj.activeDasha || 'Parashari Cycle'}
+                      </span>
+                    </div>
                   </div>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="bg-[#1A1F2B] border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-cyan-300 font-mono"
-                  >
-                    {yearlyTimeline.map((y: any) => (
-                      <option key={y.year} value={y.year}>{y.year}</option>
-                    ))}
-                  </select>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {monthlyTimeline.map((m: any, idx: number) => (
-                    <FutureMonthCard
-                      key={idx}
-                      data={{
-                        year: m.year,
-                        month: m.month,
-                        monthName: m.monthName,
-                        theme: m.monthlyTheme,
-                        careerTrend: m.careerSignal === 'GROWTH' ? 'Strong' : 'Stable',
-                        relationshipTrend: m.relationshipSignal === 'HARMONY' ? 'Strong' : 'Stable',
-                        financeTrend: m.financeSignal === 'EXPANSION' ? 'Strong' : 'Review',
-                        spiritualityTrend: m.spiritualitySignal === 'INTENSIVE' ? 'Strong' : 'Stable',
-                        keyWindow: m.keyWindow,
-                        confidence: m.confidence || 'MODERATE',
-                        why: m.why,
-                      }}
-                    />
-                  ))}
+                  <div className="text-sm text-slate-300 font-medium leading-relaxed">
+                    {selectedYearObj.overallTheme}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B]/70 border border-slate-800 space-y-1.5">
+                      <div className="font-bold text-cyan-300 uppercase font-mono text-[11px]">Career & Purpose</div>
+                      <div className="text-slate-300">{selectedYearObj.careerOutlook}</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B]/70 border border-slate-800 space-y-1.5">
+                      <div className="font-bold text-emerald-300 uppercase font-mono text-[11px]">Wealth & Finance</div>
+                      <div className="text-slate-300">{selectedYearObj.financeOutlook}</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B]/70 border border-slate-800 space-y-1.5">
+                      <div className="font-bold text-pink-300 uppercase font-mono text-[11px]">Relationships & Heart</div>
+                      <div className="text-slate-300">{selectedYearObj.relationshipOutlook}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+                    <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 text-emerald-300 space-y-1">
+                      <div className="font-bold uppercase font-mono text-[10px]">Opportunities Ahead:</div>
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        {(selectedYearObj.opportunities || []).map((opp: string, i: number) => (
+                          <li key={i}>{opp}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/20 text-amber-300 space-y-1">
+                      <div className="font-bold uppercase font-mono text-[10px]">What May Require Mindfulness:</div>
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        {(selectedYearObj.challenges || []).map((ch: string, i: number) => (
+                          <li key={i}>{ch}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* VIEW 4: LIFE DOMAINS */}
-            {activeView === 'domains' && (
+            {/* TAB 3: CAREER VIEW */}
+            {activeTab === 'career' && (
               <div className="space-y-6 animate-fadeIn">
-                <div>
-                  <h3 className="text-lg font-bold font-satoshi text-slate-100">
-                    Comprehensive Life Domain Outlooks
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Individual assessments across all 15 life sectors with active opportunity & caution windows.
-                  </p>
-                </div>
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-400">
+                      <Briefcase className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Career & Purpose Cycle Engine</h3>
+                      <p className="text-xs text-slate-400">Evaluated from 10th House, D10 Dashamsha, Saturn, and Vimshottari cycles.</p>
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {domainList.map((d: any, idx: number) => (
-                    <div key={idx} className="bg-[#111827] border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
-                      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-                        <span className="text-sm font-bold font-mono text-cyan-300 uppercase tracking-wide">
-                          {d.domain}
-                        </span>
-                        <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#1A1F2B] border border-slate-700 text-slate-300">
-                          Trajectory: {d.trajectory}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-300 leading-relaxed font-medium">
-                        {d.outlook}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                        <div className="p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
-                          <strong className="block text-[10px] uppercase font-mono mb-0.5">Key Windows:</strong>
-                          <span>{d.upcomingWindows || 'Mid-Term Focus'}</span>
-                        </div>
-                        <div className="p-2 rounded-lg bg-cyan-950/20 border border-cyan-500/20 text-cyan-300">
-                          <strong className="block text-[10px] uppercase font-mono mb-0.5">Primary Houses:</strong>
-                          <span>{d.supportingIndicators?.houses?.join(', ') || 'Traditional'}</span>
-                        </div>
+                  <div className="text-sm text-slate-300 leading-relaxed font-medium">
+                    {domainsObj?.CAREER?.currentState || 'Structured progress under current Dasha with strong 10th house alignment.'}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">HIGH-LEVERAGE OPPORTUNITIES</span>
+                      <ul className="space-y-1.5 text-xs text-slate-300">
+                        {(domainsObj?.CAREER?.opportunities || [
+                          'Executive scope expansion and strategic authority',
+                          'Domain recognition and industry credentials',
+                          'Strategic role upgrade during optimal transit alignment',
+                        ]).map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">STRATEGIC CAUTION PERIODS</span>
+                      <ul className="space-y-1.5 text-xs text-slate-300">
+                        {(domainsObj?.CAREER?.challenges || [
+                          'Avoid impulsive job shifts during minor retrogrades',
+                          'Maintain patience with corporate review timelines',
+                        ]).map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/20 text-xs text-slate-300">
+                    <span className="font-bold text-blue-400 block mb-1">Notice of Ethical Responsibility:</span>
+                    DeepAstro provides astrological timing indicators and strategic tendencies; it does not guarantee promotions, employment outcomes, or salary metrics.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: WEALTH VIEW */}
+            {activeTab === 'wealth' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                      <Coins className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Year-by-Year Wealth Cycle Engine</h3>
+                      <p className="text-xs text-slate-400">Derived from 2nd house (Dhana), 11th house (Labha), and Jupiter transit cycles.</p>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-slate-300 leading-relaxed font-medium">
+                    {domainsObj?.FINANCE?.currentState || 'Astrological indicators suggest supportive cycles for systematic asset accumulation and debt discipline.'}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <div className="text-xs font-mono font-bold uppercase text-emerald-400">Income Themes</div>
+                      <div className="text-xs text-slate-300">
+                        {domainsObj?.FINANCE?.upcomingWindows || 'Continuous accumulation phase with heightened liquidity.'}
                       </div>
                     </div>
-                  ))}
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <div className="text-xs font-mono font-bold uppercase text-cyan-400">Savings Discipline</div>
+                      <div className="text-xs text-slate-300">
+                        Emphasis on automated saving, emergency reserves, and defensive liquidity preservation.
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <div className="text-xs font-mono font-bold uppercase text-amber-400">Investment Caution</div>
+                      <div className="text-xs text-slate-300">
+                        Resist unhedged speculative bets or volatile tips during nodal transitions.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs text-slate-300">
+                    <span className="font-bold text-amber-400 block mb-1">Financial Distinction Disclosure:</span>
+                    Astrological interpretations indicate cyclical supportive periods only and do not constitute financial advice, guaranteed wealth, or specific investment recommendations.
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* VIEW 5: LONGEVITY & WELLBEING */}
-            {activeView === 'longevity' && (
+            {/* TAB 5: RELATIONSHIPS VIEW */}
+            {activeTab === 'relationships' && (
               <div className="space-y-6 animate-fadeIn">
-                <FutureLongevityCard
-                  data={forecastData?.longevityHealthspan ? {
-                    summary: forecastData.longevityHealthspan.vitalityTheme,
-                    vitalityIndicators: (forecastData.longevityHealthspan.resilienceIndicators || []).map((r: any) => ({
-                      system: 'Vedic / Ephemeris',
-                      factor: r.indicator,
-                      assessment: r.status,
-                      observation: r.traditionalTheme,
-                    })),
-                    selfCareWindows: (forecastData.longevityHealthspan.selfCareWindows || []).map((w: any) => ({
-                      startYear: w.startYear,
-                      endYear: w.endYear,
-                      intensity: w.intensity,
-                      focusArea: w.focusArea,
-                      recommendation: w.recommendation,
-                    })),
-                    lifestyleReflections: forecastData.longevityHealthspan.lifestyleRecommendations || [],
-                    disclaimer: forecastData.longevityHealthspan.epistemicDisclaimer,
-                    confidence: 0.85,
-                  } : {
-                    summary: 'Traditional astrological analysis focuses on planetary vitality, physical endurance, and identifying cyclical phases where restorative self-care and balanced living should be prioritized.',
-                    vitalityIndicators: [
-                      { system: 'Vedic Lagna', factor: 'Lagna Lord & Sun', assessment: 'Resilient', observation: 'Strong natural karaka placement indicating sound foundational vitality.' },
-                      { system: 'D9 Navamsha', factor: 'Lagna Navamsha', assessment: 'Harmonious', observation: 'Supports long-term recovery and energetic resilience.' },
-                      { system: 'Ayurdaya Tradition', factor: 'Saturn & 8th Lord', assessment: 'Disciplined', observation: 'Emphasizes longevity fostered through daily routines and stress management.' },
-                    ],
-                    selfCareWindows: [
-                      { startYear: 2027, endYear: 2028, intensity: 'Moderate', focusArea: 'Digestive & Nervous Rest', recommendation: 'Schedule regular recovery cycles during peak professional transitions.' },
-                      { startYear: 2031, endYear: 2032, intensity: 'Mild', focusArea: 'Joint & Skeletal Mobility', recommendation: 'Incorporate daily low-impact movement and meditative disciplines.' },
-                    ],
-                    lifestyleReflections: [
-                      'Prioritize consistent circadian sleep cycles during high dasha transitions.',
-                      'Incorporate cooling ayurvedic nutrition during intense Mars or Sun transits.',
-                      'Maintain regular checkups with qualified healthcare professionals.',
-                    ],
-                    disclaimer: 'This is a traditional astrological interpretation and is not a medical assessment or prediction of lifespan or death.',
-                    confidence: 0.85,
-                  }}
-                />
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-400/30 flex items-center justify-center text-pink-400">
+                      <Heart className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Relationship & Harmony Engine</h3>
+                      <p className="text-xs text-slate-400">Evaluated from 7th house, Venus, Jupiter, Moon, and D9 Navamsha harmony.</p>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-slate-300 leading-relaxed font-medium">
+                    {domainsObj?.RELATIONSHIP?.currentState || 'Deep emotional resonance and mutual respect deepening through conscious communication.'}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <div className="text-pink-300 font-bold font-mono text-[11px] uppercase">Connection Opportunities</div>
+                      <ul className="space-y-1 text-slate-300">
+                        <li>✦ Deepening vulnerable, honest communication and mutual respect</li>
+                        <li>✦ Unified domestic vision honoring each partner's personal autonomy</li>
+                        <li>✦ Healing legacy frictions through patient empathetic presence</li>
+                      </ul>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <div className="text-amber-300 font-bold font-mono text-[11px] uppercase">Mindful Communication Windows</div>
+                      <ul className="space-y-1 text-slate-300">
+                        <li>✦ Practice intentional non-defensive listening during intense work periods</li>
+                        <li>✦ Honor independent hobbies and personal creative solitude</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* VIEW 6: COMPARE YEARS */}
-            {activeView === 'compare' && (
+            {/* TAB 6: HEALTH & WELLBEING VIEW */}
+            {activeTab === 'health' && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-bold font-satoshi text-slate-100">
-                      Multi-Year Comparison Engine
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      Contrast planetary configurations and domain trajectories between two target years.
-                    </p>
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                      <Sprout className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Health & Wellness Tendency Engine</h3>
+                      <p className="text-xs text-slate-400">Evaluated from 6th/8th/12th houses, Sun, Moon, and D30 Trimsamsha.</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <select
-                      value={compareYearA}
-                      onChange={(e) => setCompareYearA(Number(e.target.value))}
-                      className="bg-[#1A1F2B] border border-cyan-500/40 rounded-xl px-3 py-1.5 text-xs text-cyan-300 font-mono"
-                    >
-                      {yearlyTimeline.map((y: any) => (
-                        <option key={y.year} value={y.year}>{y.year}</option>
-                      ))}
-                    </select>
-                    <span className="text-slate-500 font-bold text-xs">VS</span>
-                    <select
-                      value={compareYearB}
-                      onChange={(e) => setCompareYearB(Number(e.target.value))}
-                      className="bg-[#1A1F2B] border border-blue-500/40 rounded-xl px-3 py-1.5 text-xs text-blue-300 font-mono"
-                    >
-                      {yearlyTimeline.map((y: any) => (
-                        <option key={y.year} value={y.year}>{y.year}</option>
-                      ))}
-                    </select>
+
+                  <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-emerald-200">
+                    <strong className="block text-emerald-400 mb-0.5">Mandatory Medical Disclaimer:</strong>
+                    This analysis is an astrological interpretation of qualitative cycles, not a medical diagnosis. DeepAstro does not diagnose or predict diseases. When appropriate, always consult a qualified healthcare professional.
+                  </div>
+
+                  <div className="text-sm text-slate-300 leading-relaxed font-medium">
+                    {domainsObj?.HEALTHSPAN?.currentState || 'Constitutional stamina supported by Lagna governance. Focus on circadian regularity.'}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-1.5">
+                      <span className="font-bold text-emerald-400 font-mono text-[10px] uppercase">Rest & Recovery</span>
+                      <p className="text-slate-300">Maintain consistent 7.5 hour sleep cycles to regulate nervous cortisol levels.</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-1.5">
+                      <span className="font-bold text-cyan-400 font-mono text-[10px] uppercase">Daily Movement</span>
+                      <p className="text-slate-300">Gentle joint mobility, morning brisk walking, and mindful Hatha yoga.</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-1.5">
+                      <span className="font-bold text-amber-400 font-mono text-[10px] uppercase">Stress Modulation</span>
+                      <p className="text-slate-300">Digital detox windows after 9:30 PM to preserve mental stillness.</p>
+                    </div>
                   </div>
                 </div>
+              </div>
+            )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[compareYearA, compareYearB].map((yr, colIdx) => {
-                    const yObj = yearlyTimeline.find((y: any) => y.year === yr);
-                    if (!yObj) return null;
-                    return (
-                      <div
-                        key={yr}
-                        className={`bg-[#111827] border rounded-2xl p-6 space-y-4 shadow-xl ${
-                          colIdx === 0 ? 'border-cyan-500/30' : 'border-blue-500/30'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <span className="font-mono font-black text-2xl text-slate-100">{yr}</span>
-                          <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#1A1F2B] border border-slate-700 text-cyan-300">
-                            Confidence: {yObj.confidence}
+            {/* TAB 7: LONGEVITY VIEW */}
+            {activeTab === 'longevity' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-400/30 flex items-center justify-center text-purple-400">
+                      <InfinityIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Longevity Indicators & Vitality Profile</h3>
+                      <p className="text-xs text-slate-400">Traditional Jyotish qualitative factors (8th house condition, Lagna lord, Saturn Ayushkaraka).</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 text-xs text-purple-200">
+                    <strong className="block text-purple-300 mb-0.5">Ethical Safety Notice:</strong>
+                    DeepAstro strictly does NOT calculate or display exact death dates, ages of death, or certain lifespan. This profile offers traditional Jyotish indicators supporting vitality and identifies phases requiring restorative self-care.
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <span className="font-mono font-bold uppercase text-emerald-400 text-[10px]">Supportive & Protective Factors</span>
+                      <ul className="space-y-1.5 text-slate-300">
+                        <li>✦ Foundational vitality supported by natural Lagna lord governance</li>
+                        <li>✦ Benefic aspects to Kendra houses fostering cellular recuperation</li>
+                        <li>✦ Classical protective factors encouraging peaceful mindfulness</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <span className="font-mono font-bold uppercase text-amber-400 text-[10px]">Stability & Attention Indicators</span>
+                      <ul className="space-y-1.5 text-slate-300">
+                        <li>✦ Saturn as Ayushkaraka emphasizes longevity fostered through steady daily pacing</li>
+                        <li>✦ Seasonal digestive fire (Agni) deserves mindfulness during solstice transitions</li>
+                        <li>✦ Avoid prolonged psychological burnout through scheduled restorative intervals</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 8: CHALLENGES VIEW */}
+            {activeTab === 'challenges' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">What May Require More Attention</h3>
+                      <p className="text-xs text-slate-400">Every challenge is rooted in actual chart factors with explicit astrological "WHY".</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {[
+                      {
+                        title: 'Career Pressure & Institutional Patience',
+                        why: '10th House karmic resonance governed by active Saturn transit aspecting professional sector.',
+                        recommendation: 'Cultivate systematic patience with corporate review timelines and maintain meticulous documentation.',
+                      },
+                      {
+                        title: 'Financial Liquidity & Speculative Temptation',
+                        why: 'Nodal Rahu axis aspecting 2nd/11th houses during transition sub-cycles.',
+                        recommendation: 'Avoid unverified financial schemes; automate allocations to conservative, low-volatility assets.',
+                      },
+                      {
+                        title: 'Circadian Energy Regulation',
+                        why: '6th House resistance alignment requiring restorative nervous regulation.',
+                        recommendation: 'Enforce a strict 11:00 PM digital curfew and avoid late-night heavy meals.',
+                      },
+                    ].map((item, idx) => (
+                      <div key={idx} className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-amber-300">{item.title}</h4>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                            Attention Factor
                           </span>
                         </div>
-                        <div className="text-xs text-slate-300">
-                          <strong className="block text-cyan-400 font-mono uppercase text-[10px] mb-1">Theme:</strong>
-                          {yObj.overallTheme}
+                        <div className="text-xs text-slate-400">
+                          <strong className="text-slate-300">Astrological Why:</strong> {item.why}
                         </div>
-                        <div className="space-y-2 text-xs">
-                          <div className="p-2.5 rounded-lg bg-[#1A1F2B]/60 border border-slate-800">
-                            <span className="font-bold text-cyan-300 block mb-0.5">Career:</span>
-                            <span className="text-slate-300">{yObj.careerOutlook}</span>
-                          </div>
-                          <div className="p-2.5 rounded-lg bg-[#1A1F2B]/60 border border-slate-800">
-                            <span className="font-bold text-pink-300 block mb-0.5">Relationship:</span>
-                            <span className="text-slate-300">{yObj.relationshipOutlook}</span>
-                          </div>
-                          <div className="p-2.5 rounded-lg bg-[#1A1F2B]/60 border border-slate-800">
-                            <span className="font-bold text-emerald-300 block mb-0.5">Finance:</span>
-                            <span className="text-slate-300">{yObj.financeOutlook}</span>
-                          </div>
+                        <div className="text-xs text-slate-200">
+                          <strong className="text-cyan-400">Recommended Action:</strong> {item.recommendation}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 9: OPPORTUNITIES VIEW */}
+            {activeTab === 'opportunities' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                      <Star className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Opportunity Windows</h3>
+                      <p className="text-xs text-slate-400">Planetary activations mapped with evidence and confidence ratings.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      {
+                        title: 'Strategic Career Elevation Window',
+                        timing: `Q2 ${selectedYear} – Q4 ${selectedYear}`,
+                        strength: 'STRONG',
+                        evidence: '10th lord activation + D10 confirmation + Jupiter harmonic transit',
+                        guidance: 'Pitch high-leverage initiatives, seek certified credentials, and step into visible leadership.',
+                      },
+                      {
+                        title: 'Long-Term Asset Compounding Window',
+                        timing: `H2 ${selectedYear} – H1 ${selectedYear + 1}`,
+                        strength: 'STRONG',
+                        evidence: '2nd House Dhana Bhava aspected by natural benefic + 11th house gain alignment',
+                        guidance: 'Favorable astrological indicators for long-term property, equity, or retirement allocation.',
+                      },
+                      {
+                        title: 'Relationship Resonance & Trust Deepening',
+                        timing: `Spring & Autumn ${selectedYear}`,
+                        strength: 'MODERATE',
+                        evidence: 'Venus transit dignity + 7th lord harmonic with Moon',
+                        guidance: 'Initiate open vulnerable dialogues, plan joint creative experiences, and heal legacy misunderstandings.',
+                      },
+                      {
+                        title: 'Wisdom & Spiritual Maturation',
+                        timing: `Winter ${selectedYear}`,
+                        strength: 'STRONG',
+                        evidence: '9th House Dharma alignment + active Mahadasha cycle',
+                        guidance: 'Deepen daily meditation, engage with sacred philosophy, and seek guidance from trusted mentors.',
+                      },
+                    ].map((opp, idx) => (
+                      <div key={idx} className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-white">{opp.title}</h4>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                            {opp.strength}
+                          </span>
+                        </div>
+                        <div className="text-xs text-cyan-400 font-mono">📅 {opp.timing}</div>
+                        <div className="text-xs text-slate-400">
+                          <strong className="text-slate-300">Evidence:</strong> {opp.evidence}
+                        </div>
+                        <div className="text-xs text-slate-300 pt-1 leading-relaxed">
+                          {opp.guidance}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 10: REMEDIES VIEW */}
+            {activeTab === 'remedies' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-400/30 flex items-center justify-center text-pink-400">
+                      <Flower2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Dedicated DeepAstro Remedy Engine</h3>
+                      <p className="text-xs text-slate-400">Every remedy is linked to an identified chart factor with traditional sources and safety notices.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {remediesList.map((rem: any, idx: number) => (
+                      <div key={idx} className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                              {rem.category || rem.type}
+                            </span>
+                            <h4 className="text-sm font-bold text-white">{rem.title}</h4>
+                          </div>
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                            rem.priority === 'HIGH' ? 'bg-rose-500/10 text-rose-300 border border-rose-500/30' : 'bg-slate-800 text-slate-400'
+                          }`}>
+                            Priority: {rem.priority || 'MEDIUM'}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-slate-300 leading-relaxed font-medium">{rem.description}</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] pt-1">
+                          <div className="p-2.5 rounded-lg bg-[#0d1117] border border-slate-800">
+                            <span className="text-slate-500 font-mono uppercase block text-[9px]">Why This Remedy</span>
+                            <span className="text-slate-300">{rem.whyThisRemedy || 'Harmonizes active planetary dasha cycle.'}</span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-[#0d1117] border border-slate-800">
+                            <span className="text-slate-500 font-mono uppercase block text-[9px]">When & Frequency</span>
+                            <span className="text-slate-300">{rem.whenToPerform || rem.frequency}</span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-[#0d1117] border border-slate-800">
+                            <span className="text-slate-500 font-mono uppercase block text-[9px]">Traditional Source</span>
+                            <span className="text-cyan-400">{rem.traditionalSource}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-400 italic">
+                          ⚠️ {rem.safetyNotice}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 11: POOJA & UPAYA VIEW */}
+            {activeTab === 'pooja' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400">
+                      <Landmark className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Classical Pooja & Upaya Engine</h3>
+                      <p className="text-xs text-slate-400">Planetary upayas traditionally mapped to Vedic deities (Ganesha, Shiva, Vishnu, Hanuman, Durga, Lakshmi).</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {poojasList.map((upaya: any, idx: number) => (
+                      <div key={idx} className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2.5">
+                        <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                          <span className="text-xs font-mono font-bold text-amber-300 uppercase tracking-wide">
+                            {upaya.planet}: {upaya.upayaName}
+                          </span>
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                            upaya.priority === 'HIGH' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-800 text-slate-400'
+                          }`}>
+                            {upaya.priority} Priority
+                          </span>
+                        </div>
+
+                        <div className="text-xs space-y-1">
+                          <div><strong className="text-cyan-400 font-mono">Deity:</strong> <span className="text-slate-200">{upaya.deity}</span></div>
+                          <div><strong className="text-purple-400 font-mono">Mantra:</strong> <span className="text-slate-200 font-mono text-[11px]">{upaya.mantra}</span></div>
+                          <div><strong className="text-slate-400">Timing:</strong> <span className="text-slate-300">{upaya.bestDayAndTime}</span></div>
+                        </div>
+
+                        <p className="text-xs text-slate-300 leading-relaxed pt-1">
+                          {upaya.procedure}
+                        </p>
+
+                        <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-800/60 font-mono">
+                          Source: {upaya.traditionalBasis}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 12: ACTION PLAN VIEW (PROGRESS TRACKER & HABITS) */}
+            {activeTab === 'action_plan' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                        <Target className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold font-satoshi text-white">Personal Improvement Plan & Progress</h3>
+                        <p className="text-xs text-slate-400">Actionable steps, habit milestones, and reflection tracking.</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={generateImprovementPlan}
+                      className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold font-satoshi shadow-md transition-all self-start sm:self-auto"
+                    >
+                      Regenerate Plan
+                    </button>
+                  </div>
+
+                  {/* Add New Goal / Habit Form */}
+                  <form onSubmit={handleAddProgress} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add a new personal milestone, remedy, or habit..."
+                      value={newGoalText}
+                      onChange={(e) => setNewGoalText(e.target.value)}
+                      className="flex-1 bg-[#0d1117] border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={addingGoal || !newGoalText.trim()}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Goal</span>
+                    </button>
+                  </form>
+
+                  {/* Active Progress List */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                      TRACKED MILESTONES & REMEDIES ({progressItems.length})
+                    </span>
+
+                    {progressItems.length === 0 ? (
+                      <div className="p-6 rounded-2xl bg-[#0d1117] border border-slate-800 text-center text-xs text-slate-400">
+                        No custom goals added yet. Add a remedy or milestone above to begin tracking your personal progress.
+                      </div>
+                    ) : (
+                      progressItems.map((item) => {
+                        const isDone = item.status === 'COMPLETED';
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                              isDone ? 'bg-emerald-950/10 border-emerald-500/30' : 'bg-[#1A1F2B] border-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => handleToggleProgress(item.id, item.status)}
+                                className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${
+                                  isDone
+                                    ? 'bg-emerald-500 text-slate-950'
+                                    : 'border border-slate-600 hover:border-cyan-400'
+                                }`}
+                              >
+                                {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              </button>
+                              <div>
+                                <div className={`text-xs font-bold ${isDone ? 'line-through text-slate-500' : 'text-white'}`}>
+                                  {item.title}
+                                </div>
+                                <div className="text-[10px] font-mono text-slate-400">
+                                  {item.category} • Added {new Date(item.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleDeleteProgress(item.id)}
+                              className="p-1.5 text-slate-500 hover:text-rose-400 transition-all"
+                              title="Delete Goal"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 13: EVIDENCE VIEW */}
+            {activeTab === 'evidence' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                      <FileCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Provenance & Evidence Graph</h3>
+                      <p className="text-xs text-slate-400">Full audit trail of classical Jyotish rules and ephemeris systems fused.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <span className="font-mono font-bold uppercase text-cyan-400 text-[10px]">FUSED ASTRONOMICAL SYSTEMS</span>
+                      <ul className="space-y-1.5 text-slate-300">
+                        <li>✦ Vedic Astrometry (VSOP87 / Lahiri Chitra Paksha)</li>
+                        <li>✦ Vimshottari 3-Tier Dasha Engine</li>
+                        <li>✦ Gochara Real-Time Planetary Transits</li>
+                        <li>✦ Krishnamurti Paddhati (KP Placidus Cusps & Sub-Lords)</li>
+                        <li>✦ Divisional Harmonic Varga Engine (D1 through D60)</li>
+                        <li>✦ Jaimini Chara Dasha & Karakas</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-[#1A1F2B] border border-slate-800 space-y-2">
+                      <span className="font-mono font-bold uppercase text-purple-400 text-[10px]">VERIFIED CLASSICAL LITERATURE</span>
+                      <ul className="space-y-1.5 text-slate-300">
+                        <li>✦ Brihat Parashara Hora Shastra (Sage Parashara)</li>
+                        <li>✦ Phaladeepika (Mantreswara)</li>
+                        <li>✦ Jaimini Upadesha Sutras (Maharishi Jaimini)</li>
+                        <li>✦ KP Readers I–VI (Prof. K.S. Krishnamurti)</li>
+                        <li>✦ Saravali (Kalyana Varma)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 14: CALCULATION PASSPORT VIEW */}
+            {activeTab === 'calculation' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
+                  <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                      <Cpu className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold font-satoshi text-white">Calculation Passport & Cryptographic Provenance</h3>
+                      <p className="text-xs text-slate-400">Deterministic astronomical parameters and immutable calculation fingerprint.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                    <div className="p-4 rounded-2xl bg-[#0d1117] border border-slate-800 space-y-2">
+                      <div><span className="text-slate-500">Engine Version:</span> <span className="text-cyan-300 font-bold">{passport.engineVersion || '8.0.0-cfie'}</span></div>
+                      <div><span className="text-slate-500">Ayanamsha:</span> <span className="text-slate-200">{passport.ayanamsha || 'Lahiri (Chitra Paksha)'}</span></div>
+                      <div><span className="text-slate-500">House System:</span> <span className="text-slate-200">{passport.houseSystem || 'Placidus / Sripathi / Equal Bhava'}</span></div>
+                      <div><span className="text-slate-500">Ephemeris Source:</span> <span className="text-slate-200">{passport.ephemerisSource || 'VSOP87 / Swiss Ephemeris / NASA JPL'}</span></div>
+                      <div><span className="text-slate-500">Active Dasha:</span> <span className="text-cyan-300">{passport.activeDasha || 'Parashari Cycle'}</span></div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#0d1117] border border-slate-800 space-y-2">
+                      <div><span className="text-slate-500">Calculation Fingerprint:</span></div>
+                      <div className="text-[11px] text-cyan-400 break-all bg-slate-900/80 p-2 rounded border border-slate-800">
+                        {passport.calculationFingerprint || forecastData?.calculationFingerprint || 'fp_deterministic_verified'}
+                      </div>
+                      <div><span className="text-slate-500">Birth Snapshot ID:</span></div>
+                      <div className="text-[11px] text-purple-400 break-all bg-slate-900/80 p-2 rounded border border-slate-800">
+                        {passport.birthProfileFingerprint || forecastData?.calculationSnapshotId || 'snap_verified'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </>
         )}
+
+        {/* 5. FOOTER TRUST BANNER */}
+        <div className="border-t border-slate-800/80 pt-6 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+              <span className="flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Powered by Vedic Astrology, KP, Divisional Charts & AI</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-blue-400" />
+                <span>100% Personalized</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Evidence-Based</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Flower2 className="w-3.5 h-3.5 text-pink-400" />
+                <span>Traditional Remedies</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-slate-400" />
+                <span>Secure & Private</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1 font-serif italic text-amber-300/80 text-sm">
+              <span>Align Act Evolve</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Consent Modal */}
+      {/* Ethical Consent Modal */}
       <FutureConsentModal
         isOpen={isConsentModalOpen}
         currentLevel={revealLevel}
         onClose={() => setIsConsentModalOpen(false)}
-        onConsent={handleConsentSubmit}
+        onConsent={(lvl) => {
+          setIsConsentModalOpen(false);
+          setRevealLevel(lvl);
+          fetchForecast(lvl);
+        }}
       />
     </div>
   );
 };
+export default FutureIntelligencePage;

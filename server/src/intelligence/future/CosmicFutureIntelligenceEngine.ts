@@ -53,7 +53,7 @@ export interface GenerateFutureForecastRequest {
 }
 
 export class CosmicFutureIntelligenceEngine {
-  public static readonly VERSION = '2.0.0-cfie';
+  public static readonly VERSION = '8.0.0-cfie';
 
   /**
    * Primary invocation gate with entitlement, consent, and birth data verification
@@ -157,12 +157,17 @@ export class CosmicFutureIntelligenceEngine {
     const scenarios = FutureScenarioEngine.generateScenarios(kundli, activeDasha, yearForecasts[0]?.strongestDomain || 'CAREER');
 
     // 9. Longevity and Healthspan (Level 6 Sensitive Consent Required)
+    // 9. Longevity and Healthspan (Level 5/6 Sensitive Consent Required)
     const longevityHealthspan = effectiveLevel === 'LEVEL_6' || effectiveLevel === 'LEVEL_5'
       ? FutureLongevityEngine.evaluateHealthSpan(kundli)
       : undefined;
 
-    // 10. Remedial Protocols
-    const remedies = FutureRemedyEngine.generateRemedies(activeDasha);
+    // 10. Remedial & Pooja / Upaya Protocols
+    const remedies = FutureRemedyEngine.generateRemedies(activeDasha, kundli);
+    const poojasAndUpayas = FutureRemedyEngine.generatePoojasAndUpayas(activeDasha, kundli);
+
+    // 10b. 3-Year Life Domain Score Indices
+    const domainScores = FutureLifeDomainEngine.calculateDomainScores(kundli, activeDasha);
 
     // 11. Real Dynamic Multi-System Convergence
     const systemConvergence = this.evaluateSystemConvergence(kundli, yearForecasts);
@@ -172,6 +177,44 @@ export class CosmicFutureIntelligenceEngine {
 
     // 13. Deterministic Calculation Fingerprint
     const calculationFingerprint = CalculationSnapshotService.generateFingerprint(profileInput);
+
+    // 13b. Calculation Passport
+    const calculationPassport = {
+      calculationFingerprint,
+      birthProfileFingerprint: snapshot.snapshotId,
+      engineVersion: this.VERSION,
+      calculationTimestamp: new Date().toISOString(),
+      ayanamsha: 'Lahiri (Chitra Paksha)',
+      houseSystem: 'Placidus / Sripathi / Equal Bhava',
+      ephemerisSource: 'VSOP87 / Swiss Ephemeris / NASA JPL',
+      timezone: tz,
+      coordinates: { latitude: lat, longitude: lon },
+      activeDasha: `${activeDasha} Mahadasha`,
+      activeTransits: [
+        `Saturn Gochara in karmic transit sector for ${kundli?.ascendant?.details?.signName || 'Aries'}`,
+        `Jupiter Gochara expanding 9th/10th dharmic alignment`,
+        `Rahu-Ketu nodal axis along natal awareness vectors`,
+      ],
+      calculationModulesUsed: [
+        'VedicAstroEngine (VSOP87 / Lahiri)',
+        'Vimshottari Dasha Engine',
+        'Krishnamurti Paddhati (KP Cusps & Sub-Lords)',
+        'Divisional Varga Engine (D1-D60)',
+        'FutureRemedyEngine 8.0',
+        'FutureLifeDomainEngine 8.0',
+        'FutureLongevityEngine 8.0',
+        'FutureImprovementEngine 8.0',
+      ],
+      rulesApplied: [
+        'RULE_PARASHARI_LAGNA_DIGNITY',
+        'RULE_VIMSHOTTARI_DASHA_CYCLE',
+        'RULE_GOCHARA_TRANSIT_HARMONY',
+        'RULE_D10_CAREER_CORRELATION',
+        'RULE_D9_NAVAMSHA_SYNERGY',
+        'RULE_ASHTAKAVARGA_BINDU_STRENGTH',
+        'RULE_ETHICAL_LONGEVITY_QUALITATIVE',
+      ],
+    };
 
     // 14. Contradiction Evaluation
     const contradictionItems = FutureContradictionEngine.detectContradictions(
@@ -240,6 +283,9 @@ export class CosmicFutureIntelligenceEngine {
       yearForecasts,
       monthForecasts,
       domainForecasts,
+      domainScores,
+      poojasAndUpayas,
+      calculationPassport,
       scenarios,
       eventWindows,
       longevityHealthspan,
@@ -432,7 +478,12 @@ export class CosmicFutureIntelligenceEngine {
         forecastFingerprint: provenance.forecastFingerprint,
         issuedAt: provenance.createdAt,
       },
-    };
+      domainScores: forecast.domainScores,
+      poojasAndUpayas: forecast.poojasAndUpayas,
+      calculationPassport: forecast.calculationPassport,
+      remedies: forecast.remedies,
+      longevityHealthspan: forecast.longevityHealthspan,
+    } as any;
   }
 
   private static evaluateSystemConvergence(kundli: any, yearForecasts: any[]): FutureConvergenceReport {

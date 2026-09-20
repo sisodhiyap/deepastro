@@ -110,12 +110,60 @@ export interface LongevityHealthspanInterpretation {
 }
 
 export interface FutureRemedy {
-  type: 'MEDITATION' | 'MANTRA' | 'SERVICE' | 'CHARITY' | 'DISCIPLINE' | 'GEMSTONE_CAUTION';
+  id?: string;
+  type: 'MEDITATION' | 'MANTRA' | 'SERVICE' | 'CHARITY' | 'DISCIPLINE' | 'GEMSTONE_CAUTION' | 'TEMPLE_PRACTICE' | 'LIFESTYLE';
+  category?: string;
   title: string;
   description: string;
   frequency: string;
   traditionalSource: string;
   safetyNotice: string;
+  planetTargeted?: string;
+  priority?: 'HIGH' | 'MEDIUM' | 'OPTIONAL';
+  whyThisRemedy?: string;
+  whatTraditionallyAssociatedWith?: string;
+  whenToPerform?: string;
+  howOften?: string;
+}
+
+export interface PoojaUpayaItem {
+  id: string;
+  planet: string;
+  upayaName: string;
+  deity: string;
+  mantra: string;
+  procedure: string;
+  bestDayAndTime: string;
+  frequency: string;
+  priority: 'HIGH' | 'MEDIUM' | 'OPTIONAL';
+  traditionalBasis: string;
+  safetyNotice: string;
+}
+
+export interface DomainScoreIndex {
+  domain: string;
+  domainKey: string;
+  currentScore: number;
+  next12MonthsScore: number;
+  next3YearsScore: number;
+  trajectory: 'ASCENDING' | 'STABLE' | 'ATTENTION';
+  contributingFactors: string[];
+}
+
+export interface CalculationPassport {
+  calculationFingerprint: string;
+  birthProfileFingerprint: string;
+  engineVersion: string;
+  calculationTimestamp: string;
+  ayanamsha: string;
+  houseSystem: string;
+  ephemerisSource: string;
+  timezone: number;
+  coordinates: { latitude: number; longitude: number };
+  activeDasha: string;
+  activeTransits: string[];
+  calculationModulesUsed: string[];
+  rulesApplied: string[];
 }
 
 export interface CosmicFutureForecastSchema {
@@ -136,6 +184,9 @@ export interface CosmicFutureForecastSchema {
   yearForecasts: YearForecast[];
   monthForecasts: MonthForecast[];
   domainForecasts: Record<LifeDomain, DomainForecast>;
+  domainScores?: DomainScoreIndex[];
+  poojasAndUpayas?: PoojaUpayaItem[];
+  calculationPassport?: CalculationPassport;
   scenarios: {
     baseline: string;
     opportunity: string;
