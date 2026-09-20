@@ -162,6 +162,7 @@ export class PastLifeCardEngine {
     return {
       format: 'soul_journey' as const,
       fullSchema: schema,
+      soulJourneyModules: schema.soulJourneyModules,
     };
   }
 }

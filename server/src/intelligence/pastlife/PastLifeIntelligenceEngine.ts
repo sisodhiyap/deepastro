@@ -29,7 +29,7 @@ import {
 import { BirthProfileRecord } from '../../database/db.js';
 
 export class PastLifeIntelligenceEngine {
-  public static readonly VERSION = '2.0.0-soultrace';
+  public static readonly VERSION = '2.1.0-soultrace';
   public static readonly KNOWLEDGE_VERSION = '7.0.0-canon';
 
   public static generate(
