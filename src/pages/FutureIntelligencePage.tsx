@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Sparkles,
   Compass,
@@ -242,6 +242,10 @@ export const FutureIntelligencePage: React.FC = () => {
   const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
   const [showFeedbackComment, setShowFeedbackComment] = useState(false);
+
+  // Tab rail refs for accessible keyboard nav & auto-scroll
+  const tabRailRef = useRef<HTMLDivElement>(null);
+  const tabButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const fetchForecast = async (overrideConsentLevel?: number) => {
     setPageState('GENERATING');
@@ -599,8 +603,58 @@ export const FutureIntelligencePage: React.FC = () => {
     { id: 'calculation', label: 'Calculation', icon: Cpu },
   ];
 
+  // Tab accent colours (one per tab for the active indicator)
+  const TAB_ACCENTS: Record<FutureTabId, string> = {
+    overview:      'border-cyan-500/60 text-cyan-300 shadow-cyan-500/10',
+    timeline:      'border-blue-500/60 text-blue-300 shadow-blue-500/10',
+    career:        'border-violet-500/60 text-violet-300 shadow-violet-500/10',
+    wealth:        'border-amber-500/60 text-amber-300 shadow-amber-500/10',
+    relationships: 'border-rose-500/60 text-rose-300 shadow-rose-500/10',
+    health:        'border-emerald-500/60 text-emerald-300 shadow-emerald-500/10',
+    longevity:     'border-teal-500/60 text-teal-300 shadow-teal-500/10',
+    challenges:    'border-orange-500/60 text-orange-300 shadow-orange-500/10',
+    opportunities: 'border-cyan-500/60 text-cyan-300 shadow-cyan-500/10',
+    remedies:      'border-green-500/60 text-green-300 shadow-green-500/10',
+    pooja:         'border-yellow-500/60 text-yellow-300 shadow-yellow-500/10',
+    action_plan:   'border-blue-500/60 text-blue-300 shadow-blue-500/10',
+    evidence:      'border-purple-500/60 text-purple-300 shadow-purple-500/10',
+    calculation:   'border-cyan-500/60 text-cyan-300 shadow-cyan-500/10',
+  };
+
+  // Keyboard navigation handler for the tab rail
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLButtonElement>, tabIndex: number) => {
+      const tabIds = tabs.map(t => t.id);
+      let nextIndex = tabIndex;
+      if (e.key === 'ArrowRight') { e.preventDefault(); nextIndex = (tabIndex + 1) % tabIds.length; }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); nextIndex = (tabIndex - 1 + tabIds.length) % tabIds.length; }
+      else if (e.key === 'Home') { e.preventDefault(); nextIndex = 0; }
+      else if (e.key === 'End')  { e.preventDefault(); nextIndex = tabIds.length - 1; }
+      else return;
+      const nextId = tabIds[nextIndex];
+      tabButtonRefs.current[nextId]?.focus();
+      setActiveTab(nextId as FutureTabId);
+    },
+    []
+  );
+
+  // Auto-scroll active tab into view whenever it changes
+  useEffect(() => {
+    const btn = tabButtonRefs.current[activeTab];
+    if (btn && tabRailRef.current) {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      btn.scrollIntoView({
+        behavior: prefersReduced ? 'instant' : 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+      });
+    }
+  }, [activeTab]);
+
   return (
-    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 px-3 sm:px-6 lg:px-10 space-y-6 sm:space-y-8 font-inter w-full max-w-full overflow-x-hidden">
+    // NOTE: AppShell <main> already adds horizontal padding (px-3 sm:px-6 lg:px-8).
+    // We do NOT add extra padding here to avoid double-indentation that crushes tab space.
+    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 space-y-6 sm:space-y-8 font-inter w-full max-w-full">
       {/* 1. TOP HERO SECTION */}
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Badges */}
@@ -743,26 +797,89 @@ export const FutureIntelligencePage: React.FC = () => {
         </div>
 
         {/* 3. RESPONSIVE INTELLIGENCE NAVIGATION RAIL (14 TABS) */}
-        <div className="border-y border-slate-800/80 py-2.5">
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
-            {tabs.map((tab) => {
+        {/* The outer wrapper is position:relative so the edge-fade pseudo-element clips correctly */}
+        <div className="relative border-y border-slate-800/80" style={{ isolation: 'isolate' }}>
+          {/* Left edge fade — hides when scrolled to start */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 z-10"
+            style={{
+              background: 'linear-gradient(to right, #06070A 0%, transparent 100%)',
+            }}
+          />
+          {/* Right edge fade — hides when scrolled to end */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 z-10"
+            style={{
+              background: 'linear-gradient(to left, #06070A 0%, transparent 100%)',
+            }}
+          />
+
+          {/* Tab rail: only THIS element scrolls horizontally — never the page */}
+          <div
+            ref={tabRailRef}
+            role="tablist"
+            aria-label="Future Intelligence sections"
+            className="flex items-center gap-1.5 py-2.5 overflow-x-auto overflow-y-hidden"
+            style={{
+              // Ensure the rail never triggers page overflow.
+              // scrollbar-thin shows a subtle native scrollbar on desktop.
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#334155 transparent',
+              WebkitOverflowScrolling: 'touch',
+              scrollSnapType: 'x proximity',
+            }}
+          >
+            {/* Left padding sentinel so first tab doesn't hide under left fade */}
+            <span aria-hidden="true" className="pl-1 shrink-0" />
+
+            {tabs.map((tab, tabIndex) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const accentClasses = isActive ? TAB_ACCENTS[tab.id] : '';
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 touch-target-min ${
+                  id={`future-tab-${tab.id}`}
+                  ref={(el) => { tabButtonRefs.current[tab.id] = el; }}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`future-panel-${tab.id}`}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => setActiveTab(tab.id as FutureTabId)}
+                  onKeyDown={(e) => handleTabKeyDown(e, tabIndex)}
+                  className={[
+                    // Layout — NEVER shrink below content size
+                    'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl',
+                    // Typography
+                    'text-xs font-semibold whitespace-nowrap',
+                    // Transition
+                    'transition-all duration-150',
+                    // Touch target
+                    'min-h-[2.75rem]',
+                    // Scroll snap
+                    'snap-start',
+                    // Focus ring — always visible on keyboard nav
+                    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400',
+                    // State
                     isActive
-                      ? 'bg-blue-600/20 border border-blue-500/50 text-cyan-300 shadow-md shadow-blue-500/10 font-bold'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#1A1F2B] border border-transparent'
-                  }`}
+                      ? `bg-slate-800/80 border ${accentClasses} shadow-md font-bold`
+                      : 'border border-transparent text-slate-400 hover:text-slate-100 hover:bg-[#1A1F2B] hover:border-slate-700/60',
+                  ].join(' ')}
+                  style={{ scrollSnapAlign: 'start' }}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                  <Icon
+                    className={`w-3.5 h-3.5 shrink-0 ${isActive ? accentClasses.split(' ').find(c => c.startsWith('text-')) || 'text-cyan-400' : 'text-slate-500'}`}
+                    aria-hidden="true"
+                  />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
+
+            {/* Right padding sentinel so last tab doesn't hide under right fade */}
+            <span aria-hidden="true" className="pr-1 shrink-0" />
           </div>
         </div>
 
@@ -789,9 +906,9 @@ export const FutureIntelligencePage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* TAB 1: OVERVIEW (EXACT DESIGN MATCH) */}
+            {/* TAB 1: OVERVIEW */}
             {activeTab === 'overview' && (
-              <div className="space-y-8 animate-fadeIn">
+              <div id="future-panel-overview" role="tabpanel" aria-labelledby="future-tab-overview" className="space-y-8 animate-fadeIn">
                 {/* Middle Grid: Roadmap (Left) + Top Recommendations (Right) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   {/* Left Column: Your Future Optimization Roadmap */}
@@ -1081,7 +1198,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 2: TIMELINE VIEW */}
             {activeTab === 'timeline' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-timeline" role="tabpanel" aria-labelledby="future-tab-timeline" className="space-y-6 animate-fadeIn">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-xl font-bold font-satoshi text-white">
@@ -1171,7 +1288,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 3: CAREER VIEW */}
             {activeTab === 'career' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-career" role="tabpanel" aria-labelledby="future-tab-career" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-3">
@@ -1239,7 +1356,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 4: WEALTH VIEW */}
             {activeTab === 'wealth' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-wealth" role="tabpanel" aria-labelledby="future-tab-wealth" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-3">
@@ -1295,7 +1412,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 5: RELATIONSHIPS VIEW */}
             {activeTab === 'relationships' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-relationships" role="tabpanel" aria-labelledby="future-tab-relationships" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-3">
@@ -1343,7 +1460,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 6: HEALTH & WELLBEING VIEW */}
             {activeTab === 'health' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-health" role="tabpanel" aria-labelledby="future-tab-health" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-3">
@@ -1393,7 +1510,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 7: LONGEVITY VIEW */}
             {activeTab === 'longevity' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-longevity" role="tabpanel" aria-labelledby="future-tab-longevity" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-3">
@@ -1444,7 +1561,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 8: CHALLENGES VIEW */}
             {activeTab === 'challenges' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-challenges" role="tabpanel" aria-labelledby="future-tab-challenges" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400">
@@ -1496,7 +1613,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 9: OPPORTUNITIES VIEW */}
             {activeTab === 'opportunities' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-opportunities" role="tabpanel" aria-labelledby="future-tab-opportunities" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
@@ -1562,7 +1679,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 10: REMEDIES VIEW */}
             {activeTab === 'remedies' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-remedies" role="tabpanel" aria-labelledby="future-tab-remedies" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-400/30 flex items-center justify-center text-pink-400">
@@ -1620,7 +1737,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 11: POOJA & UPAYA VIEW */}
             {activeTab === 'pooja' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-pooja" role="tabpanel" aria-labelledby="future-tab-pooja" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400">
@@ -1668,7 +1785,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 12: ACTION PLAN VIEW (PROGRESS TRACKER & HABITS) */}
             {activeTab === 'action_plan' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-action_plan" role="tabpanel" aria-labelledby="future-tab-action_plan" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                     <div className="flex items-center gap-3">
@@ -1821,7 +1938,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 13: EVIDENCE VIEW */}
             {activeTab === 'evidence' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-evidence" role="tabpanel" aria-labelledby="future-tab-evidence" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
@@ -1863,7 +1980,7 @@ export const FutureIntelligencePage: React.FC = () => {
 
             {/* TAB 14: CALCULATION PASSPORT VIEW */}
             {activeTab === 'calculation' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div id="future-panel-calculation" role="tabpanel" aria-labelledby="future-tab-calculation" className="space-y-6 animate-fadeIn">
                 <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
                   <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
                     <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
