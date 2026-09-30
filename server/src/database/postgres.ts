@@ -174,6 +174,18 @@ export class PostgresService implements IDatabaseClient {
           rowCount: res.rowCount ?? res.rows.length,
         };
       } catch (err: any) {
+        if (
+          err.code === 'ENOTFOUND' ||
+          err.code === 'ECONNREFUSED' ||
+          err.code === 'ETIMEDOUT' ||
+          err.message?.includes('ENOTFOUND') ||
+          err.message?.includes('ECONNREFUSED') ||
+          err.message?.includes('getaddrinfo')
+        ) {
+          console.warn(`[PostgresService] Remote database unavailable (${err.message}). Activating in-memory fallback.`);
+          this.isConnected = false;
+          return this.fallback.query<T>(sql, params);
+        }
         throw new Error(`[PostgresService] Query Error: ${err.message} | SQL: ${sql}`);
       }
     }

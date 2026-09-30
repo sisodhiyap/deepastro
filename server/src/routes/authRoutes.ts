@@ -346,15 +346,32 @@ router.post('/guest-session', async (_req: Request, res: Response) => {
       createdAt: new Date().toISOString(),
     };
 
-    await userRepository.createUser(guestUser);
+    try {
+      await userRepository.createUser(guestUser);
+    } catch (err: any) {
+      console.warn('[AuthRoutes] Guest user DB insert notice:', err.message);
+    }
     db.users.set(guestId, guestUser);
 
-    const { profile } = await AuthBootstrapService.ensureUserProfile({
-      authUserId: guestId,
-      email: guestEmail,
-      fullName: guestName,
-      role: 'CLIENT',
-    });
+    let profile: any = null;
+    try {
+      const resBootstrap = await AuthBootstrapService.ensureUserProfile({
+        authUserId: guestId,
+        email: guestEmail,
+        fullName: guestName,
+        role: 'CLIENT',
+      });
+      profile = resBootstrap.profile;
+    } catch (err: any) {
+      console.warn('[AuthRoutes] Guest profile bootstrap notice:', err.message);
+      profile = {
+        userId: guestId,
+        fullName: guestName,
+        themePreference: 'dark',
+        chartStylePreference: 'north',
+      };
+      db.profiles.set(guestId, profile);
+    }
 
     const token = jwt.sign(
       { userId: guestId, email: guestEmail, role: 'CLIENT' },
