@@ -59,7 +59,16 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));           // Reduced from 25mb â€” prevents oversized payload attacks
+
+// Request ID and Telemetry Tracking
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const reqId = (req.headers['x-request-id'] as string) || `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  (req as any).requestId = reqId;
+  res.setHeader('X-Request-Id', reqId);
+  next();
+});
+
+app.use(express.json({ limit: '1mb' }));           // Reduced from 25mb — prevents oversized payload attacks
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Security Headers â€” Content-Security-Policy + hardened headers
@@ -187,20 +196,35 @@ app.use('/finance', financialRoutes);
 app.use('/financial', financialRoutes);
 
 // Friendly 404 handler
-app.use((_req: Request, res: Response) => {
+app.use((req: Request, res: Response) => {
+  const reqId = (req as any).requestId || `req_${Date.now()}`;
   res.status(404).json({
-    error: 'The requested celestial coordinate does not exist in this cosmos.',
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: 'The requested celestial coordinate does not exist in this cosmos.',
+      requestId: reqId,
+    },
     code: 'NOT_FOUND',
+    message: 'The requested celestial coordinate does not exist in this cosmos.',
+    requestId: reqId,
   });
 });
 
 // Friendly Cosmic Error Handler
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[DeepAstro Server Error]:', err);
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  const reqId = (req as any).requestId || `req_${Date.now()}`;
+  console.error(`[DeepAstro Server Error] [${reqId}]:`, err);
   res.status(err.status || 500).json({
-    error: 'Something cosmic went off course.',
+    success: false,
+    error: {
+      code: err.code || 'INTERNAL_SERVER_ERROR',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Something cosmic went off course.',
+      requestId: reqId,
+    },
     details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     guidance: 'Please retry or summon AstroBot for guidance.',
+    requestId: reqId,
   });
 });
 
