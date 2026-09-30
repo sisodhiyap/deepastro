@@ -654,7 +654,7 @@ export const FutureIntelligencePage: React.FC = () => {
   return (
     // NOTE: AppShell <main> already adds horizontal padding (px-3 sm:px-6 lg:px-8).
     // We do NOT add extra padding here to avoid double-indentation that crushes tab space.
-    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 space-y-6 sm:space-y-8 font-inter w-full max-w-full">
+    <div className="min-h-screen bg-[#06070A] text-slate-100 py-6 sm:py-8 space-y-6 sm:space-y-8 font-inter w-full max-w-full overflow-x-hidden">
       {/* 1. TOP HERO SECTION */}
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Badges */}

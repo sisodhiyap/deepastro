@@ -1,3 +1,4 @@
+import '../server/src/utils/urlPolyfill.js';
 import app from '../server/src/index.js';
 
 export default function handler(req: any, res: any) {

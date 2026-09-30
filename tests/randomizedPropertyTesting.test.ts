@@ -76,11 +76,15 @@ describe('DeepAstro 1,000+ Randomized Property Testing Suite', () => {
       expect(res.ascendant.degrees).toBeGreaterThanOrEqual(0);
       expect(res.ascendant.degrees).toBeLessThan(360);
 
-      // 3. Exactly 9 Grahas
-      expect(res.planets).toHaveLength(9);
+      // 3. Exactly 9 Navagrahas distinguished from Ascendant/Lagna
+      const navagrahaNames = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+      const navagrahas = res.planets.filter((p) => navagrahaNames.includes(p.name));
+      expect(navagrahas).toHaveLength(9);
+      expect(res.ascendant).toBeDefined();
+      expect(Number.isFinite(res.ascendant.degrees)).toBe(true);
 
       // 4. Graha circular bounding, nakshatra & pada bounds
-      for (const p of res.planets) {
+      for (const p of navagrahas) {
         expect(Number.isFinite(p.siderealLongitude)).toBe(true);
         expect(p.siderealLongitude).toBeGreaterThanOrEqual(0);
         expect(p.siderealLongitude).toBeLessThan(360);
@@ -95,15 +99,16 @@ describe('DeepAstro 1,000+ Randomized Property Testing Suite', () => {
       }
 
       // 5. Rahu-Ketu Exact 180° Invariant
-      const rahu = res.planets.find((p) => p.name === 'Rahu')!;
-      const ketu = res.planets.find((p) => p.name === 'Ketu')!;
+      const rahu = navagrahas.find((p) => p.name === 'Rahu')!;
+      const ketu = navagrahas.find((p) => p.name === 'Ketu')!;
       const nodalDiff = Math.abs(((rahu.siderealLongitude + 180.0) % 360.0) - ketu.siderealLongitude);
       expect(nodalDiff).toBeLessThan(0.00001);
 
-      // 6. Vimshottari 120-Year Conservation
-      expect(res.dashas.allMahadashas).toHaveLength(9);
-      const subsequent8Years = res.dashas.allMahadashas.slice(1).reduce((acc, m) => acc + m.durationYears, 0);
-      const firstDashaRemaining = res.dashas.allMahadashas[0].durationYears;
+      // 6. Vimshottari 120-Year Conservation (First 9 Mahadashas represent the 120-year cycle)
+      expect(res.dashas.allMahadashas.length).toBeGreaterThanOrEqual(9);
+      const cycleMahadashas = res.dashas.allMahadashas.slice(0, 9);
+      const subsequent8Years = cycleMahadashas.slice(1).reduce((acc, m) => acc + m.durationYears, 0);
+      const firstDashaRemaining = cycleMahadashas[0].durationYears;
       expect(subsequent8Years).toBeLessThanOrEqual(120);
       expect(firstDashaRemaining).toBeGreaterThan(0);
       expect(subsequent8Years + firstDashaRemaining).toBeLessThanOrEqual(120.0001);

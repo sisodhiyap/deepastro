@@ -25,10 +25,27 @@ export default defineConfig({
     chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-icons': ['lucide-react'],
-          'vendor-pdf': ['jspdf', 'html2canvas'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('canvg') || id.includes('pdf-lib')) {
+              return 'vendor-pdf';
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('astronomy-engine')) {
+              return 'vendor-astronomy';
+            }
+          }
+          if (id.includes('/src/components/charts/')) {
+            return 'chart-rendering';
+          }
         },
       },
     },

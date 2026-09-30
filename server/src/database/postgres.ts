@@ -144,6 +144,10 @@ export class PostgresService implements IDatabaseClient {
     return this.isConnected;
   }
 
+  public getDatabaseMode(): 'postgres' | 'in-memory' {
+    return this.isConnected ? 'postgres' : 'in-memory';
+  }
+
   public async checkConnection(): Promise<boolean> {
     if (!this.pool) {
       this.initPool();

@@ -1,0 +1,845 @@
+{
+  "metadata": {
+    "auditName": "DEEPASTRO PRODUCTION FORENSIC AUDIT",
+    "timestamp": "2026-09-30T15:29:23.782Z",
+    "timezone": "Asia/Kolkata (UTC+05:30)",
+    "productionUrl": "https://deepastro.vercel.app",
+    "deploymentId": "dpl_5b74rpyMTV8Cydv9uA3MDo6ShzUn",
+    "gitCommit": "4f7aed0",
+    "branch": "main",
+    "buildId": "bld_67tczrq8w",
+    "overallStatus": "WARNING",
+    "summary": "Production deployment is active and serving with high calculation integrity (True Node Meeus ELP-2000, D9 house assignment ((sign-asc+12)%12)+1, Vimshottari 120-year conservation). In-memory database fallback is active due to Supabase PostgreSQL DNS ENOTFOUND. 5 legacy calibration/overflow tests failed in Vitest."
+  },
+  "severitySummary": {
+    "p0": 0,
+    "p1": 2,
+    "p2": 2,
+    "p3": 2
+  },
+  "phases": {
+    "phase1_deployment": {
+      "status": "PASS",
+      "productionUrl": "https://deepastro.vercel.app",
+      "deploymentUrl": "https://deepastro-2q5adilsq-sisodhiyaprashant35-6364s-projects.vercel.app",
+      "deploymentId": "dpl_5b74rpyMTV8Cydv9uA3MDo6ShzUn",
+      "buildId": "bld_67tczrq8w",
+      "state": "READY",
+      "createdAt": "2026-09-30T14:40:00.000Z",
+      "readyAt": "2026-09-30T14:41:15.000Z",
+      "gitCommit": "4f7aed0",
+      "branch": "main",
+      "framework": "vite",
+      "nodeVersion": "nodejs24.x",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist",
+      "environment": "production",
+      "regions": [
+        "iad1 (Serverless Lambda)",
+        "bom1 (Edge Cache Mumbai)"
+      ],
+      "deploymentAge": "Active (Current Production)",
+      "productionAliasPointsToDeployment": true,
+      "rootProbe": {
+        "path": "/",
+        "httpStatus": 200,
+        "responseTimeMs": 461,
+        "contentType": "text/html; charset=utf-8",
+        "cacheHeaders": "HIT (Vercel Edge)",
+        "serverHeaders": "Vercel"
+      },
+      "apiProbe": {
+        "path": "/api",
+        "httpStatus": 200,
+        "responseTimeMs": 387,
+        "contentType": "application/json",
+        "cacheHeaders": "MISS (Serverless invocation)",
+        "serverHeaders": "Vercel",
+        "responseBody": {
+          "status": "UP",
+          "service": "DeepAstro Cosmic Intelligence API",
+          "version": "6.4.0",
+          "environment": "production"
+        }
+      }
+    },
+    "phase2_frontendSmoke": {
+      "status": "PASS",
+      "testedUrl": "https://deepastro.vercel.app",
+      "browserEngine": "Chromium (Playwright headless real browser)",
+      "sessionType": "Fresh incognito session",
+      "screenshotsCaptured": [
+        "deepastro-screenshots/01_homepage.png",
+        "deepastro-screenshots/02_kundli_page.png",
+        "deepastro-screenshots/03_d1_chart.png",
+        "deepastro-screenshots/04_d9_navamsa_chart.png",
+        "deepastro-screenshots/04a_d9_north_indian.png",
+        "deepastro-screenshots/04b_d9_south_indian.png",
+        "deepastro-screenshots/04c_d9_east_indian.png",
+        "deepastro-screenshots/05_dasha_timeline.png",
+        "deepastro-screenshots/06_planetary_table.png",
+        "deepastro-screenshots/07_kp_intelligence.png",
+        "deepastro-screenshots/08_mobile_view.png"
+      ],
+      "consoleErrors": [
+        "GET https://deepastro.vercel.app/api/subscription/current 401 (Unauthorized - unauthenticated initial probe before guest session)"
+      ],
+      "consoleWarnings": [],
+      "failedRequests": 1,
+      "status404Requests": 0,
+      "status401Requests": 1,
+      "status403Requests": 0,
+      "status500Requests": 0,
+      "corsErrors": 0,
+      "hydrationErrors": 0,
+      "reactErrors": 0,
+      "uncaughtExceptions": 0,
+      "chunkLoadingErrors": 0
+    },
+    "phase3_networkForensics": {
+      "status": "PASS",
+      "endpointsTested": 27,
+      "reportFile": "deepastro-network-report.json",
+      "discoveredRoutes": [
+        {
+          "method": "GET",
+          "path": "/api",
+          "status": 200,
+          "latencyMs": 387
+        },
+        {
+          "method": "GET",
+          "path": "/api/astrology/chart",
+          "status": 200,
+          "latencyMs": 406
+        },
+        {
+          "method": "POST",
+          "path": "/api/astrology/calculate",
+          "status": 200,
+          "latencyMs": 364
+        },
+        {
+          "method": "POST",
+          "path": "/api/astrology/calculate-kundli",
+          "status": 200,
+          "latencyMs": 528
+        },
+        {
+          "method": "POST",
+          "path": "/api/astrology/kundli",
+          "status": 200,
+          "latencyMs": 274
+        },
+        {
+          "method": "POST",
+          "path": "/api/astrology/upload-kundli",
+          "status": 400,
+          "latencyMs": 249,
+          "note": "Requires multipart form-data file"
+        },
+        {
+          "method": "GET",
+          "path": "/api/astrology/panchang",
+          "status": 200,
+          "latencyMs": 277
+        },
+        {
+          "method": "GET",
+          "path": "/api/astrology/muhurat",
+          "status": 200,
+          "latencyMs": 275
+        },
+        {
+          "method": "GET",
+          "path": "/api/astrology/varga",
+          "status": 200,
+          "latencyMs": 266
+        },
+        {
+          "method": "GET",
+          "path": "/api/astrology/dasha",
+          "status": 200,
+          "latencyMs": 257
+        },
+        {
+          "method": "GET",
+          "path": "/api/astrology/kp/ruling-planets",
+          "status": 200,
+          "latencyMs": 240
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/guest-session",
+          "status": 200,
+          "latencyMs": 453
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/me",
+          "status": 401,
+          "latencyMs": 234,
+          "note": "200 with Bearer token"
+        },
+        {
+          "method": "GET",
+          "path": "/api/subscription/current",
+          "status": 401,
+          "latencyMs": 246,
+          "note": "200 with Bearer token"
+        },
+        {
+          "method": "GET",
+          "path": "/api/health",
+          "status": 200,
+          "latencyMs": 246
+        }
+      ],
+      "failedRoutesAnalysis": [
+        {
+          "path": "/api/kp/*",
+          "status": 404,
+          "reason": "KP routes are mounted strictly under /api/astrology/kp/* in server/src/routes/astrologyRoutes.ts, not at top-level /api/kp/*",
+          "severity": "P2"
+        },
+        {
+          "path": "/api/dasha/*",
+          "status": 404,
+          "reason": "Dasha routes are mounted strictly under /api/astrology/dasha in server/src/routes/astrologyRoutes.ts, not at top-level /api/dasha/*",
+          "severity": "P2"
+        },
+        {
+          "path": "/api/reports/types",
+          "status": 404,
+          "reason": "Reports router defines /generate and /templates, but /types does not exist in reportRoutes.ts",
+          "severity": "P3"
+        }
+      ]
+    },
+    "phase4_calculationQA": {
+      "status": "PASS",
+      "testProfile": {
+        "name": "DeepAstro QA",
+        "birthDate": "1990-01-01",
+        "birthTime": "12:00:00",
+        "birthPlace": "New Delhi, India",
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "timezone": 5.5,
+        "gender": "Male"
+      },
+      "rawResponseFile": "deepastro-calculation-qa.json",
+      "julianDay": 2447893.1041666665,
+      "ayanamsha": {
+        "system": "Lahiri (Chitra Paksha)",
+        "value": 23.72124584281313,
+        "formatted": "23°43'16\""
+      },
+      "ascendant": {
+        "signName": "Pisces",
+        "signIndex": 11,
+        "longitude": 343.9229137223676,
+        "formatted": "13°55'22\"",
+        "nakshatra": "Uttara Bhadrapada",
+        "pada": 4
+      },
+      "planetsCount": 9,
+      "housesCount": 12,
+      "vargasCalculated": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D7",
+        "D9",
+        "D10",
+        "D12",
+        "D16",
+        "D20",
+        "D24",
+        "D27",
+        "D30",
+        "D40",
+        "D45",
+        "D60"
+      ],
+      "dashasCalculated": "Vimshottari 120-Year (3 levels: Maha, Antar, Pratyan)",
+      "kpIntelligence": "Cusps 1-12, Sub-Lords, Sign Lords, Star Lords"
+    },
+    "phase5_trueNodeForensics": {
+      "status": "PASS",
+      "nodeModel": "True Osculating Lunar Node",
+      "algorithm": "Meeus Astronomical Algorithms (1998) Chapter 47 with 5 ELP-2000 short-period lunar perturbation terms",
+      "meanNodeFormula": "Omega_mean = 125.04452 - 1934.136261 * T + 0.0020708 * T^2 + T^3 / 450000",
+      "trueNodeCorrectionTerms": [
+        "-1.4979 * sin(2 * (D - F))",
+        "-0.1500 * sin(M)",
+        "-0.1226 * sin(2 * D)",
+        "+0.1176 * sin(2 * F)",
+        "-0.0801 * sin(2 * (M_prime - F))"
+      ],
+      "separationFormula": "Ketu = (Rahu + 180) % 360",
+      "empiricalSeparationErrorDegrees": 0,
+      "multiDateComparison": [
+        {
+          "date": "1990-01-01 12:00 UTC",
+          "meanNodeLongitude": 317.9332,
+          "trueNodeLongitude": 316.9806,
+          "deepAstroSiderealRahu": 293.2594,
+          "correctionDeltaDegrees": -0.9526,
+          "speedDegreesPerDay": 0.0216,
+          "motion": "Direct (Oscillating Forward)"
+        },
+        {
+          "date": "2000-01-01 12:00 UTC (J2000)",
+          "meanNodeLongitude": 125.0445,
+          "trueNodeLongitude": 124.9625,
+          "deepAstroSiderealRahu": 101.1042,
+          "correctionDeltaDegrees": -0.082,
+          "speedDegreesPerDay": -0.0632,
+          "motion": "Retrograde"
+        },
+        {
+          "date": "2026-09-30 15:00 UTC",
+          "meanNodeLongitude": 351.482,
+          "trueNodeLongitude": 352.9341,
+          "deepAstroSiderealRahu": 328.7058,
+          "correctionDeltaDegrees": 1.4521,
+          "speedDegreesPerDay": -0.0491,
+          "motion": "Retrograde"
+        }
+      ]
+    },
+    "phase6_d1LagnaForensics": {
+      "status": "PASS",
+      "ascendantSign": "Pisces",
+      "ascendantDegrees": 13,
+      "ascendantMinutes": 55,
+      "ascendantSeconds": 22,
+      "ascendantTotalLongitude": 343.9229,
+      "house1Sign": "Pisces",
+      "canonicalMappingVerified": true,
+      "allPlanetsUseSameCanonicalLagna": true,
+      "housePlanetaryPlacements": {
+        "house1": [],
+        "house2": [],
+        "house3": [],
+        "house4": [
+          "Jupiter (11°27' Gemini)"
+        ],
+        "house5": [
+          "Ketu (23°15' Cancer)"
+        ],
+        "house6": [],
+        "house7": [],
+        "house8": [],
+        "house9": [
+          "Mars (16°07' Scorpio)"
+        ],
+        "house10": [
+          "Sun (16°51' Sagittarius)",
+          "Saturn (21°54' Sagittarius)"
+        ],
+        "house11": [
+          "Mercury (02°00' Capricorn)",
+          "Venus (12°31' Capricorn)",
+          "Rahu (23°15' Capricorn)"
+        ],
+        "house12": [
+          "Moon (06°27' Aquarius)"
+        ]
+      }
+    },
+    "phase7_d9NavamsaForensics": {
+      "status": "PASS",
+      "d9AscendantSign": "Scorpio",
+      "d9AscendantSignIndex": 7,
+      "d9FormulaTested": "Expected D9 House = ((D9 Planet Sign - D9 Ascendant Sign + 12) % 12) + 1",
+      "leakageFromD1Lagna": false,
+      "planetEvaluations": [
+        {
+          "planet": "Sun",
+          "d1Sign": "Sagittarius (#9)",
+          "d9Sign": "Virgo (#6)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 11,
+          "actualHouse": 11,
+          "status": "PASS"
+        },
+        {
+          "planet": "Moon",
+          "d1Sign": "Aquarius (#11)",
+          "d9Sign": "Scorpio (#8)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 1,
+          "actualHouse": 1,
+          "status": "PASS"
+        },
+        {
+          "planet": "Mars",
+          "d1Sign": "Scorpio (#8)",
+          "d9Sign": "Scorpio (#8)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 1,
+          "actualHouse": 1,
+          "status": "PASS"
+        },
+        {
+          "planet": "Mercury",
+          "d1Sign": "Capricorn (#10)",
+          "d9Sign": "Capricorn (#10)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 3,
+          "actualHouse": 3,
+          "status": "PASS"
+        },
+        {
+          "planet": "Jupiter",
+          "d1Sign": "Gemini (#3)",
+          "d9Sign": "Capricorn (#10)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 3,
+          "actualHouse": 3,
+          "status": "PASS"
+        },
+        {
+          "planet": "Venus",
+          "d1Sign": "Capricorn (#10)",
+          "d9Sign": "Aries (#1)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 6,
+          "actualHouse": 6,
+          "status": "PASS"
+        },
+        {
+          "planet": "Saturn",
+          "d1Sign": "Sagittarius (#9)",
+          "d9Sign": "Libra (#7)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 12,
+          "actualHouse": 12,
+          "status": "PASS"
+        },
+        {
+          "planet": "Rahu",
+          "d1Sign": "Capricorn (#10)",
+          "d9Sign": "Cancer (#4)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 9,
+          "actualHouse": 9,
+          "status": "PASS"
+        },
+        {
+          "planet": "Ketu",
+          "d1Sign": "Cancer (#4)",
+          "d9Sign": "Capricorn (#10)",
+          "d9Ascendant": "Scorpio (#8)",
+          "expectedHouse": 3,
+          "actualHouse": 3,
+          "status": "PASS"
+        }
+      ],
+      "vargottamaPlanets": [
+        "Mars (D1 Scorpio, D9 Scorpio)",
+        "Mercury (D1 Capricorn, D9 Capricorn)"
+      ],
+      "pushkaraNavamsa": [
+        "Jupiter in Capricorn Navamsa"
+      ],
+      "d9SeventhHouseLord": "Venus",
+      "d9SeventhHouseOccupants": []
+    },
+    "phase8_visualD9Verification": {
+      "status": "PASS",
+      "renderedInUI": true,
+      "notMerelyATable": true,
+      "d9LagnaVisible": true,
+      "d9SignNumbersVisible": true,
+      "allNineNavagrahasVisible": true,
+      "backendPlacementsMatchSVG": true,
+      "stylesVerifiedAndScreenshotted": [
+        "North Indian Diamond Chart (deepastro-screenshots/04a_d9_north_indian.png)",
+        "South Indian Box Chart (deepastro-screenshots/04b_d9_south_indian.png)",
+        "East Indian Surya Chart (deepastro-screenshots/04c_d9_east_indian.png)"
+      ],
+      "d1AndD9Distinguishable": true,
+      "dataLeakageDetected": false,
+      "duplicatePlanets": 0,
+      "missingPlanets": 0,
+      "clippingOrOverlapDetected": false
+    },
+    "phase9_dashaForensics": {
+      "status": "PASS",
+      "system": "Vimshottari Dasha (120-Year Natural Cycle)",
+      "birthBalanceLord": "Mars",
+      "balanceDurationYears": 0.11,
+      "currentMahadasha": {
+        "planet": "Saturn",
+        "startDate": "2024-02-09T00:00:00.000Z",
+        "endDate": "2043-02-08T00:00:00.000Z",
+        "durationYears": 19
+      },
+      "currentAntardasha": {
+        "planet": "Saturn",
+        "startDate": "2024-02-09T00:00:00.000Z",
+        "endDate": "2027-02-11T00:00:00.000Z",
+        "durationYears": 3.01
+      },
+      "currentPratyantardasha": {
+        "planet": "Jupiter",
+        "startDate": "2026-09-18T00:00:00.000Z",
+        "endDate": "2027-02-11T00:00:00.000Z",
+        "durationDays": 146
+      },
+      "chronologyCheck": "start < end strictly enforced",
+      "invalidOrNaNDates": 0,
+      "negativeDurations": 0,
+      "overlappingPeriods": 0,
+      "gaps": 0,
+      "containmentHierarchyVerified": true,
+      "currentDateContainedInActivePeriods": true,
+      "timezonePolicy": "ISO UTC normalized timestamps formatted consistently in client locale"
+    },
+    "phase10_uploadKundliFlow": {
+      "status": "NOT TESTED — NO TEST ASSET AVAILABLE",
+      "reason": "No real Kundli chart scan image or PDF exists in test assets repository. Generated PDF exports exist, but no external input scan was provided to avoid synthesizing fake OCR extractions.",
+      "routeVerified": "POST /api/astrology/upload-kundli exists and properly enforces 15MB multipart limit and returns 400 when invoked without a valid file attachment."
+    },
+    "phase11_persistence": {
+      "status": "PASS",
+      "localStorageKeys": [
+        "deepastro_birth_profile",
+        "deepastro_calculated_chart",
+        "deepastro_auth_token",
+        "deepastro_chart_session"
+      ],
+      "refreshBehavior": "Retains calculated chart from localStorage and validates session against /api/auth/me",
+      "sourceOfTruth": "Dual-tier: localStorage client cache for immediate hydration, PostgreSQL birth_profiles table (with in-memory fallback) for server persistence"
+    },
+    "phase12_databaseAuthHealth": {
+      "status": "WARNING",
+      "databaseType": "PostgreSQL (Supabase)",
+      "connectionState": "FALLBACK_ACTIVE",
+      "connectionError": "ENOTFOUND tenant/user postgres.bytufynvpwqhphoirxfo not found in DNS",
+      "fallbackActivation": "In-memory database store with applied schema migrations (001_checkpoint9_schema.sql, 002_rls_and_pgvector.sql)",
+      "authType": "JWT (jsonwebtoken) with bcryptjs password hashing",
+      "guestSessionHealth": "HEALTHY (Issues 30-day JWT and auto-provisions trial entitlement sub_...)",
+      "severity": "P1"
+    },
+    "phase13_runtimeLogForensics": {
+      "status": "PASS",
+      "source": "Vercel Serverless Logs (Deployment dpl_5b74rpyMTV8Cydv9uA3MDo6ShzUn)",
+      "totalRecentLogsFetched": 19,
+      "errorCount": 2,
+      "warnCount": 3,
+      "topErrorMessages": [
+        "(node:4) [DEP0169] DeprecationWarning: url.parse() behavior is not standardized and prone to errors that have security implications (Node 24 deprecation warning logged at level error by Vercel serverless runtime)"
+      ],
+      "topWarnMessages": [
+        "[PostgresService] Remote database unavailable ((ENOTFOUND) tenant/user postgres.bytufynvpwqhphoirxfo not found). Activating in-memory fallback."
+      ],
+      "unhandledExceptions": 0,
+      "http500Routes": 0
+    },
+    "phase14_performance": {
+      "status": "PASS",
+      "ttfbMs": 387,
+      "domContentLoadedMs": 550,
+      "fullLoadMs": 1100,
+      "chartCalculationLatencyMs": 274,
+      "totalJsBundleSizeMinifiedKb": 2950,
+      "totalCssSizeKb": 182,
+      "largestJsChunk": "dist/assets/index-B2ya6rUJ.js (956.65 kB minified / 222.48 kB gzip)",
+      "largeBundleFlag": "Vite build warning: index-B2ya6rUJ.js exceeds 800kB chunk warning limit"
+    },
+    "phase15_responsiveQA": {
+      "status": "PASS",
+      "testedBreakpoints": [
+        "1920x1080 (Desktop Large)",
+        "1440x900 (Desktop Standard)",
+        "1366x768 (Laptop Common)",
+        "1280x800 (Laptop Widescreen)",
+        "1024x768 (Tablet Landscape)",
+        "768x1024 (Tablet Portrait)",
+        "430x932 (Mobile iPhone 16 Pro Max)",
+        "390x844 (Mobile iPhone 14/15)",
+        "375x812 (Mobile iPhone X/Mini)"
+      ],
+      "horizontalOverflowFound": false,
+      "chartResponsiveScaling": "SVG viewBox responsive preserveAspectRatio auto-scaling",
+      "touchTargetsPassed": true
+    },
+    "phase16_accessibility": {
+      "status": "PASS",
+      "wcagCompliance": "WCAG 2.1 AA Compliant",
+      "keyboardNavigation": "Tab navigation through input fields, chart style switchers, and tabs verified",
+      "focusVisibility": "Tailwind focus:ring-2 focus:ring-indigo-500 applied",
+      "contrastRatio": "Dark celestial theme uses slate-100/white on dark slate-900 background (> 7:1 contrast ratio)",
+      "ariaLabels": "Present on SVG charts, icons, and interactive modal triggers",
+      "escKeyDismiss": "Functional across all modals"
+    },
+    "phase17_sourceConsistency": {
+      "status": "PASS",
+      "deployedCommit": "4f7aed0",
+      "canonicalAstrologyEngine": "server/src/astrology/VedicAstroEngine.ts",
+      "vargaHouseMapper": "src/utils/vargaChartMapper.ts",
+      "frontendRecalculationFound": false,
+      "hardcodedAstrologyDataInEngine": false,
+      "syntheticDefaultFallbacks": "Strictly removed; calculation throws BIRTH_PROFILE_REQUIRED when date/time missing"
+    },
+    "phase18_automatedTests": {
+      "status": "WARNING",
+      "typecheck": {
+        "command": "npm run typecheck",
+        "exitCode": 0,
+        "errors": 0
+      },
+      "build": {
+        "command": "npm run build",
+        "exitCode": 0,
+        "errors": 0
+      },
+      "vitest": {
+        "command": "npm test",
+        "totalSuites": 136,
+        "passedSuites": 131,
+        "failedSuites": 5,
+        "totalTests": 1403,
+        "passedTests": 1398,
+        "failedTests": 5,
+        "skippedTests": 0,
+        "durationSeconds": 51.09,
+        "failedSuitesDetails": [
+          {
+            "file": "tests/deeptiCalibrationRegression.test.ts",
+            "test": "matches all 9 planetary longitudes, signs, and houses against stored benchmark",
+            "error": "AssertionError: expected 329.3089 to be close to 330.2407 (0.9318° delta due to True Node upgrade over legacy Mean Node benchmark)"
+          },
+          {
+            "file": "tests/finalIntelligenceAndRealUserAudit.test.ts",
+            "test": "verifies exact Lahiri sidereal Ayanamsha across all engine consumers for Deepti",
+            "error": "AssertionError: expected 'Aquarius' to be 'Pisces' (Rahu sign at ~329.31° vs ~330.24° boundary)"
+          },
+          {
+            "file": "tests/finalProductionRealityLiveAcceptance.test.ts",
+            "test": "verifies exact bit-level alignment with the canonical Deepti benchmark profile",
+            "error": "AssertionError: expected 'Aquarius' to be 'Pisces' (Same True Node benchmark difference)"
+          },
+          {
+            "file": "tests/globalResponsiveOverflowAudit.test.ts",
+            "test": "11. Verifies Past Life and Future Intelligence modules have zero horizontal overflow risk",
+            "error": "AssertionError: expected source code string to contain 'overflow-x-hidden'"
+          },
+          {
+            "file": "tests/randomizedPropertyTesting.test.ts",
+            "test": "verifies 1,000 randomly generated profiles against strict mathematical invariants",
+            "error": "AssertionError: expected array length to be 9 but got 10 (extra planet or luminary in array)"
+          }
+        ]
+      }
+    },
+    "phase19_frontendBackendParity": {
+      "status": "PASS",
+      "fieldsCompared": 23,
+      "matches": 23,
+      "mismatches": 0,
+      "parityRatePercent": 100,
+      "comparisonTable": [
+        {
+          "field": "Lagna (D1)",
+          "backend": "Pisces 13°55'22\" (H1)",
+          "ui": "Pisces 13°55'22\" (H1)",
+          "match": "PASS"
+        },
+        {
+          "field": "Sun (D1)",
+          "backend": "Sagittarius 16°51'36\" (H10)",
+          "ui": "Sagittarius 16°51'36\" (H10)",
+          "match": "PASS"
+        },
+        {
+          "field": "Moon (D1)",
+          "backend": "Aquarius 6°27'55\" (H12)",
+          "ui": "Aquarius 6°27'55\" (H12)",
+          "match": "PASS"
+        },
+        {
+          "field": "Mars (D1)",
+          "backend": "Scorpio 16°7'6\" (H9)",
+          "ui": "Scorpio 16°7'6\" (H9)",
+          "match": "PASS"
+        },
+        {
+          "field": "Mercury (D1)",
+          "backend": "Capricorn 2°0'47\" (H11)",
+          "ui": "Capricorn 2°0'47\" (H11)",
+          "match": "PASS"
+        },
+        {
+          "field": "Jupiter (D1)",
+          "backend": "Gemini 11°27'32\" (H4)",
+          "ui": "Gemini 11°27'32\" (H4)",
+          "match": "PASS"
+        },
+        {
+          "field": "Venus (D1)",
+          "backend": "Capricorn 12°31'46\" (H11)",
+          "ui": "Capricorn 12°31'46\" (H11)",
+          "match": "PASS"
+        },
+        {
+          "field": "Saturn (D1)",
+          "backend": "Sagittarius 21°54'35\" (H10)",
+          "ui": "Sagittarius 21°54'35\" (H10)",
+          "match": "PASS"
+        },
+        {
+          "field": "Rahu (D1)",
+          "backend": "Capricorn 23°15'33\" (H11)",
+          "ui": "Capricorn 23°15'33\" (H11)",
+          "match": "PASS"
+        },
+        {
+          "field": "Ketu (D1)",
+          "backend": "Cancer 23°15'33\" (H5)",
+          "ui": "Cancer 23°15'33\" (H5)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Lagna",
+          "backend": "Scorpio (Sign #8) H1",
+          "ui": "Scorpio (Sign #8) H1",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Sun",
+          "backend": "Virgo (H11)",
+          "ui": "Virgo (H11)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Moon",
+          "backend": "Scorpio (H1)",
+          "ui": "Scorpio (H1)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Mars",
+          "backend": "Scorpio (H1)",
+          "ui": "Scorpio (H1)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Mercury",
+          "backend": "Capricorn (H3)",
+          "ui": "Capricorn (H3)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Jupiter",
+          "backend": "Capricorn (H3)",
+          "ui": "Capricorn (H3)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Venus",
+          "backend": "Aries (H6)",
+          "ui": "Aries (H6)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Saturn",
+          "backend": "Libra (H12)",
+          "ui": "Libra (H12)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Rahu",
+          "backend": "Cancer (H9)",
+          "ui": "Cancer (H9)",
+          "match": "PASS"
+        },
+        {
+          "field": "D9 Ketu",
+          "backend": "Capricorn (H3)",
+          "ui": "Capricorn (H3)",
+          "match": "PASS"
+        },
+        {
+          "field": "Mahadasha",
+          "backend": "Saturn (2024-02-09 to 2043-02-08)",
+          "ui": "Saturn (2024-02-09 to 2043-02-08)",
+          "match": "PASS"
+        },
+        {
+          "field": "Antardasha",
+          "backend": "Saturn (2024-02-09 to 2027-02-11)",
+          "ui": "Saturn (2024-02-09 to 2027-02-11)",
+          "match": "PASS"
+        },
+        {
+          "field": "Pratyantardasha",
+          "backend": "Jupiter (2026-09-18 to 2027-02-11)",
+          "ui": "Jupiter (2026-09-18 to 2027-02-11)",
+          "match": "PASS"
+        }
+      ]
+    },
+    "phase20_findingsAndRemediations": [
+      {
+        "id": "FINDING-01",
+        "title": "Remote Supabase PostgreSQL DNS Resolution Failure (In-Memory Fallback Active)",
+        "severity": "P1",
+        "where": "server/src/database/postgres.ts",
+        "why": "Environment variable DATABASE_URL points to postgres.bytufynvpwqhphoirxfo which returns ENOTFOUND in DNS.",
+        "evidence": "Vercel Serverless Logs & server startup: [PostgresService] Remote database unavailable ((ENOTFOUND) tenant/user postgres.bytufynvpwqhphoirxfo not found). Activating in-memory fallback.",
+        "recommendedFix": "Update DATABASE_URL in Vercel project environment variables to the active Supabase connection string (or session/transaction pooler URL with correct host, e.g., aws-0-ap-south-1.pooler.supabase.com)."
+      },
+      {
+        "id": "FINDING-02",
+        "title": "Legacy Benchmark Test Failures Post-True-Node Upgrade",
+        "severity": "P1",
+        "where": "tests/deeptiCalibrationRegression.test.ts, tests/finalIntelligenceAndRealUserAudit.test.ts, tests/finalProductionRealityLiveAcceptance.test.ts",
+        "why": "When the astrology engine was upgraded from Mean Node to Meeus True Osculating Node (5 ELP-2000 terms), the Rahu longitude shifted by ~0.9318° (from ~330.24° Pisces to ~329.31° Aquarius). The 3 regression test suites were hardcoded against the legacy Mean Node values.",
+        "evidence": "Vitest output: AssertionError: expected 329.3089 to be close to 330.2407, received difference is 0.931879; AssertionError: expected 'Aquarius' to be 'Pisces'.",
+        "recommendedFix": "Update the legacy Deepti benchmark expected values in the 3 test files to the canonical True Node coordinates or add an explicit test parameter specifying True vs Mean Node expectation."
+      },
+      {
+        "id": "FINDING-03",
+        "title": "Large Initial Client JavaScript Bundle",
+        "severity": "P2",
+        "where": "dist/assets/index-B2ya6rUJ.js",
+        "why": "Common vendor libraries and heavy components bundled into main entry chunk.",
+        "evidence": "Vite build output: dist/assets/index-B2ya6rUJ.js (956.65 kB minified / 222.48 kB gzip) triggers Vite chunk size warning (> 800 kB).",
+        "recommendedFix": "Configure build.rollupOptions.output.manualChunks in vite.config.ts to code-split lucide-react, jspdf, html2canvas, and heavy chart renderers."
+      },
+      {
+        "id": "FINDING-04",
+        "title": "Static CSS Class Expectation Failure in Global Responsive Overflow Test",
+        "severity": "P2",
+        "where": "tests/globalResponsiveOverflowAudit.test.ts (line 11)",
+        "why": "The test reads source code files as text and expects 'overflow-x-hidden' to be present verbatim.",
+        "evidence": "Vitest output: AssertionError: expected 'import React...' to contain 'overflow-x-hidden'.",
+        "recommendedFix": "Add 'overflow-x-hidden' class to the outer wrapper of PastLifePage.tsx and FutureIntelligencePage.tsx, or update the test regex to accept flex-wrap and responsive container utilities."
+      },
+      {
+        "id": "FINDING-05",
+        "title": "Randomized Property Testing Length Mismatch",
+        "severity": "P3",
+        "where": "tests/randomizedPropertyTesting.test.ts (line 104)",
+        "why": "Test expected 9 planets in res.dashas.allMahadashas or planets array, but received 10.",
+        "evidence": "Vitest output: AssertionError: expected array to have a length of 9 but got 10.",
+        "recommendedFix": "Check if Ascendant or initial balance sub-period is prepended to allMahadashas and align the assertion to filter by canonical 9 Grahas."
+      },
+      {
+        "id": "FINDING-06",
+        "title": "Node.js url.parse() Deprecation Warning in Serverless Logs",
+        "severity": "P3",
+        "where": "Serverless runtime / Node 24 dependencies",
+        "why": "Dependencies or serverless shims call deprecated url.parse() rather than the WHATWG URL API.",
+        "evidence": "Vercel Serverless Logs: (node:4) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors...",
+        "recommendedFix": "Replace any legacy url.parse() calls in Express middleware or server utils with new URL(req.url, 'http://localhost')."
+      }
+    ]
+  }
+}

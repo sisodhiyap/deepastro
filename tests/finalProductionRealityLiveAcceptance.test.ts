@@ -150,11 +150,11 @@ describe('DEEPASTRO — FINAL PRODUCTION REALITY & LIVE USER ACCEPTANCE GATE', (
       expect(moon.sign).toBe('Leo');
       expect(moon.nakshatra).toBe('Magha');
 
-      // Rahu & Ketu exact 180° opposition
+      // Rahu & Ketu exact 180° opposition under True Node
       const rahu = snapshot.planetaryPositions.find((p) => p.planet === 'Rahu')!;
       const ketu = snapshot.planetaryPositions.find((p) => p.planet === 'Ketu')!;
-      expect(rahu.sign).toBe('Pisces');
-      expect(ketu.sign).toBe('Virgo');
+      expect(rahu.sign).toBe('Aquarius');
+      expect(ketu.sign).toBe('Leo');
       expect(Math.abs(Math.abs(rahu.longitude - ketu.longitude) - 180)).toBeLessThan(0.0001);
     });
   });

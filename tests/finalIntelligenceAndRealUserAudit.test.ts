@@ -336,11 +336,11 @@ describe('DEEPASTRO — FINAL INTELLIGENCE INTEGRITY + REAL USER SIMULATION AUDI
       expect(moon.sign).toBe('Leo');
       expect(moon.nakshatra).toBe('Magha');
 
-      // Verify Rahu in Pisces (Meena ~0° 14') & Ketu in Virgo (Kanya ~0° 14')
+      // Verify Rahu in Aquarius (~29° 18') & Ketu in Leo (~29° 18') under True Node
       const rahu = snapshot.planetaryPositions.find((p) => p.planet === 'Rahu')!;
       const ketu = snapshot.planetaryPositions.find((p) => p.planet === 'Ketu')!;
-      expect(rahu.sign).toBe('Pisces');
-      expect(ketu.sign).toBe('Virgo');
+      expect(rahu.sign).toBe('Aquarius');
+      expect(ketu.sign).toBe('Leo');
       expect(Math.abs(Math.abs(rahu.longitude - ketu.longitude) - 180)).toBeLessThan(0.001);
     });
   });

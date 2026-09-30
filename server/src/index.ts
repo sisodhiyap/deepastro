@@ -1,3 +1,4 @@
+import './utils/urlPolyfill.js';
 import verifyReportRoutes from './routes/verifyReportRoutes.js';
 import futureRoutes from './routes/futureRoutes.js';
 /**
@@ -48,6 +49,7 @@ import cosmosRoutes from './routes/cosmosRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 
 import { DeepAstroHealthEngine } from './services/DeepAstroHealthEngine.js';
+import { dbClient } from './database/postgres.js';
 
 dotenv.config();
 EnvLoader.load();
@@ -95,6 +97,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
     ayanamsha: 'Lahiri (Chitra Paksha)',
     version: '6.0.4',
     engineVersion: DeepAstroHealthEngine.VERSION,
+    databaseMode: dbClient.getDatabaseMode(),
+    DATABASE_MODE: dbClient.getDatabaseMode(),
     totalSubsystems: health.totalSubsystems,
     healthyCount: health.healthyCount,
     degradedCount: health.degradedCount,

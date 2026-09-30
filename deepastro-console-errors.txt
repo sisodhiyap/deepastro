@@ -1,0 +1,20 @@
+=== DEEPASTRO PRODUCTION BROWSER CONSOLE FORENSICS ===
+Session URL: https://deepastro.vercel.app
+Date: 2026-09-30T15:07:00Z
+Target Deployment: dpl_5b74rpyMTV8Cydv9uA3MDo6ShzUn
+
+[VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) @ https://deepastro.vercel.app/:0
+[ERROR] Failed to load resource: the server responded with a status of 401 () @ https://deepastro.vercel.app/api/subscription/current:0
+[VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) @ https://deepastro.vercel.app/kundli:0
+[ERROR] Failed to load resource: the server responded with a status of 401 () @ https://deepastro.vercel.app/api/subscription/current:0
+[ERROR] Failed to load resource: the server responded with a status of 404 () @ https://deepastro.vercel.app/api/auth/me:0
+
+--- SUMMARY ---
+Total Errors: 3
+  - 401 /api/subscription/current (Expected for unauthenticated initial guest state)
+  - 404 /api/auth/me (Check route registration on Vercel serverless bundle)
+Total Warnings: 0
+React Errors: 0
+Chunk Loading Errors: 0
+Hydration Errors: 0
+Uncaught Exceptions: 0
