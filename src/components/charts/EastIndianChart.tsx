@@ -6,15 +6,45 @@ interface EastIndianChartProps {
   planets: ChartPlanet[];
   size?: number;
   className?: string;
+  lagnaLabel?: string;
+  chartTitle?: string;
 }
+
+const PLANET_ABBREV: Record<string, string> = {
+  Sun: 'Su',
+  Moon: 'Mo',
+  Mars: 'Ma',
+  Mercury: 'Me',
+  Jupiter: 'Ju',
+  Venus: 'Ve',
+  Saturn: 'Sa',
+  Rahu: 'Ra',
+  Ketu: 'Ke',
+};
+
+const EAST_SIGNS = [
+  { signIndex: 0,  signNum: 1,  name: 'Aries', coords: { x: 200, y: 70 }, labelCoords: { x: 200, y: 40 } },
+  { signIndex: 1,  signNum: 2,  name: 'Taurus', coords: { x: 320, y: 70 }, labelCoords: { x: 320, y: 40 } },
+  { signIndex: 2,  signNum: 3,  name: 'Gemini', coords: { x: 340, y: 150 }, labelCoords: { x: 340, y: 130 } },
+  { signIndex: 3,  signNum: 4,  name: 'Cancer', coords: { x: 340, y: 250 }, labelCoords: { x: 340, y: 230 } },
+  { signIndex: 4,  signNum: 5,  name: 'Leo', coords: { x: 320, y: 340 }, labelCoords: { x: 320, y: 365 } },
+  { signIndex: 5,  signNum: 6,  name: 'Virgo', coords: { x: 200, y: 340 }, labelCoords: { x: 200, y: 365 } },
+  { signIndex: 6,  signNum: 7,  name: 'Libra', coords: { x: 80,  y: 340 }, labelCoords: { x: 80,  y: 365 } },
+  { signIndex: 7,  signNum: 8,  name: 'Scorpio', coords: { x: 60,  y: 250 }, labelCoords: { x: 60,  y: 230 } },
+  { signIndex: 8,  signNum: 9,  name: 'Sagittarius', coords: { x: 60,  y: 150 }, labelCoords: { x: 60,  y: 130 } },
+  { signIndex: 9,  signNum: 10, name: 'Capricorn', coords: { x: 80,  y: 70 }, labelCoords: { x: 80,  y: 40 } },
+  { signIndex: 10, signNum: 11, name: 'Aquarius', coords: { x: 140, y: 130 }, labelCoords: { x: 140, y: 110 } },
+  { signIndex: 11, signNum: 12, name: 'Pisces', coords: { x: 260, y: 130 }, labelCoords: { x: 260, y: 110 } },
+];
 
 export const EastIndianChart: React.FC<EastIndianChartProps> = ({
   ascendantSignIndex,
   planets,
   size = 420,
   className = '',
+  lagnaLabel = 'LAGNA',
+  chartTitle,
 }) => {
-  // Signs in East Indian chart are fixed in triangles/rectangles around central diagonals
   const planetsBySign: Record<number, ChartPlanet[]> = {};
   for (let s = 0; s < 12; s++) {
     planetsBySign[s] = planets.filter((p) => p.signIndex === s);
@@ -22,6 +52,14 @@ export const EastIndianChart: React.FC<EastIndianChartProps> = ({
 
   return (
     <div className={`relative w-full max-w-[420px] flex flex-col items-center select-none ${className}`}>
+      {chartTitle && (
+        <div className="w-full flex items-center justify-between text-xs font-bold text-cosmic-muted uppercase tracking-wider mb-2 px-1">
+          <span className="text-cyan-400">{chartTitle}</span>
+          <span className="text-[10px] text-amber-300 font-mono">
+            Asc: {ascendantSignIndex + 1} ({EAST_SIGNS.find(s => s.signIndex === ascendantSignIndex)?.name})
+          </span>
+        </div>
+      )}
       <svg
         viewBox="0 0 400 400"
         style={{ width: '100%', maxWidth: size, height: 'auto', aspectRatio: '1 / 1' }}
@@ -47,31 +85,45 @@ export const EastIndianChart: React.FC<EastIndianChartProps> = ({
           INDIAN
         </text>
 
-        {/* Sign Markers & Planets placed in quadrants */}
-        <text x="200" y="45" textAnchor="middle" className="text-[10px] font-bold fill-amber-400">
-          Aries (Mesha) {ascendantSignIndex === 0 && '★ Lagna'}
-        </text>
-        <text x="330" y="100" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Taurus
-        </text>
-        <text x="330" y="200" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Gemini
-        </text>
-        <text x="330" y="300" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Cancer
-        </text>
-        <text x="200" y="370" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Leo
-        </text>
-        <text x="70" y="300" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Virgo
-        </text>
-        <text x="70" y="200" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Libra
-        </text>
-        <text x="70" y="100" textAnchor="middle" className="text-[10px] font-bold fill-cosmic-muted">
-          Scorpio
-        </text>
+        {/* 12 Signs & Occupants */}
+        {EAST_SIGNS.map((s) => {
+          const isAsc = s.signIndex === ascendantSignIndex;
+          const occupants = planetsBySign[s.signIndex] || [];
+
+          return (
+            <g key={`east-sign-${s.signIndex}`}>
+              <text
+                x={s.labelCoords.x}
+                y={s.labelCoords.y}
+                textAnchor="middle"
+                className={`text-[9px] font-bold ${isAsc ? 'fill-cyan-300' : 'fill-amber-300/70'}`}
+              >
+                {s.signNum} {s.name.substring(0, 3)} {isAsc && `★ ${lagnaLabel}`}
+              </text>
+
+              {/* Occupants */}
+              <g transform={`translate(${s.coords.x}, ${s.coords.y})`}>
+                {occupants.map((p, idx) => {
+                  const yOffset = (idx - (occupants.length - 1) / 2) * 12;
+                  const abbrev = PLANET_ABBREV[p.name] || p.name.substring(0, 2);
+                  return (
+                    <text
+                      key={`east-p-${p.name}`}
+                      x="0"
+                      y={yOffset}
+                      textAnchor="middle"
+                      className="text-[9px] font-bold fill-cosmic-text"
+                    >
+                      {abbrev}
+                      {p.isRetrograde && <tspan className="text-[7px] fill-amber-400 font-extrabold">(R)</tspan>}
+                      {p.isCombust && <tspan className="text-[7px] fill-rose-400 font-extrabold">(C)</tspan>}
+                    </text>
+                  );
+                })}
+              </g>
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

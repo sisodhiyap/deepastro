@@ -56,8 +56,8 @@ export const SWISS_EPHEMERIS_BENCHMARKS: EphemerisBenchmark[] = [
       { name: 'Jupiter', expectedSiderealLon: 205.88 }, // Libra 25°52'
       { name: 'Venus', expectedSiderealLon: 112.56 },   // Cancer 22°33'
       { name: 'Saturn', expectedSiderealLon: 110.47 },  // Cancer 20°28'
-      { name: 'Rahu', expectedSiderealLon: 35.07 },     // Taurus 5°04'
-      { name: 'Ketu', expectedSiderealLon: 215.07 },    // Scorpio 5°04'
+      { name: 'Rahu', expectedSiderealLon: 35.75 },     // Taurus 5°45' (True Node)
+      { name: 'Ketu', expectedSiderealLon: 215.75 },    // Scorpio 5°45' (True Node)
     ],
   },
   {
@@ -83,8 +83,8 @@ export const SWISS_EPHEMERIS_BENCHMARKS: EphemerisBenchmark[] = [
       { name: 'Jupiter', expectedSiderealLon: 1.40 },   // Aries 1°24'
       { name: 'Venus', expectedSiderealLon: 217.71 },   // Scorpio 7°42'
       { name: 'Saturn', expectedSiderealLon: 16.54 },   // Aries 16°32'
-      { name: 'Rahu', expectedSiderealLon: 101.19 },    // Cancer 11°11'
-      { name: 'Ketu', expectedSiderealLon: 281.19 },    // Capricorn 11°11'
+      { name: 'Rahu', expectedSiderealLon: 100.07 },    // Cancer 10°04' (True Node)
+      { name: 'Ketu', expectedSiderealLon: 280.07 },    // Capricorn 10°04' (True Node)
     ],
   },
 ];

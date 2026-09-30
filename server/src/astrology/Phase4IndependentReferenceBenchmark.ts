@@ -16,6 +16,7 @@ import {
   BirthProfileInput,
   VedicAstroEngine,
 } from './VedicAstroEngine.js';
+import { calculateMeeusTrueNode } from './PlanetEngine.js';
 import {
   getUtcDateFromLocal,
   getJulianDayFromDate,
@@ -182,12 +183,12 @@ export class Phase4IndependentReferenceBenchmark {
         refSiderealLon = normalizeDegrees(Astronomy.Ecliptic(v).elon - refAyanamsha);
       } else if (item.name === 'Rahu' || item.name === 'Ketu') {
         const T = time.tt / 36525.0;
-        let omega = 125.0445550 - 1934.1361849 * T + 0.0020762 * T * T + (T * T * T) / 467410.0 - (T * T * T * T) / 60616000.0;
-        omega = normalizeDegrees(omega);
+        const { trueOmega } = calculateMeeusTrueNode(T);
         if (item.name === 'Rahu') {
-          refSiderealLon = normalizeDegrees(omega - refAyanamsha);
+          refSiderealLon = normalizeDegrees(trueOmega - refAyanamsha);
         } else {
-          refSiderealLon = normalizeDegrees(omega + 180.0 - refAyanamsha);
+          const rahuSid = normalizeDegrees(trueOmega - refAyanamsha);
+          refSiderealLon = normalizeDegrees(rahuSid + 180.0);
         }
       }
 

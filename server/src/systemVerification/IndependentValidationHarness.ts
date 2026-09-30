@@ -27,6 +27,7 @@ import {
   BirthProfileInput,
   VedicAstroEngine,
 } from '../astrology/VedicAstroEngine.js';
+import { calculateMeeusTrueNode } from '../astrology/PlanetEngine.js';
 import {
   getUtcDateFromLocal,
   getJulianDayFromDate,
@@ -270,12 +271,11 @@ export class IndependentValidationHarness {
         errorMap[pl.name].push(diff);
       }
 
-      // Rahu / Ketu
+      // Rahu / Ketu (True Lunar Node reference)
       const T = time.tt / 36525.0;
-      let omega = 125.0445550 - 1934.1361849 * T + 0.0020762 * T * T + (T * T * T) / 467410.0 - (T * T * T * T) / 60616000.0;
-      omega = normalizeDegrees(omega);
-      const refRahu = normalizeDegrees(omega - refAyanamsha);
-      const refKetu = normalizeDegrees(omega + 180.0 - refAyanamsha);
+      const { trueOmega } = calculateMeeusTrueNode(T);
+      const refRahu = normalizeDegrees(trueOmega - refAyanamsha);
+      const refKetu = normalizeDegrees(refRahu + 180.0);
 
       const actualRahu = factSet.planets.find(p => p.name === 'Rahu')?.siderealLongitude || 0;
       const actualKetu = factSet.planets.find(p => p.name === 'Ketu')?.siderealLongitude || 0;

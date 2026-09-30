@@ -1,5 +1,9 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Layers, Star, Award, Compass, ShieldCheck, Heart, Briefcase } from 'lucide-react';
+import { NorthIndianChart } from '../charts/NorthIndianChart.js';
+import { SouthIndianChart } from '../charts/SouthIndianChart.js';
+import { EastIndianChart } from '../charts/EastIndianChart.js';
+import { mapVargaChartToChartPlanets } from '../../utils/vargaChartMapper.js';
 
 interface VargaExplorerPanelProps {
   shodashavargaDetail?: Record<string, any>;
@@ -80,42 +84,78 @@ export const VargaExplorerPanel: React.FC<VargaExplorerPanelProps> = ({
             <span className="text-xs text-slate-400 font-mono">Formula: {currentChart.formulaVersion}</span>
           </div>
 
-          {/* Varga Planetary Placements Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#1A1F2B] text-slate-400 uppercase text-[10px] tracking-wider border-b border-[#2A3441]">
-                <tr>
-                  <th className="py-2.5 px-4">Planet</th>
-                  <th className="py-2.5 px-4">Sign in {currentChart.code}</th>
-                  <th className="py-2.5 px-4">Sign Lord</th>
-                  <th className="py-2.5 px-4">House in {currentChart.code}</th>
-                  {selectedVarga === 'd9' && <th className="py-2.5 px-4 text-amber-300">Vargottama</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2A3441]/60">
-                {currentChart.planets?.map((p: any) => (
-                  <tr key={p.planet} className="hover:bg-slate-800/30">
-                    <td className="py-2.5 px-4 font-bold text-white">{p.planet}</td>
-                    <td className="py-2.5 px-4 text-slate-300">
-                      {p.signName} ({p.vedicSignName})
-                    </td>
-                    <td className="py-2.5 px-4 text-slate-400">{p.signLord}</td>
-                    <td className="py-2.5 px-4 font-semibold text-cyan-300">H{p.houseInVarga}</td>
-                    {selectedVarga === 'd9' && (
-                      <td className="py-2.5 px-4">
-                        {p.isVargottama ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                            ★ Vargottama
-                          </span>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    )}
+          {/* Visual Varga Chart & Placements Table */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="lg:col-span-5 flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900/60 border border-cosmic-border shadow-inner">
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-2">
+                Visual {currentChart.code.toUpperCase()} Harmonic Kundli
+              </span>
+              {chartStyle === 'north' && (
+                <NorthIndianChart
+                  ascendantSignIndex={currentChart.ascendantSignIndex}
+                  planets={mapVargaChartToChartPlanets(currentChart)}
+                  size={360}
+                  lagnaLabel={`LAGNA — ${currentChart.code.toUpperCase()}`}
+                  chartTitle={`${currentChart.code.toUpperCase()} — ${currentChart.englishName}`}
+                />
+              )}
+              {chartStyle === 'south' && (
+                <SouthIndianChart
+                  ascendantSignIndex={currentChart.ascendantSignIndex}
+                  planets={mapVargaChartToChartPlanets(currentChart)}
+                  size={360}
+                  lagnaLabel={`LAGNA — ${currentChart.code.toUpperCase()}`}
+                  chartTitle={`${currentChart.code.toUpperCase()} — ${currentChart.englishName}`}
+                />
+              )}
+              {chartStyle === 'east' && (
+                <EastIndianChart
+                  ascendantSignIndex={currentChart.ascendantSignIndex}
+                  planets={mapVargaChartToChartPlanets(currentChart)}
+                  size={360}
+                  lagnaLabel={`LAGNA — ${currentChart.code.toUpperCase()}`}
+                  chartTitle={`${currentChart.code.toUpperCase()} — ${currentChart.englishName}`}
+                />
+              )}
+            </div>
+
+            {/* Varga Planetary Placements Table */}
+            <div className="lg:col-span-7 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#1A1F2B] text-slate-400 uppercase text-[10px] tracking-wider border-b border-[#2A3441]">
+                  <tr>
+                    <th className="py-2.5 px-4">Planet</th>
+                    <th className="py-2.5 px-4">Sign in {currentChart.code}</th>
+                    <th className="py-2.5 px-4">Sign Lord</th>
+                    <th className="py-2.5 px-4">House in {currentChart.code}</th>
+                    {selectedVarga === 'd9' && <th className="py-2.5 px-4 text-amber-300">Vargottama</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#2A3441]/60">
+                  {currentChart.planets?.map((p: any) => (
+                    <tr key={p.planet} className="hover:bg-slate-800/30">
+                      <td className="py-2.5 px-4 font-bold text-white">{p.planet}</td>
+                      <td className="py-2.5 px-4 text-slate-300">
+                        {p.signName} ({p.vedicSignName})
+                      </td>
+                      <td className="py-2.5 px-4 text-slate-400">{p.signLord}</td>
+                      <td className="py-2.5 px-4 font-semibold text-cyan-300">H{p.houseInVarga}</td>
+                      {selectedVarga === 'd9' && (
+                        <td className="py-2.5 px-4">
+                          {p.isVargottama ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                              ★ Vargottama
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

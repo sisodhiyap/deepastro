@@ -233,18 +233,85 @@ function getApparentPlanetPosition(name: Exclude<PlanetName, 'Rahu' | 'Ketu'>, t
   return { lon: normalizeDegrees(lon1), speed };
 }
 
-/**
- * Compute Mean Lunar Nodes (Rahu and Ketu) using IAU theory
- */
-function getLunarNodes(time: AstronomyTypes.AstroTime): { rahuLon: number; ketuLon: number; speed: number } {
-  const T = time.tt / 36525.0;
-  // IAU / Simon & Chapront Mean Ascending Node of the Moon (Rahu)
-  let omega = 125.0445550 - 1934.1361849 * T + 0.0020762 * T * T + (T * T * T) / 467410.0 - (T * T * T * T) / 60616000.0;
-  omega = normalizeDegrees(omega);
-  const ketu = normalizeDegrees(omega + 180.0);
-  const speed = -1934.1361849 / 36525.0; // ~ -0.05295 deg/day
+export interface LunarNodesResult {
+  rahuLon: number;
+  ketuLon: number;
+  speed: number;
+  isRetrograde: boolean;
+  meanRahuLon: number;
+  nodeModel: 'TRUE_NODE';
+  nodeModelDescription: string;
+  nodeCalculationVersion: string;
+}
 
-  return { rahuLon: omega, ketuLon: ketu, speed };
+/**
+ * Compute Mean Ascending Lunar Node (Omega) and True / Osculating Ascending Lunar Node
+ * using Meeus-style ELP-2000 short-period periodic perturbations (Ch. 47).
+ */
+export function calculateMeeusTrueNode(T: number): { meanOmega: number; trueOmega: number; corr: number } {
+  const rad = Math.PI / 180.0;
+  // Mean ascending node polynomial (Meeus Ch. 47)
+  const omega = 125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + (T * T * T) / 467441.0 - (T * T * T * T) / 60616000.0;
+
+  // Fundamental astronomical arguments (Meeus Ch. 47)
+  // D = Moon's mean elongation from Sun
+  const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T + (T * T * T) / 545868.0 - (T * T * T * T) / 113065000.0;
+  // M = Sun's mean anomaly
+  const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + (T * T * T) / 24490000.0;
+  // M' = Moon's mean anomaly
+  const Mprime = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + (T * T * T) / 69699.0 - (T * T * T * T) / 14712000.0;
+  // F = Moon's argument of latitude
+  const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T * T - (T * T * T) / 3526000.0 + (T * T * T * T) / 863310000.0;
+
+  // Short-period true-node periodic perturbations
+  const corr =
+    - 1.4979 * Math.sin(2.0 * (D - F) * rad)
+    - 0.1500 * Math.sin(M * rad)
+    - 0.1226 * Math.sin(2.0 * D * rad)
+    + 0.1176 * Math.sin(2.0 * F * rad)
+    - 0.0801 * Math.sin(2.0 * (Mprime - F) * rad);
+
+  return {
+    meanOmega: normalizeDegrees(omega),
+    trueOmega: normalizeDegrees(omega + corr),
+    corr,
+  };
+}
+
+/**
+ * Compute True / Osculating Lunar Nodes (Rahu and Ketu) using Meeus theory with short-period corrections
+ * and numerical differentiation for exact instantaneous nodal velocity.
+ */
+export function getLunarNodes(time: AstronomyTypes.AstroTime): LunarNodesResult {
+  const T = time.tt / 36525.0;
+  const { meanOmega, trueOmega } = calculateMeeusTrueNode(T);
+
+  // Numerical differentiation of true node around observation time (dt = 0.01 days ~ 14.4 minutes)
+  const dt = 0.01;
+  const Tplus = (time.tt + dt) / 36525.0;
+  const Tminus = (time.tt - dt) / 36525.0;
+  const plusRes = calculateMeeusTrueNode(Tplus);
+  const minusRes = calculateMeeusTrueNode(Tminus);
+  let diff = plusRes.trueOmega - minusRes.trueOmega;
+  if (diff > 180.0) diff -= 360.0;
+  if (diff < -180.0) diff += 360.0;
+  const speed = diff / (2.0 * dt);
+  const isRetrograde = speed < 0;
+
+  const rahuLon = trueOmega;
+  // Ketu MUST be exactly normalizeDegrees(Rahu + 180). Do not independently calculate Ketu.
+  const ketuLon = normalizeDegrees(rahuLon + 180.0);
+
+  return {
+    rahuLon,
+    ketuLon,
+    speed,
+    isRetrograde,
+    meanRahuLon: meanOmega,
+    nodeModel: 'TRUE_NODE',
+    nodeModelDescription: 'True/Osculating Lunar Node',
+    nodeCalculationVersion: 'MEEUS_TRUE_NODE_V1',
+  };
 }
 
 /**
@@ -260,7 +327,7 @@ export function calculateAllPlanets(jd: number, ascendantLongitude: number): Pla
   const sunPos = getApparentPlanetPosition('Sun', time);
   const sunSidereal = normalizeDegrees(sunPos.lon - ayanamsha);
 
-  const { rahuLon, ketuLon, speed: nodeSpeed } = getLunarNodes(time);
+  const nodeInfo = getLunarNodes(time);
 
   const planetNames: PlanetName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
   const results: PlanetData[] = [];
@@ -271,13 +338,15 @@ export function calculateAllPlanets(jd: number, ascendantLongitude: number): Pla
     let isRetro: boolean;
 
     if (name === 'Rahu') {
-      siderealLon = normalizeDegrees(rahuLon - ayanamsha);
-      speed = nodeSpeed;
-      isRetro = true; // Nodes are always retrograde in mean motion
+      siderealLon = normalizeDegrees(nodeInfo.rahuLon - ayanamsha);
+      speed = nodeInfo.speed;
+      isRetro = nodeInfo.isRetrograde;
     } else if (name === 'Ketu') {
-      siderealLon = normalizeDegrees(ketuLon - ayanamsha);
-      speed = nodeSpeed;
-      isRetro = true;
+      // Ketu sidereal MUST be exactly normalizeDegrees(Rahu_sidereal + 180)
+      const rahuSidereal = normalizeDegrees(nodeInfo.rahuLon - ayanamsha);
+      siderealLon = normalizeDegrees(rahuSidereal + 180.0);
+      speed = nodeInfo.speed;
+      isRetro = nodeInfo.isRetrograde;
     } else {
       const raw = getApparentPlanetPosition(name, time);
       siderealLon = normalizeDegrees(raw.lon - ayanamsha);

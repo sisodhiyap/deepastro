@@ -21,6 +21,8 @@ export interface CalculationPassport {
   ayanamshaVersion: string;
   ayanamshaValueDegrees: number;
   nodeModel: 'TRUE_NODE' | 'MEAN_NODE';
+  nodeModelDescription: string;
+  nodeCalculationVersion: string;
   houseSystem: string;
   latitude: number;
   longitude: number;
@@ -54,6 +56,8 @@ export interface CalculationPassportInput {
   planetsSummary?: string;
   calculationMethod?: 'DRIK_SIDDHANTA' | 'SURYA_SIDDHANTA';
   nodeModel?: 'TRUE_NODE' | 'MEAN_NODE';
+  nodeModelDescription?: string;
+  nodeCalculationVersion?: string;
   houseSystem?: string;
   ayanamshaName?: string;
 }
@@ -117,6 +121,8 @@ export class CalculationPassportEngine {
       ayanamshaVersion: this.AYANAMSHA_VERSION,
       ayanamshaValueDegrees: input.ayanamshaDegrees,
       nodeModel: input.nodeModel || 'TRUE_NODE',
+      nodeModelDescription: input.nodeModelDescription || 'True/Osculating Lunar Node',
+      nodeCalculationVersion: input.nodeCalculationVersion || 'MEEUS_TRUE_NODE_V1',
       houseSystem: input.houseSystem || 'WHOLE_SIGN_AND_SRIPATI_CHALIT',
       latitude: input.latitude,
       longitude: input.longitude,

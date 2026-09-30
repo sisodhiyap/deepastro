@@ -29,6 +29,8 @@ import { SouthIndianChart } from '../components/charts/SouthIndianChart.js';
 import { EastIndianChart } from '../components/charts/EastIndianChart.js';
 import { PlanetaryTable } from '../components/astrology/PlanetaryTable.js';
 import { DashaTimeline } from '../components/astrology/DashaTimeline.js';
+import { NavamsaD9View } from '../components/astrology/NavamsaD9View.js';
+import { mapVargaChartToChartPlanets } from '../utils/vargaChartMapper.js';
 import {
   getCalculatedChart,
   getBirthProfile,
@@ -377,36 +379,81 @@ export const KundliPage: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const getActivePlanets = () => {
-    if (!kundli) return [];
-    if (activeVarga === 'd9' && kundli.vargas?.d9_navamsa) {
-      return kundli.vargas.d9_navamsa.map((p: any) => {
-        const base = kundli.planets.find((orig: any) => orig.name === p.planet);
-        return {
-          name: p.planet,
-          symbol: base?.symbol || '',
-          house: ((p.signIndex - kundli.ascendant.details.signIndex + 12) % 12) + 1,
-          signIndex: p.signIndex,
-          isRetrograde: base?.isRetrograde,
-          isCombust: base?.isCombust,
-        };
-      });
+  const getActiveVargaData = () => {
+    if (!kundli) {
+      return {
+        ascendantSignIndex: 0,
+        planets: [] as any[],
+        lagnaLabel: 'LAGNA',
+        title: 'D1 (Rashi)',
+      };
     }
-    if (activeVarga === 'd10' && kundli.vargas?.d10_dashamsha) {
-      return kundli.vargas.d10_dashamsha.map((p: any) => {
-        const base = kundli.planets.find((orig: any) => orig.name === p.planet);
-        return {
-          name: p.planet,
-          symbol: base?.symbol || '',
-          house: ((p.signIndex - kundli.ascendant.details.signIndex + 12) % 12) + 1,
-          signIndex: p.signIndex,
-          isRetrograde: base?.isRetrograde,
-          isCombust: base?.isCombust,
-        };
-      });
+
+    if (activeVarga === 'd9') {
+      const d9Chart = kundli.navamsaDeep?.d9Chart || kundli.shodashavargaDetail?.d9 || kundli.shodashavarga?.d9;
+      const ascSign = d9Chart?.ascendantSignIndex !== undefined 
+        ? d9Chart.ascendantSignIndex 
+        : ((kundli.ascendant.details.signIndex * 9) % 12);
+      
+      const mappedPlanets = d9Chart 
+        ? mapVargaChartToChartPlanets(d9Chart, kundli.planets)
+        : (kundli.vargas?.d9_navamsa || []).map((p: any) => {
+            const base = kundli.planets.find((orig: any) => orig.name === p.planet);
+            return {
+              name: p.planet,
+              symbol: base?.symbol || '',
+              house: ((p.signIndex - ascSign + 12) % 12) + 1,
+              signIndex: p.signIndex,
+              isRetrograde: base?.isRetrograde,
+              isCombust: base?.isCombust,
+            };
+          });
+
+      return {
+        ascendantSignIndex: ascSign,
+        planets: mappedPlanets,
+        lagnaLabel: 'LAGNA — D9',
+        title: 'D9 (Navamsa)',
+      };
     }
-    return kundli.planets;
+
+    if (activeVarga === 'd10') {
+      const d10Chart = kundli.dasamshaDeep?.d10Chart || kundli.shodashavargaDetail?.d10 || kundli.shodashavarga?.d10;
+      const ascSign = d10Chart?.ascendantSignIndex !== undefined 
+        ? d10Chart.ascendantSignIndex 
+        : ((kundli.ascendant.details.signIndex * 10) % 12);
+
+      const mappedPlanets = d10Chart 
+        ? mapVargaChartToChartPlanets(d10Chart, kundli.planets)
+        : (kundli.vargas?.d10_dashamsha || []).map((p: any) => {
+            const base = kundli.planets.find((orig: any) => orig.name === p.planet);
+            return {
+              name: p.planet,
+              symbol: base?.symbol || '',
+              house: ((p.signIndex - ascSign + 12) % 12) + 1,
+              signIndex: p.signIndex,
+              isRetrograde: base?.isRetrograde,
+              isCombust: base?.isCombust,
+            };
+          });
+
+      return {
+        ascendantSignIndex: ascSign,
+        planets: mappedPlanets,
+        lagnaLabel: 'LAGNA — D10',
+        title: 'D10 (Dashamsha)',
+      };
+    }
+
+    return {
+      ascendantSignIndex: kundli.ascendant.details.signIndex,
+      planets: kundli.planets,
+      lagnaLabel: 'LAGNA',
+      title: 'D1 (Rashi)',
+    };
   };
+
+  const getActivePlanets = () => getActiveVargaData().planets;
 
   return (
     <div className="space-y-10 animate-fadeIn">
@@ -812,6 +859,32 @@ export const KundliPage: React.FC = () => {
             ))}
           </div>
 
+          {/* Legacy Calculation Warning if old Mean Node detected */}
+          {Boolean(
+            kundli &&
+            (!kundli.passport?.nodeCalculationVersion || kundli.passport.nodeCalculationVersion !== 'MEEUS_TRUE_NODE_V1')
+          ) && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-300">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  <strong className="font-bold text-sm block">Legacy calculation detected — recalculate chart</strong>
+                  <p className="text-amber-200/80 mt-0.5">
+                    This chart was calculated with an earlier Mean Node approximation. DeepAstro now enforces Jean Meeus True/Osculating Lunar Nodes.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => calculateChart()}
+                className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs uppercase tracking-wider transition-all shadow-glow-amber shrink-0 flex items-center justify-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Recalculate Chart</span>
+              </button>
+            </div>
+          )}
+
           {/* Birth Time Sensitivity Alert if Applicable */}
           {kundli.accuracyQuality?.isBoundarySensitive && (
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-xs text-amber-300">
@@ -918,27 +991,40 @@ export const KundliPage: React.FC = () => {
               {/* Chart Canvas & Essentials Summary */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-6 flex justify-center p-4 rounded-3xl border border-cosmic-border bg-cosmic-surface/60 overflow-hidden">
-                  {chartStyle === 'north' && (
-                    <NorthIndianChart
-                      ascendantSignIndex={kundli.ascendant.details.signIndex}
-                      planets={getActivePlanets()}
-                      size={420}
-                    />
-                  )}
-                  {chartStyle === 'south' && (
-                    <SouthIndianChart
-                      ascendantSignIndex={kundli.ascendant.details.signIndex}
-                      planets={getActivePlanets()}
-                      size={420}
-                    />
-                  )}
-                  {chartStyle === 'east' && (
-                    <EastIndianChart
-                      ascendantSignIndex={kundli.ascendant.details.signIndex}
-                      planets={getActivePlanets()}
-                      size={420}
-                    />
-                  )}
+                  {(() => {
+                    const activeVargaData = getActiveVargaData();
+                    return (
+                      <>
+                        {chartStyle === 'north' && (
+                          <NorthIndianChart
+                            ascendantSignIndex={activeVargaData.ascendantSignIndex}
+                            planets={activeVargaData.planets}
+                            size={420}
+                            lagnaLabel={activeVargaData.lagnaLabel}
+                            chartTitle={activeVargaData.title}
+                          />
+                        )}
+                        {chartStyle === 'south' && (
+                          <SouthIndianChart
+                            ascendantSignIndex={activeVargaData.ascendantSignIndex}
+                            planets={activeVargaData.planets}
+                            size={420}
+                            lagnaLabel={activeVargaData.lagnaLabel}
+                            chartTitle={activeVargaData.title}
+                          />
+                        )}
+                        {chartStyle === 'east' && (
+                          <EastIndianChart
+                            ascendantSignIndex={activeVargaData.ascendantSignIndex}
+                            planets={activeVargaData.planets}
+                            size={420}
+                            lagnaLabel={activeVargaData.lagnaLabel}
+                            chartTitle={activeVargaData.title}
+                          />
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="lg:col-span-6 space-y-4">
@@ -1022,9 +1108,9 @@ export const KundliPage: React.FC = () => {
           {activeMasterTab === 'rashi' && (
             <div className="space-y-6">
               <div className="flex justify-center p-6 rounded-3xl border border-cosmic-border bg-cosmic-surface/60 overflow-hidden">
-                {chartStyle === 'north' && <NorthIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} />}
-                {chartStyle === 'south' && <SouthIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} />}
-                {chartStyle === 'east' && <EastIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} />}
+                {chartStyle === 'north' && <NorthIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} lagnaLabel="LAGNA" chartTitle="D1 — Rashi Kundli" />}
+                {chartStyle === 'south' && <SouthIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} lagnaLabel="LAGNA" chartTitle="D1 — Rashi Kundli" />}
+                {chartStyle === 'east' && <EastIndianChart ascendantSignIndex={kundli.ascendant.details.signIndex} planets={kundli.planets} size={460} lagnaLabel="LAGNA" chartTitle="D1 — Rashi Kundli" />}
               </div>
               <PlanetaryTable planets={kundli.planets} />
             </div>
@@ -1074,11 +1160,10 @@ export const KundliPage: React.FC = () => {
 
           {/* TAB 5: NAVAMSA (D9) */}
           {activeMasterTab === 'navamsa' && (
-            <VargaExplorerPanel
-              shodashavargaDetail={kundli.shodashavarga || kundli.shodashavargaDetail}
-              navamsaDeep={kundli.navamsaDeep}
-              dasamshaDeep={kundli.dasamshaDeep}
+            <NavamsaD9View
+              kundli={kundli}
               chartStyle={chartStyle}
+              onRecalculate={() => calculateChart()}
             />
           )}
 
@@ -1124,7 +1209,10 @@ export const KundliPage: React.FC = () => {
             <DashaTimeline
               currentMahadasha={kundli.dashas.currentMahadasha}
               currentAntardasha={kundli.dashas.currentAntardasha}
+              currentPratyantardasha={kundli.dashas.currentPratyantardasha}
               allMahadashas={kundli.dashas.allMahadashas}
+              ianaTimeZone={kundli.passport?.ianaTimeZone || (formData.timezone ? `UTC${Number(formData.timezone) >= 0 ? '+' : ''}${formData.timezone}` : 'Asia/Kolkata')}
+              birthTimezoneOffset={kundli.passport?.birthTimezoneOffset ?? Number(formData.timezone || 5.5)}
             />
           )}
 
@@ -1177,7 +1265,10 @@ export const KundliPage: React.FC = () => {
             <DashaTimeline
               currentMahadasha={kundli.dashas.currentMahadasha}
               currentAntardasha={kundli.dashas.currentAntardasha}
+              currentPratyantardasha={kundli.dashas.currentPratyantardasha}
               allMahadashas={kundli.dashas.allMahadashas}
+              ianaTimeZone={kundli.passport?.ianaTimeZone || (formData.timezone ? `UTC${Number(formData.timezone) >= 0 ? '+' : ''}${formData.timezone}` : 'Asia/Kolkata')}
+              birthTimezoneOffset={kundli.passport?.birthTimezoneOffset ?? Number(formData.timezone || 5.5)}
             />
           )}
 

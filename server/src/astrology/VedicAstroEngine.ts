@@ -281,6 +281,8 @@ export class VedicAstroEngine {
       ayanamshaDegrees: result.astronomy.ayanamshaDegrees,
       ascendantDegrees: result.ascendant.degrees,
       nodeModel: 'TRUE_NODE',
+      nodeModelDescription: 'True/Osculating Lunar Node',
+      nodeCalculationVersion: 'MEEUS_TRUE_NODE_V1',
       calculationMethod: 'DRIK_SIDDHANTA',
     });
 

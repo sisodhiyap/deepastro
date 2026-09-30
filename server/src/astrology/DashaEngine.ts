@@ -90,8 +90,11 @@ export function calculateVimshottariDasha(
 
   currentStart = firstEnd;
 
-  // Subsequent Mahadashas up to full cycle
-  for (let step = 1; step < 9; step++) {
+  // Subsequent Mahadashas up to full 120-year cycle (and extended if current timestamp exceeds 120 years)
+  const nowMs = currentDate.getTime();
+  let step = 1;
+  // Always compute at least the full 9-mahadasha cycle
+  while (step < 9 || (currentStart.getTime() < nowMs && step < 27)) {
     const nextIdx = (lordIndex + step) % 9;
     const info = DASHA_SEQUENCE[nextIdx];
     const endMs = currentStart.getTime() + info.years * MS_PER_YEAR;
@@ -105,9 +108,10 @@ export function calculateVimshottariDasha(
     });
 
     currentStart = end;
+    step++;
   }
 
-  // Populate Antardashas for each Mahadasha
+  // Populate Antardashas and Pratyantardashas for each Mahadasha
   for (let m = 0; m < mahadashas.length; m++) {
     const mDasha = mahadashas[m];
     const mStartMs = new Date(mDasha.startDate).getTime();
@@ -122,21 +126,24 @@ export function calculateVimshottariDasha(
       const aIdx = (mLordIdx + a) % 9;
       const aInfo = DASHA_SEQUENCE[aIdx];
       // Antardasha proportion = (M_duration * A_years) / 120
-      const aDurationMs = mTotalMs * (aInfo.years / 120.0);
-      const aEndMs = aStartMs + aDurationMs;
+      // For the 9th Antardasha, clamp to mEndMs to eliminate floating point rounding
+      const aDurationMs = a === 8 ? (mEndMs - aStartMs) : mTotalMs * (aInfo.years / 120.0);
+      const aEndMs = a === 8 ? mEndMs : aStartMs + aDurationMs;
 
       // Calculate Pratyantardashas (Level 3) for this Antardasha
       const pratyantardashas: PratyantardashaPeriod[] = [];
       let pStartMs = aStartMs;
+      const subTotalMs = aEndMs - aStartMs;
+
       for (let p = 0; p < 9; p++) {
         const pIdx = (aIdx + p) % 9;
         const pInfo = DASHA_SEQUENCE[pIdx];
-        const pDurationMs = aDurationMs * (pInfo.years / 120.0);
-        const pEndMs = pStartMs + pDurationMs;
+        const pDurationMs = p === 8 ? (aEndMs - pStartMs) : subTotalMs * (pInfo.years / 120.0);
+        const pEndMs = p === 8 ? aEndMs : pStartMs + pDurationMs;
 
         pratyantardashas.push({
           planet: pInfo.lord,
-          durationDays: Math.round(pDurationMs / (24 * 60 * 60 * 1000)),
+          durationDays: Math.max(1, Math.round((pEndMs - pStartMs) / (24 * 60 * 60 * 1000))),
           startDate: new Date(pStartMs).toISOString(),
           endDate: new Date(pEndMs).toISOString(),
         });
@@ -157,41 +164,58 @@ export function calculateVimshottariDasha(
     mDasha.antardashas = antardashas;
   }
 
-  // Find currently active Mahadasha, Antardasha, and Pratyantardasha
-  const nowMs = currentDate.getTime();
-  let currentM = mahadashas[0];
-  for (const m of mahadashas) {
-    if (nowMs >= new Date(m.startDate).getTime() && nowMs <= new Date(m.endDate).getTime()) {
-      currentM = m;
-      break;
+  // Find currently active Mahadasha (strictly containing nowMs, or boundary clamped)
+  let currentM = mahadashas.find((m) => {
+    const s = new Date(m.startDate).getTime();
+    const e = new Date(m.endDate).getTime();
+    return nowMs >= s && nowMs <= e;
+  });
+
+  if (!currentM) {
+    if (nowMs < new Date(mahadashas[0].startDate).getTime()) {
+      currentM = mahadashas[0];
+    } else {
+      currentM = mahadashas[mahadashas.length - 1];
     }
   }
 
-  let currentA = currentM.antardashas ? currentM.antardashas[0] : currentM;
-  if (currentM.antardashas) {
-    for (const a of currentM.antardashas) {
-      if (nowMs >= new Date(a.startDate).getTime() && nowMs <= new Date(a.endDate).getTime()) {
-        currentA = a;
-        break;
-      }
+  // Find currently active Antardasha
+  let currentA: DashaPeriod = currentM.antardashas?.[0] || currentM;
+  if (currentM.antardashas && currentM.antardashas.length > 0) {
+    const matchA = currentM.antardashas.find((a) => {
+      const s = new Date(a.startDate).getTime();
+      const e = new Date(a.endDate).getTime();
+      return nowMs >= s && nowMs <= e;
+    });
+    if (matchA) {
+      currentA = matchA;
+    } else if (nowMs < new Date(currentM.antardashas[0].startDate).getTime()) {
+      currentA = currentM.antardashas[0];
+    } else {
+      currentA = currentM.antardashas[currentM.antardashas.length - 1];
     }
   }
 
-  let currentP: PratyantardashaPeriod = currentA.pratyantardashas
-    ? currentA.pratyantardashas[0]
-    : {
-        planet: currentA.planet,
-        durationDays: 30,
-        startDate: currentA.startDate,
-        endDate: currentA.endDate,
-      };
+  // Find currently active Pratyantardasha
+  let currentP: PratyantardashaPeriod = currentA.pratyantardashas?.[0] || {
+    planet: currentA.planet,
+    durationDays: Math.max(1, Math.round((new Date(currentA.endDate).getTime() - new Date(currentA.startDate).getTime()) / 86400000)),
+    startDate: currentA.startDate,
+    endDate: currentA.endDate,
+  };
 
-  if (currentA.pratyantardashas) {
-    for (const p of currentA.pratyantardashas) {
-      if (nowMs >= new Date(p.startDate).getTime() && nowMs <= new Date(p.endDate).getTime()) {
-        currentP = p;
-        break;
-      }
+  if (currentA.pratyantardashas && currentA.pratyantardashas.length > 0) {
+    const matchP = currentA.pratyantardashas.find((p) => {
+      const s = new Date(p.startDate).getTime();
+      const e = new Date(p.endDate).getTime();
+      return nowMs >= s && nowMs <= e;
+    });
+    if (matchP) {
+      currentP = matchP;
+    } else if (nowMs < new Date(currentA.pratyantardashas[0].startDate).getTime()) {
+      currentP = currentA.pratyantardashas[0];
+    } else {
+      currentP = currentA.pratyantardashas[currentA.pratyantardashas.length - 1];
     }
   }
 
@@ -202,5 +226,49 @@ export function calculateVimshottariDasha(
     currentAntardasha: currentA,
     currentPratyantardasha: currentP,
     allMahadashas: mahadashas,
+  };
+}
+
+/**
+ * Validates Vimshottari Dasha hierarchy integrity:
+ * - startDate < endDate for all periods
+ * - No NaN or invalid dates
+ * - Mahadasha contains all its Antardashas
+ * - Antardasha contains all its Pratyantardashas
+ */
+export function validateDashaHierarchy(analysis: VimshottariAnalysis): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  for (const m of analysis.allMahadashas) {
+    const mStart = new Date(m.startDate).getTime();
+    const mEnd = new Date(m.endDate).getTime();
+    if (isNaN(mStart) || isNaN(mEnd)) errors.push(`Mahadasha ${m.planet} has invalid date string`);
+    if (mStart >= mEnd) errors.push(`Mahadasha ${m.planet} has startDate >= endDate`);
+    if (m.durationYears <= 0) errors.push(`Mahadasha ${m.planet} has non-positive duration`);
+
+    if (m.antardashas) {
+      for (const a of m.antardashas) {
+        const aStart = new Date(a.startDate).getTime();
+        const aEnd = new Date(a.endDate).getTime();
+        if (isNaN(aStart) || isNaN(aEnd)) errors.push(`Antardasha ${a.planet} has invalid date string`);
+        if (aStart >= aEnd) errors.push(`Antardasha ${a.planet} has startDate >= endDate`);
+        if (aStart < mStart || aEnd > mEnd) errors.push(`Antardasha ${a.planet} boundaries exceed Mahadasha ${m.planet}`);
+
+        if (a.pratyantardashas) {
+          for (const p of a.pratyantardashas) {
+            const pStart = new Date(p.startDate).getTime();
+            const pEnd = new Date(p.endDate).getTime();
+            if (isNaN(pStart) || isNaN(pEnd)) errors.push(`Pratyantardasha ${p.planet} has invalid date string`);
+            if (pStart >= pEnd) errors.push(`Pratyantardasha ${p.planet} has startDate >= endDate`);
+            if (pStart < aStart || pEnd > aEnd) errors.push(`Pratyantardasha ${p.planet} boundaries exceed Antardasha ${a.planet}`);
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
   };
 }

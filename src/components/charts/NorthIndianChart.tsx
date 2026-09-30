@@ -10,11 +10,31 @@ export interface ChartPlanet {
   signIndex?: number; // 0-11
 }
 
+const ZODIAC_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer',
+  'Leo', 'Virgo', 'Libra', 'Scorpio',
+  'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+];
+
+const PLANET_ABBREV: Record<string, string> = {
+  Sun: 'Su',
+  Moon: 'Mo',
+  Mars: 'Ma',
+  Mercury: 'Me',
+  Jupiter: 'Ju',
+  Venus: 'Ve',
+  Saturn: 'Sa',
+  Rahu: 'Ra',
+  Ketu: 'Ke',
+};
+
 interface NorthIndianChartProps {
   ascendantSignIndex: number; // 0-11 (0=Aries)
   planets: ChartPlanet[];
   size?: number;
   className?: string;
+  lagnaLabel?: string; // e.g. 'LAGNA' or 'LAGNA — D9'
+  chartTitle?: string;
 }
 
 export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
@@ -22,6 +42,8 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
   planets,
   size = 420,
   className = '',
+  lagnaLabel = 'LAGNA',
+  chartTitle,
 }) => {
   // Map planets by house (1-12)
   const planetsByHouse: Record<number, ChartPlanet[]> = {};
@@ -34,9 +56,12 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
     return ((ascendantSignIndex + (houseNumber - 1)) % 12) + 1;
   };
 
+  const ascSignNumber = getSignNumber(1);
+  const ascSignName = ZODIAC_SIGNS[ascendantSignIndex] || 'Aries';
+
   // House coordinates for text positioning in 400x400 viewBox
   const houseLabels: Record<number, { x: number; y: number; labelX: number; labelY: number }> = {
-    1:  { x: 200, y: 120, labelX: 200, labelY: 155 }, // 1st House (Top Diamond)
+    1:  { x: 200, y: 110, labelX: 200, labelY: 160 }, // 1st House (Top Diamond)
     2:  { x: 100, y: 55,  labelX: 130, labelY: 75  }, // 2nd House
     3:  { x: 55,  y: 100, labelX: 75,  labelY: 130 }, // 3rd House
     4:  { x: 120, y: 200, labelX: 155, labelY: 200 }, // 4th House (Left Diamond)
@@ -52,6 +77,14 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
 
   return (
     <div className={`relative w-full max-w-[420px] flex flex-col items-center select-none ${className}`}>
+      {chartTitle && (
+        <div className="w-full flex items-center justify-between text-xs font-bold text-cosmic-muted uppercase tracking-wider mb-2 px-1">
+          <span className="text-cyan-400">{chartTitle}</span>
+          <span className="text-[10px] text-amber-300 font-mono">
+            Asc: {ascSignNumber} {ascSignName}
+          </span>
+        </div>
+      )}
       <svg
         viewBox="0 0 400 400"
         style={{ width: '100%', maxWidth: size, height: 'auto', aspectRatio: '1 / 1' }}
@@ -83,33 +116,46 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
 
           return (
             <g key={`house-${h}`}>
-              {/* Sign Number Label */}
+              {/* Sign Number Label in each house */}
               <text
                 x={coords.labelX}
                 y={coords.labelY}
                 textAnchor="middle"
                 dominantBaseline="central"
-                className="text-[11px] font-semibold fill-cosmic-gold/80"
+                className="text-[11px] font-semibold fill-amber-300/90 font-mono"
               >
                 {signNum}
               </text>
 
-              {/* 1st House Lagna Marker */}
+              {/* 1st House Unambiguous Lagna Header */}
               {h === 1 && (
-                <text
-                  x={coords.x}
-                  y={coords.y - 28}
-                  textAnchor="middle"
-                  className="text-[10px] font-bold tracking-wider fill-cyan-400 uppercase"
-                >
-                  Asc (लग्न)
-                </text>
+                <g>
+                  {/* LAGNA Header Label */}
+                  <text
+                    x={coords.x}
+                    y={coords.y - 36}
+                    textAnchor="middle"
+                    className="text-[10px] font-extrabold tracking-widest fill-cyan-300 uppercase filter drop-shadow"
+                  >
+                    {lagnaLabel}
+                  </text>
+                  {/* Sign Indicator: Sign Number & Zodiac Name */}
+                  <text
+                    x={coords.x}
+                    y={coords.y - 22}
+                    textAnchor="middle"
+                    className="text-[9px] font-bold fill-amber-300 uppercase tracking-wider"
+                  >
+                    {ascSignNumber} {ascSignName}
+                  </text>
+                </g>
               )}
 
-              {/* Occupying Planets */}
-              <g transform={`translate(${coords.x}, ${coords.y})`}>
+              {/* Occupying Planets cleanly stacked */}
+              <g transform={`translate(${coords.x}, ${h === 1 ? coords.y + 4 : coords.y})`}>
                 {occupants.map((p, idx) => {
                   const yOffset = (idx - (occupants.length - 1) / 2) * 14;
+                  const abbrev = PLANET_ABBREV[p.name] || p.name.substring(0, 2);
                   return (
                     <text
                       key={`p-${h}-${p.name}`}
@@ -119,9 +165,9 @@ export const NorthIndianChart: React.FC<NorthIndianChartProps> = ({
                       dominantBaseline="central"
                       className="text-[10px] font-bold fill-cosmic-text hover:fill-cyan-300 transition-colors"
                     >
-                      {p.name.substring(0, 2)}
-                      {p.isRetrograde && <tspan className="text-[8px] fill-amber-400 font-extrabold">(R)</tspan>}
-                      {p.isCombust && <tspan className="text-[8px] fill-rose-400 font-extrabold">(C)</tspan>}
+                      {abbrev}
+                      {p.isRetrograde && <tspan className="text-[8px] fill-amber-400 font-extrabold" dx="1">(R)</tspan>}
+                      {p.isCombust && <tspan className="text-[8px] fill-rose-400 font-extrabold" dx="1">(C)</tspan>}
                     </text>
                   );
                 })}
