@@ -194,10 +194,10 @@ export class PostgresService implements IDatabaseClient {
               : undefined,
             max: 20,
             idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 5000,
+            connectionTimeoutMillis: process.env.NODE_ENV === 'test' ? 1000 : 3000,
           };
         } else {
-          poolConfig = { connectionString, connectionTimeoutMillis: 5000 };
+          poolConfig = { connectionString, connectionTimeoutMillis: process.env.NODE_ENV === 'test' ? 1000 : 3000 };
         }
         this.pool = new Pool(poolConfig);
         this.isConnected = true;
