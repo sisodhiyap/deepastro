@@ -14,6 +14,7 @@ import {
 import { PlanetName } from '../../astrology/PlanetEngine.js';
 import { ActiveDashaContext } from './DashaForecastEngine.js';
 import { predictionScoringEngine } from './PredictionWeights.js';
+import { KPForecastEngine } from './KPForecastEngine.js';
 
 export class DashaTransitIntersectionEngine {
   /**
@@ -259,6 +260,74 @@ export class DashaTransitIntersectionEngine {
           },
         ],
       });
+    }
+
+    // Augment each signal with KP, Jaimini, and Ashtakavarga confirmations
+    for (const s of signals) {
+      // 1. KP Stellar Sub-Lord Confirmation
+      const kpRes = KPForecastEngine.evaluateDomain(context, s.category, {
+        mahadasha: s.mahadashaLord,
+        antardasha: s.antardashaLord,
+      });
+      if (kpRes.evidence && kpRes.evidence.length > 0) {
+        s.evidence.push(...kpRes.evidence);
+        if (kpRes.direction === 'SUPPORTIVE') {
+          s.score = Math.min(95, s.score + 5);
+          s.strength = predictionScoringEngine.normalizeStrength(s.score);
+        }
+      }
+
+      // 2. Jaimini Chara Karaka Confirmation
+      if (context.jaimini) {
+        if ((s.category === 'CAREER_EXPANSION' || s.category === 'RESPONSIBILITY_PERIOD') && context.jaimini.amatyakaraka?.planet === s.mahadashaLord) {
+          s.evidence.push({
+            source: 'JAIMINI',
+            engineVersion: '1.0.0-jaimini',
+            rule: 'Jaimini Amatyakaraka Career Elevation',
+            entity: `AmK_${s.mahadashaLord}`,
+            value: `Mahadasha lord ${s.mahadashaLord} acts as Jaimini Amatyakaraka (AmK - Planet of Professional Status), reinforcing worldly authority.`,
+            weight: 0.20,
+            direction: 'SUPPORTIVE',
+          });
+        } else if (s.category === 'RELATIONSHIP_ACTIVATION' && context.jaimini.darakaraka?.planet === s.mahadashaLord) {
+          s.evidence.push({
+            source: 'JAIMINI',
+            engineVersion: '1.0.0-jaimini',
+            rule: 'Jaimini Darakaraka Relational Alliance',
+            entity: `DK_${s.mahadashaLord}`,
+            value: `Mahadasha lord ${s.mahadashaLord} is Jaimini Darakaraka (DK - Planet of Partnership), indicating decisive relationship chapter.`,
+            weight: 0.20,
+            direction: 'SUPPORTIVE',
+          });
+        } else if (s.category === 'SPIRITUAL_DEVELOPMENT' && context.jaimini.atmakaraka?.planet === s.mahadashaLord) {
+          s.evidence.push({
+            source: 'JAIMINI',
+            engineVersion: '1.0.0-jaimini',
+            rule: 'Jaimini Atmakaraka Soul Purpose',
+            entity: `AK_${s.mahadashaLord}`,
+            value: `Mahadasha lord ${s.mahadashaLord} is Jaimini Atmakaraka (AK - Soul Planet), catalyzing deep spiritual maturation and self-inquiry.`,
+            weight: 0.25,
+            direction: 'SUPPORTIVE',
+          });
+        }
+      }
+
+      // 3. Ashtakavarga SAV Potency Confirmation
+      if (context.ashtakavarga?.sarvashtakavarga && s.natalHouse >= 1 && s.natalHouse <= 12) {
+        const bindus = context.ashtakavarga.sarvashtakavarga[s.natalHouse - 1];
+        if (bindus !== undefined) {
+          const isHighSAV = bindus >= 28;
+          s.evidence.push({
+            source: 'ASHTAKAVARGA',
+            engineVersion: '1.0.0-ashtakavarga',
+            rule: isHighSAV ? 'SAV High Bindu Transit Potency' : 'SAV Moderate Bindu Discipline',
+            entity: `House_${s.natalHouse}_SAV_${bindus}`,
+            value: `House ${s.natalHouse} contains ${bindus} Sarvashtakavarga bindus (${isHighSAV ? 'strong structural support' : 'calls for deliberate effort'}).`,
+            weight: 0.15,
+            direction: isHighSAV ? 'SUPPORTIVE' : 'NEUTRAL',
+          });
+        }
+      }
     }
 
     return signals;

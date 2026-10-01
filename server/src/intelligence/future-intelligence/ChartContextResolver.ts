@@ -11,6 +11,11 @@ import { CalculationSnapshotService } from '../../services/CalculationSnapshotSe
 import { birthProfileRepository } from '../../database/repositories/BirthProfileRepository.js';
 import { futureIntelligenceRepository } from '../../database/repositories/FutureIntelligenceRepository.js';
 import { calculateNumerology } from '../../astrology/NumerologyEngine.js';
+import { KPEngine } from '../../astrology/KPEngine.js';
+import { ShadbalaEngine } from '../../astrology/ShadbalaEngine.js';
+import { AshtakavargaEngine } from '../../astrology/AshtakavargaEngine.js';
+import { JaiminiEngine } from '../../astrology/JaiminiEngine.js';
+import { EngineRegistry } from './EngineRegistry.js';
 import { db } from '../../database/db.js';
 import { AuthBootstrapService } from '../../services/AuthBootstrapService.js';
 
@@ -35,6 +40,8 @@ export class ChartContextResolver {
         const bp = await birthProfileRepository.getProfileByUserId(userId);
         if (bp && bp.id === chartId) {
           rawChart = bp;
+        } else {
+          throw new Error(`CHART_NOT_FOUND: Chart ${chartId} not found.`);
         }
       }
     }
@@ -56,7 +63,7 @@ export class ChartContextResolver {
 
     if (!rawChart || !rawChart.birthDate || !rawChart.birthTime) {
       throw new Error(
-        'CHART_NOT_FOUND: Complete verified Kundli parameters (birthDate, birthTime, latitude, longitude) are required to generate Future Intelligence.'
+        'PREDICTION_CONTEXT_INCOMPLETE: Complete verified Kundli parameters (birthDate, birthTime, latitude, longitude) are required to generate Future Intelligence.'
       );
     }
 
@@ -64,7 +71,7 @@ export class ChartContextResolver {
     const lat = Number(rawChart.latitude);
     const lon = Number(rawChart.longitude);
     if (isNaN(lat) || isNaN(lon)) {
-      throw new Error('INVALID_COORDINATES: Valid latitude and longitude are strictly required.');
+      throw new Error('PREDICTION_CONTEXT_INCOMPLETE: Valid latitude and longitude are strictly required.');
     }
 
     let tz = 5.5;
@@ -92,8 +99,19 @@ export class ChartContextResolver {
       'Lahiri'
     );
 
-    // 4. Calculate Master Vedic Kundli via VedicAstroEngine
+    // 4. Calculate Master Vedic Kundli & Universal FactSet via VedicAstroEngine
     const fullKundli = VedicAstroEngine.calculateKundli(birthProfileInput);
+    const factSet = VedicAstroEngine.createAstrologyFactSet(birthProfileInput);
+
+    // 4b. Multi-Engine Lineage Calculations
+    const kpAnalysis = KPEngine.calculateKP(
+      fullKundli.planets,
+      fullKundli.ascendant,
+      { isApproximateTime: birthProfileInput.isApproximateTime }
+    );
+    const shadbala = ShadbalaEngine.calculateShadbala(factSet);
+    const ashtakavarga = AshtakavargaEngine.calculateAshtakavarga(factSet);
+    const jaimini = JaiminiEngine.calculateJaimini(fullKundli.planets as any, fullKundli.ascendant as any);
 
     // 5. Extract True Node
     const rahu = fullKundli.planets.find((p) => p.name === 'Rahu');
@@ -114,22 +132,42 @@ export class ChartContextResolver {
       padas[p.name] = p.nakshatra?.pada || 1;
     }
 
-    // 7. Extract Planetary Strengths & Dignities
+    // 7. Extract Planetary Strengths & Dignities (enriched with Shadbala)
     const planetaryStrength: Record<string, any> = {};
     for (const p of fullKundli.planets) {
+      const sh = shadbala[p.name];
       planetaryStrength[p.name] = {
         dignity: p.dignity,
         isRetrograde: p.isRetrograde,
         isCombust: p.isCombust,
         speed: p.speed,
         house: p.house,
+        shadbalaScore: sh?.totalRupas || 1.0,
       };
     }
 
-    // 8. Extract Aspects
+    // 8. Extract Aspects & Bhavas
     const aspects: Record<string, number[]> = {};
+    const drishti: Record<string, number[]> = {};
+    const planetaryDegrees: Record<string, number> = {};
+    const planetarySigns: Record<string, string> = {};
+    const planetaryRetrograde: Record<string, boolean> = {};
+    const planetaryCombustion: Record<string, boolean> = {};
+    const planetaryDignity: Record<string, string> = {};
+
     for (const p of fullKundli.planets) {
       aspects[p.name] = p.aspectsToHouses || [];
+      drishti[p.name] = p.aspectsToHouses || [];
+      planetaryDegrees[p.name] = p.degreeInSign;
+      planetarySigns[p.name] = p.signName;
+      planetaryRetrograde[p.name] = p.isRetrograde;
+      planetaryCombustion[p.name] = p.isCombust;
+      planetaryDignity[p.name] = p.dignity;
+    }
+
+    const houseLords: Record<number, string> = {};
+    for (const h of fullKundli.houses) {
+      houseLords[h.houseNumber] = h.lord;
     }
 
     // 9. Compute Numerology Profile dynamically from birth date
@@ -167,6 +205,102 @@ export class ChartContextResolver {
       nakshatra: fullKundli.ascendant.nakshatra,
     };
 
+    // 12. Build Cryptographic Data Lineage and Coverage Report
+    const dataLineage = EngineRegistry.buildLineage({
+      chartId: chartId || 'primary',
+      userId,
+      calculationFingerprint,
+      calculationVersion: CalculationSnapshotService.ENGINE_VERSION,
+      predictionVersion: 'FUTURE_INTELLIGENCE_V1',
+      consumedEngines: [
+        {
+          engineId: 'D1_RASHI_ENGINE',
+          engineVersion: '1.0.0-sidereal',
+          inputData: { birthDate: birthProfileInput.birthDate, birthTime: birthProfileInput.birthTime, lat, lon, tz },
+          outputData: fullKundli.planets.map((p) => ({ name: p.name, lon: p.siderealLongitude })),
+          relevance: 'Primary concrete physical foundation for houses, planets, and baseline timing',
+        },
+        {
+          engineId: 'TRUE_NODE_ENGINE',
+          engineVersion: '1.0.0-meeus',
+          inputData: { birthDate: birthProfileInput.birthDate, birthTime: birthProfileInput.birthTime },
+          outputData: { rahu: rahu?.siderealLongitude, ketu: ketu?.siderealLongitude },
+          relevance: 'True Node astronomical evolutionary axis',
+        },
+        {
+          engineId: 'VIMSHOTTARI_DASHA_ENGINE',
+          engineVersion: '1.0.0-vimshottari',
+          inputData: { moonNakshatra: fullKundli.moonNakshatra },
+          outputData: { currentMaha: fullKundli.dashas.currentMahadasha.planet, currentAnta: fullKundli.dashas.currentAntardasha.planet },
+          relevance: 'Master temporal progression driver',
+        },
+        {
+          engineId: 'VARGA_SHODASHAVARGA_ENGINE',
+          engineVersion: '1.0.0-bphs',
+          inputData: { planetCoordinates: fullKundli.planets.map(p => p.siderealLongitude) },
+          outputData: { d9Count: d9.length, d10Count: d10.length, d60Count: d60.length },
+          relevance: 'D9 relationship/dharma and D10 career authority refinement',
+        },
+        {
+          engineId: 'KP_STELLAR_ENGINE',
+          engineVersion: '1.0.0-kp',
+          inputData: { isApproximateTime: birthProfileInput.isApproximateTime },
+          outputData: { status: kpAnalysis.status, cuspsCount: kpAnalysis.cusps.length },
+          relevance: 'Cuspal sub-lord verification and stellar significator timing',
+        },
+        {
+          engineId: 'SHADBALA_ENGINE',
+          engineVersion: '1.0.0-shadbala',
+          inputData: { factSetId: factSet.id },
+          outputData: Object.keys(shadbala).map(k => ({ planet: k, rupas: shadbala[k].totalRupas })),
+          relevance: '6-fold BPHS planetary strength scaling',
+        },
+        {
+          engineId: 'ASHTAKAVARGA_ENGINE',
+          engineVersion: '1.0.0-ashtakavarga',
+          inputData: { factSetId: factSet.id },
+          outputData: { totalBindus: ashtakavarga.totalBindus, savLength: ashtakavarga.sarvashtakavarga.length },
+          relevance: 'SAV transit house potency and bindu support evaluation',
+        },
+        {
+          engineId: 'JAIMINI_ENGINE',
+          engineVersion: '1.0.0-jaimini',
+          inputData: { planetsCount: fullKundli.planets.length },
+          outputData: { atmakaraka: jaimini.atmakaraka.planet, amatyakaraka: jaimini.amatyakaraka.planet, darakaraka: jaimini.darakaraka.planet },
+          relevance: 'Chara Karaka soul and status significator confirmation',
+        },
+        {
+          engineId: 'YOGA_ENGINE',
+          engineVersion: '1.0.0-yoga',
+          inputData: { planets: fullKundli.planets.length, houses: fullKundli.houses.length },
+          outputData: { yogasCount: (fullKundli.yogas || []).length },
+          relevance: 'Classical Raja & Dhana Yoga activation tracking',
+        },
+        {
+          engineId: 'DOSHA_ENGINE',
+          engineVersion: '1.0.0-dosha',
+          inputData: { moonSign: fullKundli.moonSign.signName },
+          outputData: { sadeSatiActive: fullKundli.doshas?.sadeSati?.isActive },
+          relevance: 'Sade Sati & nodal cycle contextual mindfulness',
+        },
+        {
+          engineId: 'NUMEROLOGY_ENGINE',
+          engineVersion: '1.0.0-numerology',
+          inputData: { birthDate: birthProfileInput.birthDate, name: birthProfileInput.name },
+          outputData: { lifePath: numerologyProfile.lifePathNumber },
+          relevance: 'Secondary Personal Year & Personal Month cyclic support',
+        },
+      ],
+    });
+
+    const engineCoverage = EngineRegistry.buildCoverageReport({
+      kpStatus: kpAnalysis.status,
+      hasVargas: Boolean(sv),
+      hasShadbala: Boolean(shadbala),
+      hasAshtakavarga: Boolean(ashtakavarga),
+      hasJaimini: Boolean(jaimini),
+    });
+
     return {
       userId,
       chartId: chartId || 'primary',
@@ -176,6 +310,7 @@ export class ChartContextResolver {
       latitude: birthProfileInput.latitude,
       longitude: birthProfileInput.longitude,
       timezone: birthProfileInput.timezone,
+      utcOffset: tz,
       ayanamsha: 'Lahiri (Chitra Paksha)',
       calculationVersion: CalculationSnapshotService.ENGINE_VERSION,
       calculationFingerprint,
@@ -194,6 +329,12 @@ export class ChartContextResolver {
       allVargas: sv,
       planetaryPositions: fullKundli.planets,
       houses: fullKundli.houses,
+      houseLords,
+      planetaryDegrees,
+      planetarySigns,
+      planetaryRetrograde,
+      planetaryCombustion,
+      planetaryDignity,
       nakshatras,
       padas,
       ascendant,
@@ -206,6 +347,14 @@ export class ChartContextResolver {
       doshas: fullKundli.doshas || { manglik: { isManglik: false }, kaalSarp: { hasKaalSarp: false }, sadeSati: { isSadeSati: false }, pitraDosha: { hasPitraDosha: false } } as any,
       planetaryStrength,
       aspects,
+      drishti,
+      kpAnalysis,
+      shadbala,
+      ashtakavarga,
+      jaimini,
+      dataLineage,
+      engineCoverage,
     };
   }
 }
+

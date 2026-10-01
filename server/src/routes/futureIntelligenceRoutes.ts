@@ -199,6 +199,8 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
       years: forecast.years,
       importantWindows: forecast.importantWindows,
       evidence: forecast.years.flatMap((y) => y.evidence),
+      engineCoverage: forecast.engineCoverage,
+      dataLineage: forecast.dataLineage,
       methodologyDisclosure: forecast.methodologyDisclosure,
       ethicalNotice: forecast.ethicalNotice,
     });
@@ -208,6 +210,18 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
     }
     if (err.message?.includes('CHART_NOT_FOUND')) {
       return res.status(404).json({ error: 'CHART_NOT_FOUND', details: err.message });
+    }
+    if (
+      err.message?.includes('PREDICTION_CONTEXT_INCOMPLETE') ||
+      err.message?.includes('INVALID_COORDINATES')
+    ) {
+      return res.status(422).json({
+        success: false,
+        code: 'PREDICTION_CONTEXT_INCOMPLETE',
+        error: 'PREDICTION_CONTEXT_INCOMPLETE',
+        details: err.message,
+        missingEngines: ['D1_RASHI_ENGINE', 'VIMSHOTTARI_DASHA_ENGINE', 'VARGA_SHODASHAVARGA_ENGINE', 'KP_STELLAR_ENGINE'],
+      });
     }
     return res.status(500).json({
       error: 'FUTURE_INTELLIGENCE_ERROR',

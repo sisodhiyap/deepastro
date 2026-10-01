@@ -127,6 +127,9 @@ export class FutureIntelligenceEngine {
       nextSignificantWindow,
       years: yearlyForecasts,
       importantWindows: allWindows,
+      evidence: yearlyForecasts.flatMap((y) => y.evidence),
+      engineCoverage: context.engineCoverage!,
+      dataLineage: context.dataLineage!,
       methodologyDisclosure:
         'Calculated using high-precision sidereal planetary mechanics (VSOP87 / ELP-2000), Meeus True Node, Lahiri Ayanamsha, 120-year Vimshottari cycles, Shodashavargas (D1 to D60), and secondary Chaldean personal years. Every prediction maps to an auditable machine-readable evidence graph.',
       ethicalNotice:
@@ -257,25 +260,25 @@ export class FutureIntelligenceEngine {
         headline: 'Domestic Roots & Support',
         description: yr.family,
         signalStrength: yr.signalStrength,
-        evidence: [],
+        evidence: (yr.evidenceJson || []).filter((e: any) => e.source === 'VARGA' || e.source === 'KP' || e.source === 'HOUSE'),
       },
       education: {
         headline: 'Intellectual Synthesis',
         description: yr.education,
         signalStrength: yr.signalStrength,
-        evidence: [],
+        evidence: (yr.evidenceJson || []).filter((e: any) => e.source === 'VARGA' || e.source === 'KP' || e.source === 'NAKSHATRA'),
       },
       travel: {
         headline: 'Exploration & Horizons',
         description: yr.travel,
         signalStrength: yr.signalStrength,
-        evidence: [],
+        evidence: (yr.evidenceJson || []).filter((e: any) => e.source === 'VARGA' || e.source === 'KP' || e.source === 'TRANSIT'),
       },
       spirituality: {
         headline: 'Inner Reflection & Dharma',
         description: yr.spirituality,
         signalStrength: yr.signalStrength,
-        evidence: [],
+        evidence: (yr.evidenceJson || []).filter((e: any) => e.source === 'VARGA' || e.source === 'KP' || e.source === 'JAIMINI'),
       },
       importantWindows: yr.importantWindows || [],
       cautionWindows: yr.cautionWindows || [],
@@ -342,6 +345,9 @@ export class FutureIntelligenceEngine {
       },
       years,
       importantWindows: windows,
+      evidence: years.flatMap((y) => y.evidence),
+      engineCoverage: context.engineCoverage!,
+      dataLineage: context.dataLineage!,
       methodologyDisclosure:
         'Calculated using high-precision sidereal planetary mechanics (VSOP87 / ELP-2000), Meeus True Node, Lahiri Ayanamsha, 120-year Vimshottari cycles, Shodashavargas (D1 to D60), and secondary Chaldean personal years. Every prediction maps to an auditable machine-readable evidence graph.',
       ethicalNotice:

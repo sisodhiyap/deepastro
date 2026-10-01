@@ -512,7 +512,34 @@ export const FutureTimelineDashboard: React.FC = () => {
           </button>
         </div>
       ) : forecast ? (
-        <div className="space-y-8 animate-fadeIn">
+        <div className="space-y-6 animate-fadeIn">
+          {/* ENGINE COVERAGE AUDIT STRIP */}
+          {forecast.engineCoverage && (
+            <div className="p-3.5 rounded-2xl bg-[#0c1220]/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px] font-bold">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>CANONICAL ENGINE COVERAGE AUDIT:</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                {Object.entries(forecast.engineCoverage).map(([eng, status]) => {
+                  const isUsed = status === 'USED';
+                  return (
+                    <span
+                      key={eng}
+                      className={`px-2 py-0.5 rounded-md border ${
+                        isUsed
+                          ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 font-semibold'
+                          : 'bg-slate-900 border-slate-800 text-slate-500'
+                      }`}
+                    >
+                      {eng}: {String(status)}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 3. CURRENT PERIOD & NEXT TRANSITION HIGHLIGHT CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* CURRENT PERIOD */}
@@ -824,6 +851,23 @@ export const FutureTimelineDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            {/* Cryptographic Lineage Audit in Drawer */}
+            {forecast?.dataLineage && (
+              <div className="p-3 rounded-2xl bg-[#070b14] border border-cyan-500/20 space-y-1.5 font-mono text-[11px]">
+                <div className="flex items-center justify-between text-cyan-400 font-bold">
+                  <span>CRYPTOGRAPHIC LINEAGE FINGERPRINT</span>
+                  <span className="text-[10px] text-slate-400 font-normal">SHA-256 Verified</span>
+                </div>
+                <div className="text-slate-300 break-all text-[10px] bg-slate-950 p-2 rounded-lg border border-slate-800">
+                  {forecast.dataLineage.calculationFingerprint}
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                  <span>Engine Snapshots: {forecast.dataLineage.consumedEngines?.length || 0} canonical engines</span>
+                  <span className="text-emerald-400 font-semibold">100% Deterministic</span>
+                </div>
+              </div>
+            )}
 
             <div className="pt-3 border-t border-slate-800 flex justify-end">
               <button

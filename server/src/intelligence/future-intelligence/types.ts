@@ -12,6 +12,10 @@ import { DashaPeriod, PratyantardashaPeriod } from '../../astrology/DashaEngine.
 import { YogaResult } from '../../astrology/YogaEngine.js';
 import { DoshaReport } from '../../astrology/DoshaEngine.js';
 import { NumerologyReport } from '../../astrology/NumerologyEngine.js';
+import { KPAnalysis } from '../../astrology/KPEngine.js';
+import { PlanetShadbala } from '../../astrology/ShadbalaEngine.js';
+import { AshtakavargaResult } from '../../astrology/AshtakavargaEngine.js';
+import { JaiminiAnalysis } from '../../astrology/JaiminiEngine.js';
 
 export type SignalStrengthLevel = 'VERY_LOW' | 'LOW' | 'MODERATE' | 'STRONG' | 'VERY_STRONG';
 export type ConfidenceLevel = 'LOW' | 'MODERATE' | 'HIGH';
@@ -31,14 +35,95 @@ export type PredictionSignalCategory =
   | 'RESPONSIBILITY_PERIOD'
   | 'TRANSFORMATION_PERIOD';
 
+export type EvidenceSource =
+  | 'D1'
+  | 'D9'
+  | 'D10'
+  | 'VARGA'
+  | 'DASHA'
+  | 'TRANSIT'
+  | 'KP'
+  | 'YOGA'
+  | 'DOSHA'
+  | 'NUMEROLOGY'
+  | 'PLANET_STRENGTH'
+  | 'HOUSE'
+  | 'ASPECT'
+  | 'NAKSHATRA'
+  | 'SHADBALA'
+  | 'ASHTAKAVARGA'
+  | 'JAIMINI'
+  | 'REMEDIES'
+  | 'NATAL'
+  | 'STRENGTH';
+
 export interface PredictionEvidence {
-  source: 'DASHA' | 'TRANSIT' | 'NATAL' | 'D9' | 'D10' | 'VARGA' | 'NUMEROLOGY' | 'YOGA' | 'DOSHA' | 'STRENGTH';
+  source: EvidenceSource;
+  engineVersion?: string;
   rule: string;
+  entity?: string;
   value: string;
   weight: number;
   direction: EvidenceDirection;
   startDate?: string;
   endDate?: string;
+  peakDate?: string;
+}
+
+export interface EngineLineageItem {
+  engineId: string;
+  engineVersion: string;
+  inputHash: string;
+  outputHash: string;
+  consumed: boolean;
+  relevance: string;
+}
+
+export interface PredictionDataLineage {
+  chartId: string;
+  userId: string;
+  calculationFingerprint: string;
+  calculationVersion: string;
+  predictionVersion: string;
+  engines: EngineLineageItem[];
+  generatedAt: string;
+}
+
+export type EngineCoverageStatus = 'USED' | 'NOT_AVAILABLE' | 'CALCULATED_BUT_NOT_PREDICTION_ENABLED' | 'OPTIONAL';
+
+export interface EngineCoverageReport {
+  D1: EngineCoverageStatus;
+  D9: EngineCoverageStatus;
+  D10: EngineCoverageStatus;
+  DASHA: EngineCoverageStatus;
+  TRANSIT: EngineCoverageStatus;
+  TRUE_NODE: EngineCoverageStatus;
+  NAKSHATRA: EngineCoverageStatus;
+  YOGA: EngineCoverageStatus;
+  DOSHA: EngineCoverageStatus;
+  PLANET_STRENGTH: EngineCoverageStatus;
+  HOUSE: EngineCoverageStatus;
+  ASPECT: EngineCoverageStatus;
+  NUMEROLOGY: EngineCoverageStatus;
+  KP: EngineCoverageStatus;
+  VARGAS: EngineCoverageStatus;
+  SHADBALA: EngineCoverageStatus;
+  ASHTAKAVARGA: EngineCoverageStatus;
+  JAIMINI: EngineCoverageStatus;
+  REMEDIES: EngineCoverageStatus;
+  TAROT: EngineCoverageStatus;
+  PALMISTRY: EngineCoverageStatus;
+}
+
+export interface DeepAstroEngineRegistry {
+  engineId: string;
+  engineName: string;
+  version: string;
+  inputSource: string;
+  outputSchema: string;
+  calculationType: string;
+  predictionRelevant: boolean;
+  futureIntelligenceConsumer?: string;
 }
 
 export interface CanonicalPredictionContext {
@@ -50,6 +135,7 @@ export interface CanonicalPredictionContext {
   latitude: number;
   longitude: number;
   timezone: number;
+  utcOffset?: number;
   ayanamsha: string;
   calculationVersion: string;
   calculationFingerprint: string;
@@ -71,6 +157,12 @@ export interface CanonicalPredictionContext {
 
   planetaryPositions: PlanetData[];
   houses: BhavaData[];
+  houseLords?: Record<number, string>;
+  planetaryDegrees?: Record<string, number>;
+  planetarySigns?: Record<string, string>;
+  planetaryRetrograde?: Record<string, boolean>;
+  planetaryCombustion?: Record<string, boolean>;
+  planetaryDignity?: Record<string, string>;
   nakshatras: Record<string, NakshatraInfo>;
   padas: Record<string, number>;
   ascendant: {
@@ -96,6 +188,15 @@ export interface CanonicalPredictionContext {
   doshas: DoshaReport;
   planetaryStrength: Record<string, { dignity: string; isRetrograde: boolean; isCombust: boolean; shadbalaScore?: number }>;
   aspects: Record<string, number[]>;
+  drishti?: Record<string, number[]>;
+
+  // DeepAstro Multi-Engine Lineage Inputs
+  kpAnalysis?: KPAnalysis;
+  shadbala?: Record<string, PlanetShadbala>;
+  ashtakavarga?: AshtakavargaResult;
+  jaimini?: JaiminiAnalysis;
+  dataLineage?: PredictionDataLineage;
+  engineCoverage?: EngineCoverageReport;
 }
 
 export interface TransitRecord {
@@ -278,6 +379,9 @@ export interface FutureIntelligenceResult {
   nextSignificantWindow: EventWindow;
   years: YearForecast[];
   importantWindows: EventWindow[];
+  evidence: PredictionEvidence[];
+  engineCoverage: EngineCoverageReport;
+  dataLineage: PredictionDataLineage;
   methodologyDisclosure: string;
   ethicalNotice: string;
 }

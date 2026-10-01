@@ -91,53 +91,112 @@ export class VargaForecastEngine {
       if (isAuspicious) vargaConvergence = 'HIGH';
     }
 
-    // 4. Other Specific Vargas (D2 Wealth, D4 Property, D24 Education, D20 Spirituality, D30 Adversity)
-    if (category === 'FINANCIAL_FOCUS' && context.allVargas?.d2_hora) {
-      const d2 = context.allVargas.d2_hora.find((v) => v.planet === activeLords.mahadasha);
+    // 4. Other Specific Vargas (D2 Wealth, D4 Property, D12 Family/Parents, D24 Education, D20 Spirituality, D30 Adversity, Travel)
+    if (category === 'FINANCIAL_FOCUS') {
+      const d2List = context.allVargas?.d2_hora || [];
+      const d2 = d2List.find((v) => v.planet === activeLords.mahadasha);
       if (d2) {
         specificVargaSignal = `D2 Hora: ${d2.planet} resides in ${d2.signName} Hora (Resource accumulation).`;
         evidence.push({
           source: 'VARGA',
           rule: 'D2 Hora Wealth Refinement',
           value: specificVargaSignal,
-          weight: 0.10,
+          weight: 0.15,
           direction: 'SUPPORTIVE',
         });
       }
-    } else if (category === 'PROPERTY_HOME_FOCUS' && context.allVargas?.d4_chaturthamsha) {
-      const d4 = context.allVargas.d4_chaturthamsha.find((v) => v.planet === activeLords.mahadasha);
-      if (d4) {
-        specificVargaSignal = `D4 Chaturthamsha: ${d4.planet} in ${d4.signName} signifies physical real estate and domestic roots.`;
+    } else if (category === 'PROPERTY_HOME_FOCUS') {
+      const d4List = context.allVargas?.d4_chaturthamsha || [];
+      const d4 = d4List.find((v) => v.planet === activeLords.mahadasha);
+      const d12 = (context.d12 || context.allVargas?.d12_dwadashamsha)?.find((v) => v.planet === activeLords.mahadasha);
+      let note = '';
+      if (d4) note += `D4 Chaturthamsha: ${d4.planet} in ${d4.signName} establishes property and domestic roots. `;
+      if (d12) note += `D12 Dwadashamsha: ${d12.planet} in ${d12.signName} anchors family lineage and ancestral bonds.`;
+      if (note) {
+        specificVargaSignal = note.trim();
         evidence.push({
           source: 'VARGA',
-          rule: 'D4 Property & Home Foundation',
+          rule: 'D4/D12 Domestic Foundation & Family Lineage',
           value: specificVargaSignal,
-          weight: 0.10,
+          weight: 0.15,
           direction: 'SUPPORTIVE',
         });
       }
-    } else if (category === 'EDUCATION_PERIOD' && context.allVargas?.d24_chaturvimshamsha) {
-      const d24 = context.allVargas.d24_chaturvimshamsha.find((v) => v.planet === activeLords.mahadasha);
+    } else if (category === 'EDUCATION_PERIOD') {
+      const d24List = context.d24 || context.allVargas?.d24_chaturvimshamsha || [];
+      const d24 = d24List.find((v) => v.planet === activeLords.mahadasha);
       if (d24) {
-        specificVargaSignal = `D24 Siddhamsa: ${d24.planet} activates intellectual synthesis and higher academic credentials.`;
+        specificVargaSignal = `D24 Siddhamsa: ${d24.planet} in ${d24.signName} activates intellectual synthesis and higher academic credentials.`;
         evidence.push({
           source: 'VARGA',
-          rule: 'D24 Intellectual Acuity',
+          rule: 'D24 Intellectual Acuity & Vidya',
           value: specificVargaSignal,
-          weight: 0.10,
+          weight: 0.15,
           direction: 'SUPPORTIVE',
         });
       }
-    } else if (category === 'SPIRITUAL_DEVELOPMENT' && context.allVargas?.d20_vimshamsha) {
-      const d20 = context.allVargas.d20_vimshamsha.find((v) => v.planet === activeLords.mahadasha);
+    } else if (category === 'SPIRITUAL_DEVELOPMENT') {
+      const d20List = context.d20 || context.allVargas?.d20_vimshamsha || [];
+      const d20 = d20List.find((v) => v.planet === activeLords.mahadasha);
       if (d20) {
         specificVargaSignal = `D20 Vimshamsha: ${d20.planet} in ${d20.signName} deepens meditative devotion and upasana.`;
         evidence.push({
           source: 'VARGA',
           rule: 'D20 Spiritual Devotion',
           value: specificVargaSignal,
-          weight: 0.10,
+          weight: 0.15,
           direction: 'SUPPORTIVE',
+        });
+      }
+    } else if (category === 'HEALTH_ROUTINE_FOCUS' || category === 'TRANSFORMATION_PERIOD') {
+      const d30List = context.d30 || context.allVargas?.d30_trimshamsha || [];
+      const d30 = d30List.find((v) => v.planet === activeLords.mahadasha);
+      if (d30) {
+        specificVargaSignal = `D30 Trimshamsha: ${d30.planet} in ${d30.signName} advises mindful routine and vulnerability mitigation.`;
+        evidence.push({
+          source: 'VARGA',
+          rule: 'D30 Adversity & Immunity Mitigation',
+          value: specificVargaSignal,
+          weight: 0.15,
+          direction: 'NEUTRAL',
+        });
+      }
+    } else if (category === 'TRAVEL_FOREIGN_CONNECTION') {
+      const d9 = context.d9?.find((v) => v.planet === activeLords.mahadasha);
+      const d12 = (context.d12 || context.allVargas?.d12_dwadashamsha)?.find((v) => v.planet === activeLords.mahadasha);
+      specificVargaSignal = `D9/D12 Long-Distance Coordinates: ${activeLords.mahadasha} in ${d9?.signName || 'D9'} / ${d12?.signName || 'D12'} stimulates horizon expansion.`;
+      evidence.push({
+        source: 'VARGA',
+        rule: 'D9/D12 Horizon Expansion Rule',
+        value: specificVargaSignal,
+        weight: 0.15,
+        direction: 'SUPPORTIVE',
+      });
+    } else if (category === 'NETWORK_EXPANSION') {
+      const d3List = context.allVargas?.d3_drekkana || [];
+      const d3 = d3List.find((v) => v.planet === activeLords.mahadasha);
+      if (d3) {
+        specificVargaSignal = `D3 Drekkana: ${d3.planet} in ${d3.signName} energizes initiative, courageous effort, and sibling camaraderie.`;
+        evidence.push({
+          source: 'VARGA',
+          rule: 'D3 Courage & Initiative',
+          value: specificVargaSignal,
+          weight: 0.15,
+          direction: 'SUPPORTIVE',
+        });
+      }
+    }
+
+    // Subtle D60 Confirmation (Strict Invariant: D60 never overrides D1 foundation)
+    if (context.d60 && context.d60.length > 0) {
+      const d60Maha = context.d60.find((v) => v.planet === activeLords.mahadasha);
+      if (d60Maha) {
+        evidence.push({
+          source: 'VARGA',
+          rule: 'D60 Subtle Karmic Context (Non-Overriding)',
+          value: `D60 Shashtiamsha aligns ${d60Maha.planet} in ${d60Maha.signName}, providing subtle refinement to foundational D1 karma.`,
+          weight: 0.05,
+          direction: 'NEUTRAL',
         });
       }
     }
