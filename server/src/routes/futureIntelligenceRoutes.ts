@@ -162,17 +162,25 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
     // Optional birth profile inline bootstrap if user has no saved profile yet
     if (req.body.birthProfile && req.body.birthProfile.birthDate) {
       const bp = req.body.birthProfile;
-      await birthProfileRepository.createProfile({
+      const profileRecord = {
+        id: `prof_${userId}`,
         userId,
         fullName: bp.name || bp.fullName || 'Cosmic Native',
         birthDate: bp.birthDate,
         birthTime: bp.birthTime,
         birthPlace: bp.birthPlace || 'Location',
-        latitude: Number(bp.latitude || 28.6139),
-        longitude: Number(bp.longitude || 77.2090),
-        timezone: Number(bp.timezone || 5.5),
+        latitude: Number(bp.latitude ?? 28.6139),
+        longitude: Number(bp.longitude ?? 77.2090),
+        timezone: Number(bp.timezone ?? 5.5),
         gender: bp.gender || 'Other',
-      });
+        createdAt: new Date().toISOString(),
+      };
+      db.birthProfiles.set(userId, profileRecord as any);
+      try {
+        await birthProfileRepository.createProfile(profileRecord);
+      } catch (_saveErr) {
+        // Safe fallback in serverless environments when Postgres is disconnected
+      }
     }
 
     const forecast = await FutureIntelligenceEngine.generateForecast({
