@@ -36,7 +36,7 @@ curl -X POST https://deepastro.vercel.app/api/astrology/kundli \
 
 ---
 
-## 4. Deployment Procedure
+# 4. Deployment Procedure
 ```bash
 # 1. Verify TypeScript strict typing
 npm run typecheck
@@ -50,3 +50,39 @@ npm run build
 # 4. Deploy to Vercel Production
 npx vercel --prod --yes
 ```
+
+---
+
+## 5. Future Intelligence Operations & Monitoring (FUTURE_INTELLIGENCE_V1)
+
+### Probing Future Intelligence Endpoints:
+```bash
+# 1. Check Available Kundlis for User
+curl -s https://deepastro.vercel.app/api/future-intelligence/charts \
+  -H "Authorization: Bearer <TOKEN>"
+
+# 2. Test Real Kundli Forecast Generation (5-Year Horizon)
+curl -X POST https://deepastro.vercel.app/api/future-intelligence/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"chartId":"primary","years":5}'
+
+# 3. Verify Month-by-Month Breakdown for a Specific Year
+curl -s "https://deepastro.vercel.app/api/future-intelligence/year/2028?chartId=primary" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### Invalidation & Recalculation:
+- **Automatic Invalidation:** Whenever a birth profile's coordinates, date, or time are mutated, the calculation fingerprint changes, automatically bypassing the cache.
+- **Manual Force Recalculate:** To force recalculation without mutating birth details, pass `"forceRecalculate": true` in the POST payload:
+```json
+{
+  "chartId": "primary",
+  "years": 5,
+  "forceRecalculate": true
+}
+```
+
+### Incomplete Context Error Code (HTTP 422):
+- When an API request lacks verified Kundli parameters, the server returns HTTP `422` with code `PREDICTION_CONTEXT_INCOMPLETE` and a structured payload listing `missingEngines`.
+- Resolution: Ensure the user's primary birth profile is saved via `/api/astrology/birth-profile` or provide a valid `chartId`.
