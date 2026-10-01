@@ -68,7 +68,7 @@ curl -X POST https://deepastro.vercel.app/api/future-intelligence/generate \
   -d '{"chartId":"primary","years":5}'
 
 # 3. Verify Month-by-Month Breakdown for a Specific Year
-curl -s "https://deepastro.vercel.app/api/future-intelligence/year/2028?chartId=primary" \
+curl -s "https://deepastro.vercel.app/api/future-intelligence/<FORECAST_ID>/year/2028" \
   -H "Authorization: Bearer <TOKEN>"
 ```
 
