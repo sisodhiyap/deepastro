@@ -143,6 +143,68 @@ export interface SavedChartRecord {
   longitude: number;
   timezone: number;
   gender?: string;
+  isApproximateTime?: boolean;
+  relationship?: string;
+  calculationFingerprint?: string;
+  createdAt: string;
+}
+
+export interface FutureForecastRecord {
+  id: string;
+  userId: string;
+  chartId: string;
+  calculationFingerprint: string;
+  predictionVersion: string;
+  forecastHorizon: string;
+  startDate: string;
+  endDate: string;
+  summaryTheme: string;
+  signalStrength: string;
+  confidenceLevel: string;
+  metadata?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FutureForecastYearRecord {
+  id: string;
+  forecastId: string;
+  year: number;
+  theme: string;
+  career: string;
+  finance: string;
+  relationships: string;
+  health: string;
+  family: string;
+  education: string;
+  travel: string;
+  spirituality: string;
+  signalStrength: string;
+  confidenceScore: number;
+  activeDasha: string;
+  majorTransits: any[];
+  keyPlanets: any[];
+  d9Signals: any[];
+  d10Signals: any[];
+  numerologySignals: any;
+  importantWindows: any[];
+  cautionWindows: any[];
+  supportivePeriods: any[];
+  evidenceJson: any[];
+  createdAt: string;
+}
+
+export interface FutureForecastWindowRecord {
+  id: string;
+  forecastId: string;
+  startDate: string;
+  peakDate: string;
+  endDate: string;
+  category: string;
+  theme: string;
+  signalStrength: string;
+  convergenceFactor: number;
+  evidenceJson: any[];
   createdAt: string;
 }
 
@@ -400,6 +462,9 @@ class DatabaseStore {
   public entitlements: Map<string, Set<string>> = new Map(); // userId -> Set of feature keys
   public astrologers: Map<string, AstrologerRecord> = new Map();
   public savedCharts: Map<string, SavedChartRecord> = new Map();
+  public futureForecasts: Map<string, FutureForecastRecord> = new Map();
+  public futureForecastYears: Map<string, FutureForecastYearRecord> = new Map();
+  public futureForecastWindows: Map<string, FutureForecastWindowRecord> = new Map();
   public uploadedFiles: Map<string, UploadedFileRecord> = new Map();
   public consultations: Map<string, ConsultationRecord> = new Map();
   public aiUsageLogs: AIUsageRecord[] = [];
@@ -683,6 +748,72 @@ class DatabaseStore {
       return true;
     }
     return false;
+  }
+
+  public saveSavedChart(chart: SavedChartRecord): SavedChartRecord {
+    this.savedCharts.set(chart.id, chart);
+    return chart;
+  }
+
+  public getSavedCharts(userId: string): SavedChartRecord[] {
+    return Array.from(this.savedCharts.values()).filter((c) => c.userId === userId);
+  }
+
+  public getSavedChart(chartId: string): SavedChartRecord | undefined {
+    return this.savedCharts.get(chartId);
+  }
+
+  public saveFutureForecast(forecast: FutureForecastRecord): void {
+    this.futureForecasts.set(forecast.id, forecast);
+  }
+
+  public getFutureForecast(forecastId: string): FutureForecastRecord | undefined {
+    return this.futureForecasts.get(forecastId);
+  }
+
+  public getFutureForecastByFingerprint(
+    userId: string,
+    chartId: string,
+    fingerprint: string,
+    horizon: string
+  ): FutureForecastRecord | undefined {
+    return Array.from(this.futureForecasts.values()).find(
+      (f) =>
+        f.userId === userId &&
+        f.chartId === chartId &&
+        f.calculationFingerprint === fingerprint &&
+        f.forecastHorizon === horizon
+    );
+  }
+
+  public saveFutureForecastYears(years: FutureForecastYearRecord[]): void {
+    for (const y of years) {
+      this.futureForecastYears.set(y.id, y);
+    }
+  }
+
+  public getFutureForecastYears(forecastId: string): FutureForecastYearRecord[] {
+    return Array.from(this.futureForecastYears.values())
+      .filter((y) => y.forecastId === forecastId)
+      .sort((a, b) => a.year - b.year);
+  }
+
+  public getFutureForecastYear(forecastId: string, year: number): FutureForecastYearRecord | undefined {
+    return Array.from(this.futureForecastYears.values()).find(
+      (y) => y.forecastId === forecastId && y.year === year
+    );
+  }
+
+  public saveFutureForecastWindows(windows: FutureForecastWindowRecord[]): void {
+    for (const w of windows) {
+      this.futureForecastWindows.set(w.id, w);
+    }
+  }
+
+  public getFutureForecastWindows(forecastId: string): FutureForecastWindowRecord[] {
+    return Array.from(this.futureForecastWindows.values()).filter(
+      (w) => w.forecastId === forecastId
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import './utils/urlPolyfill.js';
 import verifyReportRoutes from './routes/verifyReportRoutes.js';
 import futureRoutes from './routes/futureRoutes.js';
+import futureIntelligenceRoutes from './routes/futureIntelligenceRoutes.js';
 /**
  * DeepAstro Master API Server
  * High-performance, production-grade Express server powering the Vedic astrology
@@ -150,6 +151,8 @@ app.use('/api/intelligence/past-life', pastLifeRoutes);
 app.use('/intelligence/past-life', pastLifeRoutes);
 app.use('/api/intelligence', intelligenceRoutes);
 app.use('/api/future', futureRoutes);
+app.use('/api/future-intelligence', futureIntelligenceRoutes);
+app.use('/future-intelligence', futureIntelligenceRoutes);
 app.use('/api/verify', verifyReportRoutes);
 app.use('/future', futureRoutes);
 app.use('/verify', verifyReportRoutes);

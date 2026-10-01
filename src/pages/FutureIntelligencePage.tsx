@@ -41,6 +41,7 @@ import {
   X
 } from 'lucide-react';
 import { FutureConsentModal } from '../components/future/FutureConsentModal';
+import { FutureTimelineDashboard } from '../components/future/FutureTimelineDashboard';
 import { getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
 
 // --- Inline Birth Profile Form ---
@@ -228,7 +229,7 @@ export const FutureIntelligencePage: React.FC = () => {
   >('GENERATING');
   const [forecastData, setForecastData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<FutureTabId>('overview');
+  const [activeTab, setActiveTab] = useState<FutureTabId>('timeline');
   const [horizonYears, setHorizonYears] = useState<3 | 5 | 10>(5);
   const [selectedYear, setSelectedYear] = useState<number>(2027);
   const [revealLevel, setRevealLevel] = useState<number>(2);
@@ -661,12 +662,12 @@ export const FutureIntelligencePage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-mono font-bold tracking-widest uppercase shadow-sm shadow-cyan-500/10">
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>FUTURE INTELLIGENCE 8.0</span>
+            <span>FUTURE INTELLIGENCE</span>
           </div>
 
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-400/30 text-purple-300 text-xs font-semibold">
             <Star className="w-3.5 h-3.5 text-purple-400 fill-purple-400/30" />
-            <span>Your Future, Your Action</span>
+            <span>Your Personal Vedic Timeline</span>
           </div>
         </div>
 
@@ -674,10 +675,13 @@ export const FutureIntelligencePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-7 space-y-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-satoshi tracking-tight text-white">
-              Optimize Your Future
+              Future Intelligence
             </h1>
+            <p className="text-base sm:text-lg text-cyan-300 font-bold tracking-wide font-satoshi">
+              Your Personal Vedic Timeline
+            </p>
             <p className="text-sm sm:text-base text-slate-300 font-medium max-w-xl leading-relaxed">
-              Understand the themes ahead. Strengthen what you can influence.
+              Explore future periods using your calculated Kundli, Dashas, planetary transits, Vargas and numerological cycles.
             </p>
 
             {/* 4 Feature Badges */}
@@ -1196,93 +1200,10 @@ export const FutureIntelligencePage: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 2: TIMELINE VIEW */}
+            {/* TAB 2: TIMELINE VIEW - FUTURE INTELLIGENCE TIMELINE DASHBOARD */}
             {activeTab === 'timeline' && (
               <div id="future-panel-timeline" role="tabpanel" aria-labelledby="future-tab-timeline" className="space-y-6 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-xl font-bold font-satoshi text-white">
-                      Multi-Year Astrological Timeline ({horizonYears}-Year Horizon)
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      Calculated from authentic Vimshottari Mahadasha cycles and Gochara transits.
-                    </p>
-                  </div>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
-                    {yearlyTimeline.map((y: any) => (
-                      <button
-                        key={y.year}
-                        onClick={() => setSelectedYear(y.year)}
-                        className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all ${
-                          selectedYear === y.year
-                            ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
-                            : 'bg-[#1A1F2B] text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        {y.year}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-3xl bg-[#111827] border border-slate-800 p-6 space-y-6 shadow-xl">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                    <div>
-                      <span className="text-xs font-mono uppercase text-cyan-400 font-bold">YEAR PROFILE</span>
-                      <h4 className="text-2xl font-black font-satoshi text-white">{selectedYearObj.year}</h4>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => handleOpenImproveDomain('TIMELINE')}
-                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-cyan-500/20 transition-all"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Improve {selectedYearObj.year}</span>
-                      </button>
-                      <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
-                        Active Dasha: {selectedYearObj.activeDasha || 'Parashari Cycle'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-slate-300 font-medium leading-relaxed">
-                    {selectedYearObj.overallTheme}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <div className="p-4 rounded-2xl bg-[#1A1F2B]/70 border border-slate-800 space-y-1.5">
-                      <div className="font-bold text-cyan-300 uppercase font-mono text-[11px]">Career & Purpose</div>
-                      <div className="text-slate-300">{selectedYearObj.careerOutlook}</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-[#1A1F2B]/70 border border-slate-800 space-y-1.5">
-                      <div className="font-bold text-emerald-300 uppercase font-mono text-[11px]">Wealth & Finance</div>
-                      <div className="text-slate-300">{selectedYearObj.financeOutlook}</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-[#1A1F2B]/70 border border-slate-800 space-y-1.5">
-                      <div className="font-bold text-pink-300 uppercase font-mono text-[11px]">Relationships & Heart</div>
-                      <div className="text-slate-300">{selectedYearObj.relationshipOutlook}</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
-                    <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 text-emerald-300 space-y-1">
-                      <div className="font-bold uppercase font-mono text-[10px]">Opportunities Ahead:</div>
-                      <ul className="list-disc pl-4 space-y-0.5">
-                        {(selectedYearObj.opportunities || []).map((opp: string, i: number) => (
-                          <li key={i}>{opp}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/20 text-amber-300 space-y-1">
-                      <div className="font-bold uppercase font-mono text-[10px]">What May Require Mindfulness:</div>
-                      <ul className="list-disc pl-4 space-y-0.5">
-                        {(selectedYearObj.challenges || []).map((ch: string, i: number) => (
-                          <li key={i}>{ch}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                <FutureTimelineDashboard />
               </div>
             )}
 
