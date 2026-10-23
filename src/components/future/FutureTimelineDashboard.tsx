@@ -130,9 +130,13 @@ export const FutureTimelineDashboard: React.FC = () => {
         };
         setCharts([defaultChart]);
         setSelectedChart(defaultChart);
+        setSelectedChartId(defaultChart.id);
+        return;
       }
+      setLoading(false);
     } catch (err) {
       console.warn('Failed to load saved charts:', err);
+      setLoading(false);
     }
   };
 
@@ -807,7 +811,25 @@ export const FutureTimelineDashboard: React.FC = () => {
             </p>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="rounded-3xl border border-dashed border-slate-800 bg-[#0c1220]/50 p-12 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto">
+            <Compass className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-100">No Forecast Loaded</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              Select or save a birth profile to generate your multi-year Vedic Timeline across Vimshottari cycles, Gochara transits, and Shodashavarga harmonics.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddChartModal(true)}
+            className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition shadow-lg shadow-cyan-500/20"
+          >
+            Add Birth Chart
+          </button>
+        </div>
+      )}
 
       {/* 6. EVIDENCE DRAWER MODAL ("Why am I seeing this?") */}
       {activeEvidence && (

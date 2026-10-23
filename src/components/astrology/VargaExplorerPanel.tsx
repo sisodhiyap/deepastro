@@ -10,6 +10,7 @@ interface VargaExplorerPanelProps {
   navamsaDeep?: any;
   dasamshaDeep?: any;
   chartStyle?: 'north' | 'south' | 'east';
+  onRecalculate?: () => void;
 }
 
 const VARGA_LIST = [
@@ -36,6 +37,7 @@ export const VargaExplorerPanel: React.FC<VargaExplorerPanelProps> = ({
   navamsaDeep,
   dasamshaDeep,
   chartStyle = 'north',
+  onRecalculate,
 }) => {
   const [selectedVarga, setSelectedVarga] = useState<string>('d9');
 
@@ -67,7 +69,7 @@ export const VargaExplorerPanel: React.FC<VargaExplorerPanelProps> = ({
       </div>
 
       {/* Selected Varga Card */}
-      {currentChart && (
+      {currentChart ? (
         <div className="p-6 rounded-2xl bg-[#111827] border border-[#2A3441] space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#2A3441] pb-4">
             <div>
@@ -157,6 +159,23 @@ export const VargaExplorerPanel: React.FC<VargaExplorerPanelProps> = ({
               </table>
             </div>
           </div>
+        </div>
+      ) : (
+        <div className="p-8 rounded-2xl bg-[#111827] border border-dashed border-[#2A3441] text-center space-y-3">
+          <p className="text-sm font-bold text-slate-200">
+            Harmonic {selectedVarga.toUpperCase()} calculations are not present in this saved snapshot.
+          </p>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Recalculate your chart to generate the complete Shodashavarga (D1 to D60) divisional matrices with Meeus True Osculating Node precision.
+          </p>
+          {onRecalculate && (
+            <button
+              onClick={onRecalculate}
+              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition shadow-lg shadow-cyan-500/20"
+            >
+              Recalculate Shodashavargas
+            </button>
+          )}
         </div>
       )}
 

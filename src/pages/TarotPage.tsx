@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   TarotCard,
   TarotDraw,
@@ -251,7 +251,7 @@ export const TarotPage: React.FC = () => {
     setStage('shuffling');
   };
 
-  const handleShuffleComplete = () => {
+  const handleShuffleComplete = useCallback(() => {
     try {
       const chart = getCalculatedChart();
       const profile = getBirthProfile();
@@ -292,7 +292,7 @@ export const TarotPage: React.FC = () => {
       console.error('Tarot draw error:', err);
       setStage('landing');
     }
-  };
+  }, [currentUserId, selectedCategory, astroWeighting]);
 
   const handleSaveToJournal = () => {
     if (!activeSession) return;

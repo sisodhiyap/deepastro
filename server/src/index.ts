@@ -69,10 +69,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.use(express.json({ limit: '1mb' }));           // Reduced from 25mb — prevents oversized payload attacks
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Security Headers â€” Content-Security-Policy + hardened headers
+// Security Headers — Content-Security-Policy + hardened headers
 app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'"
@@ -85,8 +85,11 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Input size guard â€” reject obviously malicious payloads early
+// Input size guard — reject obviously malicious payloads early (exempting palmistry vision uploads)
 app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/api/palmistry')) {
+    return next();
+  }
   const bodySize = JSON.stringify(req.body || {}).length;
   if (bodySize > 512_000) {
     return res.status(413).json({ error: 'PAYLOAD_TOO_LARGE', details: 'Request body exceeds 512KB limit.' });

@@ -72,27 +72,13 @@ export const PalmistryPage: React.FC = () => {
 
     try {
       let res: Response;
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null;
+      const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
-      // Primary: High-reliability JSON Base64 payload (works across all serverless gateways & proxies)
-      if (base64) {
-        res = await fetch('/api/palmistry/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageData: base64,
-            palmImage: base64,
-            handType,
-            isDominant: isDominant.toString(),
-            ageRange,
-            provider,
-          }),
-        });
-      } else {
-        // Fallback: Multipart FormData
+      if (file) {
+        // High-reliability Multipart FormData for file uploads (up to 20MB)
         const formData = new FormData();
-        if (file) formData.append('palmImage', file);
+        formData.append('palmImage', file);
         formData.append('handType', handType);
         formData.append('isDominant', isDominant.toString());
         formData.append('ageRange', ageRange);
@@ -100,8 +86,27 @@ export const PalmistryPage: React.FC = () => {
 
         res = await fetch('/api/palmistry/analyze', {
           method: 'POST',
+          headers: authHeader,
           body: formData,
         });
+      } else if (base64) {
+        // Camera capture JSON payload
+        res = await fetch('/api/palmistry/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeader,
+          },
+          body: JSON.stringify({
+            imageData: base64,
+            handType,
+            isDominant: isDominant.toString(),
+            ageRange,
+            provider,
+          }),
+        });
+      } else {
+        throw new Error('No palm image data found to analyze.');
       }
 
       if (res.ok) {

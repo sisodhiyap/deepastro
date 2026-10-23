@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DailyPredictionCardData } from '../../../server/src/astrology/DailyPredictionEngine';
-import { getBirthProfile, getCalculatedChart, onChartUpdated } from '../../utils/birthStorage';
+import { getBirthProfile, getOrFetchBirthProfile, getCalculatedChart, onChartUpdated } from '../../utils/birthStorage';
 
 interface Props {
   onOpenFullHoroscope?: () => void;
@@ -89,11 +89,15 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
     try {
       setLoading(true);
       setError(null);
-      const profile = getBirthProfile();
+      const profile = await getOrFetchBirthProfile();
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null;
 
       const res = await fetch('/api/astrology/predictions/daily-card', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           ...(profile || {}),
           targetDate: overrideDate ? overrideDate.toISOString() : undefined,

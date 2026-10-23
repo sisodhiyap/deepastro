@@ -1174,6 +1174,7 @@ export const KundliPage: React.FC = () => {
               navamsaDeep={kundli.navamsaDeep}
               dasamshaDeep={kundli.dasamshaDeep}
               chartStyle={chartStyle}
+              onRecalculate={() => calculateChart()}
             />
           )}
 

@@ -21,6 +21,7 @@ import {
 import {
   getCalculatedChart,
   getBirthProfile,
+  getOrFetchBirthProfile,
   onChartUpdated,
   StoredBirthProfile,
 } from '../utils/birthStorage.js';
@@ -83,7 +84,10 @@ export const DailyPredictionsPage: React.FC = () => {
       effectiveProfile && effectiveProfile.birthDate && effectiveProfile.birthTime
         ? fetch('/api/astrology/predictions/domains', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
             body: JSON.stringify(effectiveProfile),
           }).then((res) => (res.ok ? res.json() : null))
         : Promise.resolve(null),
@@ -175,10 +179,34 @@ export const DailyPredictionsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const savedChart = getCalculatedChart();
-    const savedProfile = getBirthProfile();
+    const initData = async () => {
+      const savedChart = getCalculatedChart();
+      const savedProfile = await getOrFetchBirthProfile();
 
-    loadPredictionsForProfile(savedProfile, savedChart);
+      if (savedProfile && (!savedChart || !savedChart.ascendant)) {
+        try {
+          const calcResult = await executeCalculation({
+            name: savedProfile.name,
+            birthDate: savedProfile.birthDate,
+            birthTime: savedProfile.birthTime,
+            birthPlace: savedProfile.birthPlace,
+            latitude: savedProfile.latitude,
+            longitude: savedProfile.longitude,
+            timezone: savedProfile.timezone,
+            gender: savedProfile.gender,
+          });
+          if (calcResult) {
+            setKundliData(calcResult.chart || calcResult);
+            loadPredictionsForProfile(savedProfile, calcResult);
+            return;
+          }
+        } catch {}
+      }
+
+      loadPredictionsForProfile(savedProfile, savedChart);
+    };
+
+    initData();
 
     // Synchronize reactively when birth profile or chart changes anywhere in the app
     const unsubscribe = onChartUpdated(({ chart, profile }) => {
@@ -208,7 +236,7 @@ export const DailyPredictionsPage: React.FC = () => {
   };
 
   const chart = kundliData;
-  const hasBirthProfile = Boolean(chart && (chart.ascendant || chart.lagna));
+  const hasBirthProfile = Boolean((chart && (chart.ascendant || chart.lagna)) || domainPredictions || (getBirthProfile()?.birthDate));
   const predictions = chart?.predictions;
   const current = predictions ? predictions[activeTab] : null;
 

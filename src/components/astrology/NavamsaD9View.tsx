@@ -211,32 +211,51 @@ export const NavamsaD9View: React.FC<NavamsaD9ViewProps> = ({
           </div>
 
           <div className="w-full flex justify-center py-2">
-            {chartStyle === 'north' && (
-              <NorthIndianChart
-                ascendantSignIndex={d9AscIndex}
-                planets={d9ChartPlanets}
-                size={390}
-                lagnaLabel="LAGNA — D9"
-                chartTitle="D9 — Navamsa"
-              />
-            )}
-            {chartStyle === 'south' && (
-              <SouthIndianChart
-                ascendantSignIndex={d9AscIndex}
-                planets={d9ChartPlanets}
-                size={390}
-                lagnaLabel="LAGNA — D9"
-                chartTitle="D9 — Navamsa"
-              />
-            )}
-            {chartStyle === 'east' && (
-              <EastIndianChart
-                ascendantSignIndex={d9AscIndex}
-                planets={d9ChartPlanets}
-                size={390}
-                lagnaLabel="LAGNA — D9"
-                chartTitle="D9 — Navamsa"
-              />
+            {d9ChartPlanets.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-amber-500/5 border border-dashed border-amber-500/30 text-center space-y-3 my-8 max-w-sm">
+                <Compass className="w-8 h-8 text-amber-400 mx-auto animate-spin" />
+                <p className="text-xs font-bold text-amber-200">
+                  D9 Navamsa data is not yet generated in this snapshot.
+                </p>
+                {onRecalculate && (
+                  <button
+                    onClick={onRecalculate}
+                    className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold transition shadow-lg shadow-amber-400/20"
+                  >
+                    Recalculate D9 Navamsa
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                {chartStyle === 'north' && (
+                  <NorthIndianChart
+                    ascendantSignIndex={d9AscIndex}
+                    planets={d9ChartPlanets}
+                    size={390}
+                    lagnaLabel="LAGNA — D9"
+                    chartTitle="D9 — Navamsa"
+                  />
+                )}
+                {chartStyle === 'south' && (
+                  <SouthIndianChart
+                    ascendantSignIndex={d9AscIndex}
+                    planets={d9ChartPlanets}
+                    size={390}
+                    lagnaLabel="LAGNA — D9"
+                    chartTitle="D9 — Navamsa"
+                  />
+                )}
+                {chartStyle === 'east' && (
+                  <EastIndianChart
+                    ascendantSignIndex={d9AscIndex}
+                    planets={d9ChartPlanets}
+                    size={390}
+                    lagnaLabel="LAGNA — D9"
+                    chartTitle="D9 — Navamsa"
+                  />
+                )}
+              </>
             )}
           </div>
           <p className="text-[11px] text-amber-200/70 text-center italic">

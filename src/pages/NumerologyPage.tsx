@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Hash, Sparkles, Sun, Palette, Calendar, AlertCircle } from 'lucide-react';
-import { getBirthProfile, getCalculatedChart, onChartUpdated } from '../utils/birthStorage.js';
+import { getBirthProfile, getOrFetchBirthProfile, getCalculatedChart, onChartUpdated } from '../utils/birthStorage.js';
 
 export const NumerologyPage: React.FC = () => {
   const [name, setName] = useState(() => {
@@ -16,28 +16,18 @@ export const NumerologyPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Initial calculation if profile is present
-    const profile = getBirthProfile();
-    if (profile?.name && profile?.birthDate) {
-      setName(profile.name);
-      setBirthDate(profile.birthDate);
-      calculateNumerology(profile.name, profile.birthDate);
-    } else {
-      // 2. Fallback to server chart if logged in
-      fetch('/api/astrology/chart')
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          const bd = data?.birthData || data?.chart?.birthData;
-          if (bd?.name && bd?.birthDate) {
-            setName(bd.name);
-            setBirthDate(bd.birthDate);
-            calculateNumerology(bd.name, bd.birthDate);
-          }
-        })
-        .catch(() => {});
-    }
+    // 1. Initial calculation using unified local + server profile resolver
+    const resolveAndCalculate = async () => {
+      const profile = await getOrFetchBirthProfile();
+      if (profile?.name && profile?.birthDate) {
+        setName(profile.name);
+        setBirthDate(profile.birthDate);
+        calculateNumerology(profile.name, profile.birthDate);
+      }
+    };
+    resolveAndCalculate();
 
-    // 3. Listen to cross-page updates
+    // 2. Listen to cross-page updates
     const unsubscribe = onChartUpdated(({ profile: updatedProfile }) => {
       if (updatedProfile?.name && updatedProfile?.birthDate) {
         setName(updatedProfile.name);
@@ -58,9 +48,13 @@ export const NumerologyPage: React.FC = () => {
     setErrorMessage(null);
     setIsLoading(true);
     try {
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null;
       const res = await fetch('/api/numerology/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ name: calcName, birthDate: calcDob }),
       });
       if (res.ok) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Download, Printer, Sparkles, CheckCircle2, Eye, User, Calendar, Clock, MapPin } from 'lucide-react';
-import { getBirthProfile } from '../utils/birthStorage.js';
+import { getBirthProfile, getOrFetchBirthProfile } from '../utils/birthStorage.js';
 
 export const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState('BLUEPRINT_5PAGE');
@@ -22,38 +22,22 @@ export const ReportsPage: React.FC = () => {
 
   // Automatically load saved chart profile if one exists
   React.useEffect(() => {
-    const saved = getBirthProfile();
-    if (saved?.name && saved?.birthDate) {
-      setBirthData({
-        name: saved.name,
-        birthDate: saved.birthDate,
-        birthTime: saved.birthTime || '',
-        birthPlace: saved.birthPlace || '',
-        latitude: saved.latitude || '',
-        longitude: saved.longitude || '',
-        timezone: saved.timezone || '5.5',
-        gender: saved.gender || 'Other',
-      });
-    }
-
-    fetch('/api/astrology/chart')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const bd = data?.birthData || data?.chart?.birthData;
-        if (bd && bd.name && bd.birthDate) {
-          setBirthData({
-            name: bd.name,
-            birthDate: bd.birthDate,
-            birthTime: bd.birthTime || '',
-            birthPlace: bd.birthPlace || '',
-            latitude: bd.latitude?.toString() || '',
-            longitude: bd.longitude?.toString() || '',
-            timezone: bd.timezone?.toString() || '5.5',
-            gender: bd.gender || 'Other',
-          });
-        }
-      })
-      .catch(() => {});
+    const loadProfile = async () => {
+      const profile = await getOrFetchBirthProfile();
+      if (profile && profile.birthDate) {
+        setBirthData({
+          name: profile.name || '',
+          birthDate: profile.birthDate,
+          birthTime: profile.birthTime || '',
+          birthPlace: profile.birthPlace || '',
+          latitude: profile.latitude || '',
+          longitude: profile.longitude || '',
+          timezone: profile.timezone || '5.5',
+          gender: profile.gender || 'Other',
+        });
+      }
+    };
+    loadProfile();
   }, []);
 
   const handleGenerate = async () => {
@@ -65,10 +49,16 @@ export const ReportsPage: React.FC = () => {
 
     setIsGenerating(true);
     try {
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null;
+      const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
       if (reportType === 'BLUEPRINT_5PAGE') {
         const res = await fetch('/api/reports/blueprint/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeader,
+          },
           body: JSON.stringify({
             birthData: {
               name: birthData.name.trim(),
@@ -94,22 +84,25 @@ export const ReportsPage: React.FC = () => {
         setGeneratedReport({
           id: data.id || rep.metadata?.reportId,
           title: 'MY LIFE BLUEPRINT — JANAM KUNDLI & NUMEROLOGY REPORT',
-          native: { name: rep.profile.name },
-          executiveSummary: rep.finalBlueprint?.executiveSummary || 'Comprehensive 5-Page luxury Vedic Blueprint synthesized from verified sidereal ephemeris.',
+          native: { name: rep?.profile?.name || birthData.name },
+          executiveSummary: rep?.finalBlueprint?.executiveSummary || 'Comprehensive 5-Page luxury Vedic Blueprint synthesized from verified sidereal ephemeris.',
           htmlUrl: data.htmlUrl,
           isBlueprint: true,
           pageCount: 5,
           astronomy: {
-            ascendantSign: rep.snapshot.ascendantSign,
-            moonSign: rep.snapshot.moonSign,
-            nakshatra: `${rep.snapshot.nakshatra} (Pada ${rep.snapshot.nakshatraPada})`,
-            currentMahadasha: `${rep.activeDasha?.currentMahadasha} / ${rep.activeDasha?.currentAntardasha}`,
+            ascendantSign: rep?.snapshot?.ascendantSign || '—',
+            moonSign: rep?.snapshot?.moonSign || '—',
+            nakshatra: rep?.snapshot ? `${rep.snapshot.nakshatra} (Pada ${rep.snapshot.nakshatraPada})` : '—',
+            currentMahadasha: rep?.activeDasha ? `${rep.activeDasha.currentMahadasha} / ${rep.activeDasha.currentAntardasha}` : '—',
           },
         });
       } else {
         const res = await fetch('/api/reports/generate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeader,
+          },
           body: JSON.stringify({
             reportType,
             birthData: {
@@ -286,10 +279,10 @@ export const ReportsPage: React.FC = () => {
                 Generated Dossier #{generatedReport.id}
               </span>
               <h2 className="text-xl sm:text-2xl font-display font-extrabold text-cosmic-text mt-1">
-                {generatedReport.title}
+                {generatedReport.title || 'Vedic Astrology Dossier'}
               </h2>
               <p className="text-xs text-cosmic-muted mt-1">
-                Native: {generatedReport.native.name} &bull; Generated {new Date().toLocaleDateString()}
+                Native: {generatedReport.native?.name || birthData.name || 'Cosmic Native'} &bull; Generated {new Date().toLocaleDateString()}
               </p>
             </div>
 
@@ -305,7 +298,7 @@ export const ReportsPage: React.FC = () => {
               </a>
               <a
                 href={generatedReport.htmlUrl || `/api/reports/${generatedReport.id}/html`}
-                download={`${generatedReport.id}.html`}
+                download={`${generatedReport.id || 'deepastro_report'}.html`}
                 className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-glow-cyan"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -320,7 +313,7 @@ export const ReportsPage: React.FC = () => {
               Executive Summary
             </h3>
             <p className="text-xs text-cosmic-text leading-relaxed">
-              {generatedReport.executiveSummary}
+              {generatedReport.executiveSummary || 'Vedic sidereal planetary positions synthesized across Lagna, Rashi, and Dasha cycles.'}
             </p>
           </div>
 
@@ -328,19 +321,19 @@ export const ReportsPage: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
               <span className="text-cosmic-muted block text-[10px]">Ascendant (Lagna)</span>
-              <span className="font-bold text-cosmic-text">{generatedReport.astronomy.ascendantSign}</span>
+              <span className="font-bold text-cosmic-text">{generatedReport.astronomy?.ascendantSign || '—'}</span>
             </div>
             <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
               <span className="text-cosmic-muted block text-[10px]">Moon Rashi</span>
-              <span className="font-bold text-cosmic-text">{generatedReport.astronomy.moonSign}</span>
+              <span className="font-bold text-cosmic-text">{generatedReport.astronomy?.moonSign || '—'}</span>
             </div>
             <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
               <span className="text-cosmic-muted block text-[10px]">Nakshatra</span>
-              <span className="font-bold text-cosmic-text">{generatedReport.astronomy.nakshatra}</span>
+              <span className="font-bold text-cosmic-text">{generatedReport.astronomy?.nakshatra || '—'}</span>
             </div>
             <div className="p-3 rounded-xl bg-cosmic-card border border-cosmic-border/60">
               <span className="text-cosmic-muted block text-[10px]">Current Dasha</span>
-              <span className="font-bold text-cosmic-text">{generatedReport.astronomy.currentMahadasha}</span>
+              <span className="font-bold text-cosmic-text">{generatedReport.astronomy?.currentMahadasha || '—'}</span>
             </div>
           </div>
         </div>

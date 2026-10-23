@@ -1,40 +1,111 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Sun, Moon, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
+import { Calendar, Clock, Sun, Moon, AlertTriangle, CheckCircle2, Sparkles, MapPin, RefreshCw } from 'lucide-react';
+import { getBirthProfile } from '../utils/birthStorage.js';
 
 export const PanchangPage: React.FC = () => {
   const [panchang, setPanchang] = useState<any>(null);
   const [muhurats, setMuhurats] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
+  const profile = getBirthProfile();
+  const lat = profile?.latitude ? parseFloat(profile.latitude) : 28.6139;
+  const lon = profile?.longitude ? parseFloat(profile.longitude) : 77.2090;
+  const tz = profile?.timezone ? parseFloat(profile.timezone) : 5.5;
+  const locationLabel = profile?.birthPlace || 'New Delhi, India (Default)';
+
+  const fetchPanchangData = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const panchangUrl = `/api/astrology/panchang?lat=${lat}&lon=${lon}&tz=${tz}&date=${selectedDate}`;
+      const muhuratUrl = `/api/astrology/muhurat?date=${selectedDate}`;
+
+      const [pRes, mRes] = await Promise.all([
+        fetch(panchangUrl),
+        fetch(muhuratUrl),
+      ]);
+
+      if (!pRes.ok) {
+        const pErr = await pRes.json().catch(() => ({}));
+        throw new Error(pErr.error || pErr.details || 'Failed to fetch Panchang calculations.');
+      }
+
+      const pData = await pRes.json();
+      if (!pData || !pData.tithi || !pData.vara || !pData.nakshatra) {
+        throw new Error('Panchang calculation returned incomplete planetary coordinates.');
+      }
+
+      setPanchang(pData);
+
+      if (mRes.ok) {
+        const mData = await mRes.json();
+        setMuhurats(mData.muhurats || []);
+      }
+    } catch (err: any) {
+      console.error('[PanchangPage] Error fetching Panchang:', err);
+      setErrorMessage(err.message || 'Unable to compute Vedic Panchang for this date.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/astrology/panchang').then((r) => r.json()),
-      fetch('/api/astrology/muhurat').then((r) => r.json()),
-    ])
-      .then(([pData, mData]) => {
-        setPanchang(pData);
-        setMuhurats(mData.muhurats || []);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, []);
+    fetchPanchangData();
+  }, [selectedDate]);
 
   return (
     <div className="space-y-10 animate-fadeIn">
       {/* Title */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-          <Calendar className="w-3.5 h-3.5" /> Pancha Anga
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+            <Calendar className="w-3.5 h-3.5" /> Pancha Anga
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
+            Vedic Panchang & Shubh Muhurat
+          </h1>
+          <p className="text-xs text-cosmic-muted">
+            Daily solar and lunar calendar coordinates, Rahu Kalam, and auspicious windows.
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-          Vedic Panchang & Shubh Muhurat
-        </h1>
-        <p className="text-xs text-cosmic-muted">
-          Daily solar and lunar calendar coordinates, Rahu Kalam, and auspicious windows.
-        </p>
+
+        {/* Date and Location Indicator */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cosmic-surface border border-cosmic-border text-xs text-cosmic-muted">
+            <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="truncate max-w-[150px]">{locationLabel}</span>
+          </div>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-3 py-1.5 rounded-xl bg-cosmic-surface border border-cosmic-border text-xs text-cosmic-text focus:outline-none focus:border-cyan-400"
+          />
+        </div>
       </div>
 
-      {panchang && (
+      {isLoading ? (
+        <div className="py-20 text-center space-y-3">
+          <Sparkles className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
+          <p className="text-sm font-bold text-cosmic-text">Calculating Solilunar Ephemeris & Panchang...</p>
+        </div>
+      ) : errorMessage ? (
+        <div className="p-6 rounded-3xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            onClick={fetchPanchangData}
+            className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs font-bold flex items-center gap-1.5"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Retry
+          </button>
+        </div>
+      ) : panchang ? (
         <div className="space-y-8">
           {/* The 5 Limbs Matrix */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -127,7 +198,7 @@ export const PanchangPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

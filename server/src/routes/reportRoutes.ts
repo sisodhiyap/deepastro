@@ -129,7 +129,7 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
 
     generatedReports.set(result.id, reportPayload);
 
-    return res.status(201).json(result);
+    return res.status(201).json({ ...result, ...reportPayload });
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to generate report.', details: err.message });
   }
