@@ -8,6 +8,7 @@ import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { EnvLoader } from '../config/envLoader.js';
+import { evaluateIsolationPolicy, DatabaseIsolationMode } from '../config/isolationGuard.js';
 const { Pool } = pg;
 
 export interface QueryResult<T = any> {
@@ -156,6 +157,28 @@ class InMemoryFallbackClient implements IDatabaseClient {
   }
 }
 
+/**
+ * Secondary defense-in-depth SQL write classification helper.
+ * Primary boundary is socket-level pool nullification (this.pool === null).
+ */
+export function isMutatingSql(sql: string): boolean {
+  if (!sql || typeof sql !== 'string') return false;
+  const trimmed = sql.trim();
+  // 1. Root DML / DDL / Procedural invocations
+  if (/^(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|CALL|DO)\b/i.test(trimmed)) {
+    return true;
+  }
+  // 2. CTE writes: WITH ... (INSERT|UPDATE|DELETE)
+  if (/^\s*WITH\b[\s\S]*?\b(INSERT|UPDATE|DELETE)\b/i.test(trimmed)) {
+    return true;
+  }
+  // 3. Multi-statement write attempts (e.g. SELECT 1; DROP TABLE ...)
+  if (/;\s*(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|CALL|DO)\b/i.test(trimmed)) {
+    return true;
+  }
+  return false;
+}
+
 export class PostgresService implements IDatabaseClient {
   private pool: pg.Pool | null = null;
   private fallback: InMemoryFallbackClient = new InMemoryFallbackClient();
@@ -178,6 +201,27 @@ export class PostgresService implements IDatabaseClient {
       }
     }
     const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL;
+    const isolation = evaluateIsolationPolicy(connectionString, process.env);
+
+    if (!isolation.isAllowed || isolation.mode === 'blocked') {
+      console.warn(JSON.stringify({
+        event: 'DATABASE_ISOLATION_GUARD_ENFORCED',
+        environment: isolation.environment,
+        mode: isolation.mode,
+        reason: isolation.reason,
+        timestamp: new Date().toISOString()
+      }));
+      this.pool = null;
+      this.isConnected = false;
+      return;
+    }
+
+    if (isolation.mode === 'mock') {
+      this.pool = null;
+      this.isConnected = false;
+      return;
+    }
+
     if (connectionString && connectionString.trim().length > 0) {
       try {
         let poolConfig: any;
@@ -223,10 +267,18 @@ export class PostgresService implements IDatabaseClient {
   }
 
   public isLive(): boolean {
+    const isolation = evaluateIsolationPolicy(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL, process.env);
+    if (!isolation.isAllowed || isolation.mode === 'blocked' || isolation.mode === 'mock') {
+      return false;
+    }
     return this.isConnected;
   }
 
-  public getDatabaseMode(): 'postgres' | 'in-memory' {
+  public getDatabaseMode(): 'postgres' | 'in-memory' | 'blocked' {
+    const isolation = evaluateIsolationPolicy(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL, process.env);
+    if (isolation.mode === 'blocked') {
+      return 'blocked';
+    }
     return this.isConnected ? 'postgres' : 'in-memory';
   }
 
@@ -249,6 +301,13 @@ export class PostgresService implements IDatabaseClient {
   }
 
   public async query<T = any>(sql: string, params: any[] = []): Promise<QueryResult<T>> {
+    const isolation = evaluateIsolationPolicy(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL, process.env);
+    if (!isolation.isAllowed || isolation.mode === 'blocked') {
+      if (isMutatingSql(sql)) {
+        throw new Error(`[DatabaseIsolationGuard] Write query blocked: ${isolation.reason}`);
+      }
+    }
+
     if (!this.pool) {
       this.initPool();
     }
@@ -299,6 +358,11 @@ export class PostgresService implements IDatabaseClient {
   }
 
   public async withTransaction<T>(callback: (client: IDatabaseClient) => Promise<T>): Promise<T> {
+    const isolation = evaluateIsolationPolicy(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL, process.env);
+    if (!isolation.isAllowed || isolation.mode === 'blocked') {
+      throw new Error(`[DatabaseIsolationGuard] Transaction blocked: ${isolation.reason}`);
+    }
+
     if (this.pool && this.isConnected) {
       const client = await this.pool.connect();
       try {

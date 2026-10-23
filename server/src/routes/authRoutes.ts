@@ -14,6 +14,7 @@ import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/a
 import { supabaseAdmin } from '../database/supabaseServer.js';
 import { AuthBootstrapService } from '../services/AuthBootstrapService.js';
 import { pool } from '../database/postgres.js';
+import { evaluateIsolationPolicy } from '../config/isolationGuard.js';
 
 import crypto from 'crypto';
 
@@ -560,14 +561,17 @@ router.delete('/account', requireAuth, async (req: AuthenticatedRequest, res: Re
     db.calculationSnapshots.delete(userId);
     db.entitlements.delete(userId);
 
-    // 3. If Supabase admin available and userId is a valid UUID, delete from auth.users
+    // 3. If Supabase admin available and userId is a valid UUID, delete from auth.users (strictly in production only)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-    if (supabaseAdmin && isUuid) {
+    const isolation = evaluateIsolationPolicy(process.env.SUPABASE_URL, process.env);
+    if (supabaseAdmin && isUuid && isolation.environment === 'production') {
       try {
         await supabaseAdmin.auth.admin.deleteUser(userId);
       } catch (sbErr) {
         console.warn('[Account Delete] Supabase admin delete error:', sbErr);
       }
+    } else if (isUuid && isolation.environment !== 'production') {
+      console.info('[Account Delete] Supabase production auth deletion skipped in non-production environment.');
     }
 
     return res.json({

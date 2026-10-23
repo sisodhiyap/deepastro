@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { IDatabaseClient, dbClient } from './postgres.js';
+import { evaluateIsolationPolicy } from '../config/isolationGuard.js';
 
 export interface MigrationRecord {
   version: string;
@@ -31,6 +32,10 @@ export class MigrationRunner {
    * Initializes the schema_migrations table if it doesn't exist
    */
   public async initMigrationTable(): Promise<void> {
+    const isolation = evaluateIsolationPolicy(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL, process.env);
+    if (!isolation.canExecuteMigrations && isolation.mode !== 'isolated-staging') {
+      return;
+    }
     await this.client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version VARCHAR(64) PRIMARY KEY,
@@ -57,6 +62,12 @@ export class MigrationRunner {
    * Executes all pending SQL migration files in migrations directory
    */
   public async migrateUp(): Promise<{ applied: string[]; alreadyUpToDate: boolean }> {
+    const isolation = evaluateIsolationPolicy(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL, process.env);
+    if (!isolation.canExecuteMigrations && isolation.mode !== 'isolated-staging') {
+      console.warn(`[MigrationRunner] DDL migrations blocked by isolation guard in ${isolation.environment} environment (mode: ${isolation.mode}).`);
+      return { applied: [], alreadyUpToDate: true };
+    }
+
     await this.initMigrationTable();
     const applied = await this.getAppliedMigrations();
     const appliedSet = new Set(applied);
