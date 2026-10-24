@@ -25,7 +25,7 @@ import {
   Plus
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import { getBirthProfile, StoredBirthProfile } from '../../utils/birthStorage.js';
+import { getBirthProfile, getCalculatedChart, StoredBirthProfile } from '../../utils/birthStorage.js';
 
 interface SavedChart {
   id: string;
@@ -145,7 +145,7 @@ export const FutureTimelineDashboard: React.FC = () => {
     setError(null);
     try {
       const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
-      const localProfile = getBirthProfile();
+      const localProfile = getBirthProfile() || (getCalculatedChart && getCalculatedChart()?.birthData);
 
       const res = await fetch('/api/future-intelligence/generate', {
         method: 'POST',
@@ -163,7 +163,8 @@ export const FutureTimelineDashboard: React.FC = () => {
 
       const body = await res.json();
       if (!res.ok) {
-        throw new Error(body.details || body.error || 'Failed to generate Future Intelligence forecast.');
+        const msg = body.details || (body.error && body.error !== 'FUTURE_ENGINE_ERROR' && body.error !== 'FUTURE_INTELLIGENCE_ERROR' ? body.error : 'Timeline forecast calculation is updating. Please retry.');
+        throw new Error(msg);
       }
 
       setForecast(body);

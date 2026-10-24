@@ -55,9 +55,26 @@ export const getBirthProfile = (): StoredBirthProfile | null => {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PROFILE);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return normalizeBirthProfile(parsed);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const normalized = normalizeBirthProfile(parsed);
+      if (normalized && normalized.birthDate && normalized.birthTime) return normalized;
+    }
+
+    // Secondary recovery: extract verified birth profile from stored chart
+    const rawChart = localStorage.getItem(STORAGE_KEYS.CHART);
+    if (rawChart) {
+      const parsedChart = JSON.parse(rawChart);
+      const chartProfile = parsedChart?.birthData || parsedChart?.profile || parsedChart?.input || parsedChart?.birthProfile;
+      if (chartProfile) {
+        const normalized = normalizeBirthProfile(chartProfile);
+        if (normalized && normalized.birthDate) {
+          saveBirthProfile(normalized);
+          return normalized;
+        }
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -69,6 +86,17 @@ export const getOrFetchBirthProfile = async (): Promise<StoredBirthProfile | nul
     return local;
   }
   if (typeof window === 'undefined') return null;
+
+  // Check stored chart directly
+  const storedChart = getCalculatedChart();
+  const chartProfile = storedChart?.birthData || storedChart?.profile || storedChart?.input || storedChart?.birthProfile;
+  if (chartProfile) {
+    const normalized = normalizeBirthProfile(chartProfile);
+    if (normalized && normalized.birthDate) {
+      saveBirthProfile(normalized);
+      return normalized;
+    }
+  }
 
   const token = localStorage.getItem('deepastro_token') || localStorage.getItem('token');
   if (token) {
@@ -111,12 +139,13 @@ export const saveCalculatedChart = (chart: any, profile?: StoredBirthProfile): v
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEYS.CHART, JSON.stringify(chart));
-    if (profile) {
-      saveBirthProfile(profile);
+    const effectiveProfile = profile || chart?.birthData || chart?.profile || chart?.input || chart?.birthProfile;
+    if (effectiveProfile) {
+      saveBirthProfile(effectiveProfile);
     }
     window.dispatchEvent(
       new CustomEvent('deepastro_chart_updated', {
-        detail: { chart, profile: profile || getBirthProfile() },
+        detail: { chart, profile: effectiveProfile ? normalizeBirthProfile(effectiveProfile) : getBirthProfile() },
       })
     );
   } catch (err) {

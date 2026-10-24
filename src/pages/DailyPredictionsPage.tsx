@@ -393,7 +393,11 @@ export const DailyPredictionsPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Universal Daily Prediction Card Engine (Design Reference Spec) */}
-      <UniversalDailyPredictionCard onSwitchProfile={() => setKundliData(null)} />
+      <UniversalDailyPredictionCard
+        onSwitchProfile={() => setKundliData(null)}
+        profile={getBirthProfile() || chart?.birthData}
+        chart={chart}
+      />
 
       {/* Real-Time Transit Intelligence Sub-Header */}
       <div className="space-y-1 pt-4 border-t border-slate-800/80">

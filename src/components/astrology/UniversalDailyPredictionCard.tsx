@@ -6,6 +6,8 @@ interface Props {
   onOpenFullHoroscope?: () => void;
   onSwitchProfile?: () => void;
   overrideDate?: Date;
+  profile?: any;
+  chart?: any;
 }
 
 // 12 Classical Zodiac Constellation & Avatar Artwork Glyphs
@@ -80,6 +82,8 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
   onOpenFullHoroscope,
   onSwitchProfile,
   overrideDate,
+  profile: propProfile,
+  chart: propChart,
 }) => {
   const [cardData, setCardData] = useState<DailyPredictionCardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -89,7 +93,10 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
     try {
       setLoading(true);
       setError(null);
-      const profile = await getOrFetchBirthProfile();
+      const fetchedProfile = await getOrFetchBirthProfile();
+      const storedChart = propChart || getCalculatedChart();
+      const chartProfile = storedChart?.birthData || storedChart?.profile || storedChart?.input || storedChart?.birthProfile;
+      const effectiveProfile = propProfile || fetchedProfile || chartProfile;
       const token = typeof window !== 'undefined' ? (localStorage.getItem('deepastro_token') || localStorage.getItem('token')) : null;
 
       const res = await fetch('/api/astrology/predictions/daily-card', {
@@ -99,8 +106,14 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          ...(profile || {}),
+          ...(effectiveProfile || {}),
           targetDate: overrideDate ? overrideDate.toISOString() : undefined,
+          chart: storedChart ? {
+            ascendant: storedChart.ascendant,
+            moonSign: storedChart.moonSign,
+            dashas: storedChart.dashas,
+            planets: storedChart.planets,
+          } : undefined,
         }),
       });
 
@@ -108,10 +121,13 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
       if (data.success && data.card) {
         setCardData(data.card);
       } else {
-        throw new Error(data.details?.[0] || data.error || 'Failed to calculate daily card');
+        const detailStr = typeof data.details === 'string'
+          ? data.details
+          : (Array.isArray(data.details) ? data.details.join(', ') : (data.error || 'Failed to calculate daily card'));
+        throw new Error(detailStr);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Unable to compute daily celestial alignment.');
     } finally {
       setLoading(false);
     }
@@ -123,7 +139,7 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
       fetchCard();
     });
     return unsub;
-  }, [overrideDate]);
+  }, [overrideDate, propProfile, propChart]);
 
   if (loading) {
     return (
@@ -142,17 +158,21 @@ export const UniversalDailyPredictionCard: React.FC<Props> = ({
 
   if (error || !cardData) {
     return (
-      <div className="w-full rounded-[28px] bg-[#07080D] border border-rose-500/20 p-8 shadow-2xl flex flex-col items-center justify-center min-h-[360px] text-center">
-        <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400 mb-3 text-xl">
-          ⚠️
+      <div className="w-full rounded-[28px] bg-[#07080D] border border-cyan-500/20 p-8 shadow-2xl flex flex-col items-center justify-center min-h-[360px] text-center">
+        <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-3 text-xl">
+          ✨
         </div>
-        <h3 className="text-base font-semibold text-slate-200 mb-1">Calculation Offline</h3>
-        <p className="text-xs text-slate-400 max-w-md mb-4">{error || 'Unable to compute prediction card'}</p>
+        <h3 className="text-base font-semibold text-slate-200 mb-1">Daily Transit Calculation</h3>
+        <p className="text-xs text-slate-400 max-w-md mb-4 leading-relaxed">
+          {error && !error.includes('NO_BIRTH_PROFILE')
+            ? error
+            : 'Enter or confirm your birth details above to unlock your personalized daily prediction card.'}
+        </p>
         <button
           onClick={fetchCard}
-          className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium transition"
+          className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium transition cursor-pointer"
         >
-          Retry Calculation
+          Recalculate Alignment
         </button>
       </div>
     );

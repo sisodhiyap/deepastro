@@ -28,6 +28,7 @@ import { FutureAuditEngine } from '../intelligence/future/FutureAuditEngine.js';
 import { FutureImprovementEngine } from '../intelligence/future/FutureImprovementEngine.js';
 import { FutureProgressEngine } from '../intelligence/future/FutureProgressEngine.js';
 import { CalculationSnapshotService } from '../services/CalculationSnapshotService.js';
+import { NormalizationEngine } from '../reports/ReportIntelligenceEngine/NormalizationEngine.js';
 
 const router = Router();
 
@@ -142,8 +143,19 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
 
     const rawLat = savedProfile?.latitude;
     const rawLon = savedProfile?.longitude;
-    const lat = rawLat !== undefined && rawLat !== null && !isNaN(Number(rawLat)) ? Number(rawLat) : NaN;
-    const lon = rawLon !== undefined && rawLon !== null && !isNaN(Number(rawLon)) ? Number(rawLon) : NaN;
+    let lat = rawLat !== undefined && rawLat !== null && !isNaN(Number(rawLat)) ? Number(rawLat) : NaN;
+    let lon = rawLon !== undefined && rawLon !== null && !isNaN(Number(rawLon)) ? Number(rawLon) : NaN;
+
+    if ((isNaN(lat) || isNaN(lon)) && savedProfile?.birthDate && savedProfile?.birthTime) {
+      const loc = NormalizationEngine.normalizeLocation(
+        savedProfile.birthPlace || 'New Delhi, India',
+        undefined,
+        undefined,
+        savedProfile.timezone ? Number(savedProfile.timezone) : 5.5
+      );
+      lat = loc.latitude;
+      lon = loc.longitude;
+    }
 
     if (
       !savedProfile ||
@@ -231,6 +243,7 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
       disclaimer: forecast.disclaimer,
     });
   } catch (err: any) {
+    console.error('[FutureRoutes] generateFutureHandler failure:', err);
     if (err.message?.includes('PREMIUM_ACCESS_REQUIRED')) {
       return res.status(403).json({ error: 'PREMIUM_REQUIRED', details: err.message });
     }
@@ -239,7 +252,7 @@ const generateFutureHandler = async (req: AuthenticatedRequest, res: Response) =
     }
     return res.status(500).json({
       error: 'FUTURE_ENGINE_ERROR',
-      details: err.message || 'Failed to synthesize cosmic future forecast.',
+      details: 'Planetary transit timeline calculation encountered a temporary anomaly: ' + (err.message || 'Please check birth date and coordinates.'),
     });
   }
 };

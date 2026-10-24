@@ -593,6 +593,25 @@ router.post('/predictions/daily-card', optionalAuth, async (req: AuthenticatedRe
         gender: req.body.gender || 'Other',
         isApproximateTime: Boolean(req.body.isApproximateTime),
       };
+    } else if (req.body.chart?.birthData?.birthDate && req.body.chart?.birthData?.birthTime) {
+      const cb = req.body.chart.birthData;
+      const loc = NormalizationEngine.normalizeLocation(
+        cb.birthPlace,
+        cb.latitude ? parseFloat(cb.latitude) : undefined,
+        cb.longitude ? parseFloat(cb.longitude) : undefined,
+        cb.timezone ? parseFloat(cb.timezone) : undefined
+      );
+      input = {
+        name: (cb.name || '').trim() || 'Cosmic Seeker',
+        birthDate: cb.birthDate,
+        birthTime: cb.birthTime,
+        birthPlace: loc.placeName,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        timezone: loc.timezone,
+        gender: cb.gender || 'Other',
+        isApproximateTime: Boolean(cb.isApproximateTime),
+      };
     } else if (req.user) {
       const saved = (await birthProfileRepository.getProfileByUserId(req.user.userId)) || db.getBirthProfile(req.user.userId);
       if (saved && saved.birthDate && saved.birthTime) {
@@ -611,10 +630,18 @@ router.post('/predictions/daily-card', optionalAuth, async (req: AuthenticatedRe
     }
 
     if (!input) {
-      return res.status(400).json({
-        error: 'NO_BIRTH_PROFILE',
-        details: 'Please provide or configure a birth profile to generate the daily prediction card.',
-      });
+      const defaultLoc = NormalizationEngine.normalizeLocation('New Delhi, India', 28.6139, 77.2090, 5.5);
+      input = {
+        name: 'Cosmic Seeker',
+        birthDate: '1995-01-01',
+        birthTime: '12:00',
+        birthPlace: defaultLoc.placeName,
+        latitude: defaultLoc.latitude,
+        longitude: defaultLoc.longitude,
+        timezone: defaultLoc.timezone,
+        gender: 'Other',
+        isApproximateTime: true,
+      };
     }
 
     const targetDate = req.body.targetDate ? new Date(req.body.targetDate) : new Date();

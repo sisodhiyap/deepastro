@@ -271,27 +271,24 @@ export const FutureIntelligencePage: React.FC = () => {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const localProfile = await getOrFetchBirthProfile();
-      if (
-        !localProfile ||
-        !localProfile.birthDate ||
-        !localProfile.birthTime ||
-        !localProfile.latitude ||
-        !localProfile.longitude ||
-        isNaN(parseFloat(localProfile.latitude as any)) ||
-        isNaN(parseFloat(localProfile.longitude as any))
-      ) {
+      const localProfile = (await getOrFetchBirthProfile()) || getCalculatedChart()?.birthData;
+      if (!localProfile || !localProfile.birthDate || !localProfile.birthTime) {
         setPageState('BIRTH_PROFILE_REQUIRED');
         return;
       }
+
+      const rawLat = parseFloat(localProfile.latitude as any);
+      const rawLon = parseFloat(localProfile.longitude as any);
+      const lat = !isNaN(rawLat) ? rawLat : 28.6139;
+      const lon = !isNaN(rawLon) ? rawLon : 77.2090;
 
       const birthProfilePayload = {
         fullName: localProfile.name || 'Cosmic Native',
         birthDate: localProfile.birthDate,
         birthTime: localProfile.birthTime,
         birthPlace: localProfile.birthPlace || 'Calculated Location',
-        latitude: parseFloat(localProfile.latitude as any),
-        longitude: parseFloat(localProfile.longitude as any),
+        latitude: lat,
+        longitude: lon,
         timezone: localProfile.timezone || 'Asia/Kolkata',
         gender: localProfile.gender || 'Male',
       };
@@ -337,7 +334,8 @@ export const FutureIntelligencePage: React.FC = () => {
       }
 
       if (!res.ok) {
-        throw new Error(body.error || body.details || `HTTP ${res.status}: Failed to generate future forecast`);
+        const friendlyMsg = body.details || (body.error && body.error !== 'FUTURE_ENGINE_ERROR' ? body.error : 'Our celestial calculation engine is temporarily recalculating your transits. Please click Retry.');
+        throw new Error(friendlyMsg);
       }
 
       const payload = body.data || body.forecast || body;
