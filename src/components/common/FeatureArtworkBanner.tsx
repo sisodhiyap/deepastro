@@ -60,13 +60,16 @@ export const FeatureArtworkBanner: React.FC<FeatureArtworkBannerProps> = ({
 
   return (
     <figure
-      className={`relative overflow-hidden min-w-0 max-w-full select-none transition-all duration-300 group ${containerClasses} ${className}`}
+      className={`relative overflow-hidden min-w-0 max-w-full select-none transition-all duration-500 group ${containerClasses} ${className}`}
     >
+      {/* Ambient background aura glow */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-amber-500/15 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-sm pointer-events-none" />
+
       <div className={`relative w-full overflow-hidden ${aspectClasses}`}>
         {/* Placeholder shimmer while loading */}
         {!isLoaded && (
-          <div className="absolute inset-0 bg-slate-900/60 animate-pulse flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-cyan-400/40 animate-spin" />
+          <div className="absolute inset-0 bg-slate-900/80 animate-pulse flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-cyan-400/50 animate-spin" />
           </div>
         )}
 
@@ -81,33 +84,40 @@ export const FeatureArtworkBanner: React.FC<FeatureArtworkBannerProps> = ({
           fetchPriority={priority ? 'high' : 'auto'}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
-          className={`w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.015] ${
+          className={`w-full h-full object-cover object-center transition-all duration-700 ease-out group-hover:scale-[1.025] group-hover:brightness-[1.04] ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           } ${imageClassName}`}
         />
 
-        {/* Cinematic Gradient Overlays for optimal contrast & readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#06070a] via-[#06070a]/40 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#06070a]/80 via-transparent to-transparent pointer-events-none" />
+        {/* Cinematic Multi-Tier Gradient Overlays for optimal contrast & readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#06070a] via-[#06070a]/45 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#06070a]/85 via-[#06070a]/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,229,255,0.06),transparent_50%)] pointer-events-none" />
 
-        {/* Gold Border Highlight Glow on Top Edge */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none" />
+        {/* Gold & Cyan Dual Laser Border Highlight Glow on Top Edge */}
+        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-cyan-400/40 pointer-events-none" />
+
+        {/* Futuristic Corner Tech Accents */}
+        <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-amber-400/40 pointer-events-none rounded-tl-sm transition-colors group-hover:border-cyan-400/70" />
+        <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-amber-400/40 pointer-events-none rounded-tr-sm transition-colors group-hover:border-cyan-400/70" />
+        <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-amber-400/30 pointer-events-none rounded-bl-sm transition-colors group-hover:border-amber-400/60" />
+        <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-amber-400/30 pointer-events-none rounded-br-sm transition-colors group-hover:border-amber-400/60" />
 
         {/* Content & Caption Layer */}
         {showCaption && (
           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 pointer-events-auto">
             <div className="space-y-1.5 max-w-2xl min-w-0">
               {badge && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase backdrop-blur-md">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-cyan-500/10 border border-amber-500/40 text-amber-300 text-[10px] sm:text-xs font-mono font-bold tracking-widest uppercase shadow-[0_0_12px_rgba(245,158,11,0.2)] backdrop-blur-md">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                   <span className="truncate">{badge}</span>
                 </div>
               )}
-              <HeadingTag className="text-lg sm:text-2xl md:text-3xl font-display font-black text-white tracking-tight break-words drop-shadow-md">
+              <HeadingTag className="text-xl sm:text-2xl md:text-3xl font-display font-black text-white tracking-tight break-words drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                 {title}
               </HeadingTag>
               {description && (
-                <p className="text-xs sm:text-sm text-slate-300/90 leading-relaxed max-w-xl break-words line-clamp-2 sm:line-clamp-none drop-shadow-sm">
+                <p className="text-xs sm:text-sm text-slate-200/90 leading-relaxed max-w-xl break-words line-clamp-2 sm:line-clamp-none drop-shadow-sm font-medium">
                   {description}
                 </p>
               )}

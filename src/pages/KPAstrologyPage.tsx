@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ShieldCheck, Compass, Target, HelpCircle, RefreshCw, Layers, CheckCircle2, XCircle, Info, ChevronRight } from 'lucide-react';
 import { getBirthProfile } from '../utils/birthStorage.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 // Canonical 12 Placidus default cusps calculated for standard reference
 const DEFAULT_12_CUSPS = [
@@ -174,6 +176,16 @@ export const KPAstrologyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#06070A] text-slate-100 p-4 md:p-8 space-y-6">
+      {/* KP Stellar Telemetry Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.kpAstrologyRadar}
+        variant="banner"
+        priority={true}
+        titleOverride="Krishnamurti Paddhati (KP) Stellar Telemetry"
+        badgeOverride="PINPOINT CUSPAL SUB-LORD RADAR · 1-249 SUB-TABLES"
+        descriptionOverride="Deterministic Placidus house cusps (1 to 12), 4-tier significator hierarchy matrix, ruling planets, and event promise calculus."
+      />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2A3441] pb-6">
         <div>

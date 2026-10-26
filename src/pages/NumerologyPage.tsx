@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Hash, Sparkles, Sun, Palette, Calendar, AlertCircle } from 'lucide-react';
 import { getBirthProfile, getOrFetchBirthProfile, getCalculatedChart, onChartUpdated } from '../utils/birthStorage.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 export const NumerologyPage: React.FC = () => {
   const [name, setName] = useState(() => {
@@ -72,13 +74,23 @@ export const NumerologyPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Cinematic Numerology Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.numerologySacredMatrix}
+        variant="banner"
+        priority={true}
+        titleOverride="Sacred Numerological Matrix & Cosmic Vibration"
+        badgeOverride="ANKA SHASTRA · VIBRATIONAL HARMONICS"
+        descriptionOverride="Decode your Life Path, Destiny, Soul Urge, and Pythagorean vibrational harmonics."
+      />
+
       {/* Title */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
           <Hash className="w-3.5 h-3.5" /> Vibrational Science
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
+        <h1 className="text-2xl sm:text-3xl font-display font-black text-cosmic-text">
           Chaldean &amp; Pythagorean Numerology
         </h1>
         <p className="text-xs text-cosmic-muted">

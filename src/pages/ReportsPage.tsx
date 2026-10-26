@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { FileText, Download, Printer, Sparkles, CheckCircle2, Eye, User, Calendar, Clock, MapPin } from 'lucide-react';
 import { getBirthProfile, getOrFetchBirthProfile } from '../utils/birthStorage.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 export const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState('BLUEPRINT_5PAGE');
@@ -149,13 +151,23 @@ export const ReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-10 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Executive Cosmic Dossier Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.reportsCosmicJourney}
+        variant="banner"
+        priority={true}
+        titleOverride="Vedic Life Dossier & Astronomical Manuscript"
+        badgeOverride="EXECUTIVE ARCHIVAL DOSSIERS · PDF 2.0"
+        descriptionOverride="Comprehensive luxury Janam Kundli publications grounded in deterministic sidereal calculations, classical rules, and actionable life guidance."
+      />
+
       {/* Title */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
           <FileText className="w-3.5 h-3.5" /> Archival Intelligence
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
+        <h1 className="text-2xl sm:text-3xl font-display font-black text-cosmic-text">
           Astrological Reports &amp; PDF Dossiers
         </h1>
         <p className="text-xs text-cosmic-muted">

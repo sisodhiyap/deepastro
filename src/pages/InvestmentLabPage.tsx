@@ -6,6 +6,8 @@ import {
 import { RealtimeStockTicker } from '../components/finance/RealtimeStockTicker.js';
 import { NewsWire } from '../components/finance/NewsWire.js';
 import { MundaneCycleEngine } from '../components/finance/MundaneCycleEngine.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 interface InvestmentLabPageProps {
   initialTab?: 'market' | 'sectors' | 'macro' | 'geopolitical' | 'news' | 'synthesis' | 'personal' | 'backtest' | 'audit';
@@ -28,6 +30,16 @@ export const InvestmentLabPage: React.FC<InvestmentLabPageProps> = ({ initialTab
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto font-sans text-slate-100">
       {/* 1. REAL-TIME 5-SECOND AUTOMATIC STOCK TICKER */}
       <RealtimeStockTicker />
+
+      {/* Cinematic Financial Astrology & Cosmic Market Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.financialAstrologyLab}
+        variant="hero"
+        priority={true}
+        titleOverride="Cosmic Market Intelligence & Mundane Cycle Radar"
+        badgeOverride="FINANCIAL JYOTISH · SECTOR TELEMETRY"
+        descriptionOverride="Real-time planetary transit impacts mapped to global markets, sector momentum, and high-probability reversal gates."
+      />
 
       {/* 2. SUB-MODULE NAVIGATION BAR */}
       <div className="flex items-center gap-2 border-b border-[#1e293b] pb-2 overflow-x-auto scrollbar-none">

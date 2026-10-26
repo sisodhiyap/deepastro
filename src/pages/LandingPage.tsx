@@ -34,6 +34,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: Sparkles,
       color: 'from-cyan-500/20 to-indigo-500/10 border-cyan-500/30',
       cta: 'Generate Kundli',
+      image: DEEPASTRO_ARTWORK.kundliVedicChart.src,
+      badge: 'Lahiri Ephemeris',
     },
     {
       id: 'predictions' as NavTabId,
@@ -42,6 +44,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: Sun,
       color: 'from-amber-500/20 to-orange-500/10 border-amber-500/30',
       cta: 'View Horoscope',
+      image: DEEPASTRO_ARTWORK.planetaryInsightsTransits.src,
+      badge: 'Live Gochara',
     },
     {
       id: 'matching' as NavTabId,
@@ -50,6 +54,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: Heart,
       color: 'from-rose-500/20 to-pink-500/10 border-rose-500/30',
       cta: 'Match Horoscopes',
+      image: DEEPASTRO_ARTWORK.matchingCosmicUnion.src,
+      badge: '36 Gunas',
     },
     {
       id: 'numerology' as NavTabId,
@@ -58,6 +64,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: Hash,
       color: 'from-blue-500/20 to-cyan-500/10 border-blue-500/30',
       cta: 'Calculate Numbers',
+      image: DEEPASTRO_ARTWORK.numerologySacredMatrix.src,
+      badge: 'Vibrational Matrix',
     },
     {
       id: 'palmistry' as NavTabId,
@@ -66,6 +74,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: Hand,
       color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30',
       cta: 'Scan Palm Photo',
+      image: DEEPASTRO_ARTWORK.palmistrySacredGeometry.src,
+      badge: 'Biometric Shastra',
     },
     {
       id: 'lalkitab' as NavTabId,
@@ -74,14 +84,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: Flame,
       color: 'from-orange-500/20 to-red-500/10 border-orange-500/30',
       cta: 'Explore Remedies',
+      image: DEEPASTRO_ARTWORK.lalKitabRemedialAltar.src,
+      badge: 'Elemental Alchemy',
     },
     {
       id: 'astrologers' as NavTabId,
-      title: 'Certified Gurus & Astrologers',
-      desc: 'Elite Parashari, KP, and Vastu masters with verified credentials and direct call/chat consultations.',
+      title: 'Certified Gurus & AI Sage',
+      desc: 'Elite Parashari, KP, and Vastu masters plus explainable multi-model Vedic AI oracle cross-checking.',
       icon: Users,
       color: 'from-violet-500/20 to-purple-500/10 border-violet-500/30',
       cta: 'Meet Astrologers',
+      image: DEEPASTRO_ARTWORK.aiAstrologerSanctuary.src,
+      badge: 'Neural Oracle',
     },
     {
       id: 'reports' as NavTabId,
@@ -90,6 +104,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       icon: FileText,
       color: 'from-indigo-500/20 to-violet-500/10 border-indigo-500/30',
       cta: 'Download Reports',
+      image: DEEPASTRO_ARTWORK.reportsCosmicJourney.src,
+      badge: 'Gold Publication',
     },
   ];
 
@@ -179,23 +195,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             return (
               <div
                 key={svc.id}
-                className={`rounded-3xl border p-6 bg-gradient-to-b ${svc.color} backdrop-blur-xl flex flex-col justify-between hover:-translate-y-1 hover:shadow-cosmic-card transition-all duration-300 group`}
+                className={`rounded-3xl border overflow-hidden bg-gradient-to-b ${svc.color} backdrop-blur-xl flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-[0_12px_30px_rgba(0,229,255,0.15)] transition-all duration-300 group`}
               >
-                <div>
-                  <div className="w-11 h-11 rounded-2xl bg-cosmic-card border border-cosmic-border/80 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                    <Icon className="w-5 h-5" />
+                {/* Visual Artwork Thumbnail */}
+                {svc.image && (
+                  <div className="relative w-full h-36 overflow-hidden">
+                    <img
+                      src={svc.image}
+                      alt={svc.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 brightness-90 group-hover:brightness-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#06070a] via-[#06070a]/40 to-transparent" />
+                    {svc.badge && (
+                      <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-black/70 border border-amber-400/40 text-amber-300 tracking-wider backdrop-blur-md">
+                        {svc.badge}
+                      </span>
+                    )}
                   </div>
-                  <h4 className="text-lg font-display font-bold text-cosmic-text mb-2">{svc.title}</h4>
-                  <p className="text-xs text-cosmic-muted leading-relaxed mb-6">{svc.desc}</p>
-                </div>
+                )}
 
-                <button
-                  onClick={() => onNavigate(svc.id)}
-                  className="w-full py-2.5 rounded-xl border border-cosmic-border bg-cosmic-surface/80 hover:bg-cyan-500 hover:text-black hover:border-cyan-400 text-xs font-bold text-cosmic-text transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <span>{svc.cta}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="p-5 pt-3 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="w-10 h-10 rounded-2xl bg-cosmic-card border border-cosmic-border/80 flex items-center justify-center text-cyan-400 mb-3 group-hover:scale-110 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-base font-display font-bold text-cosmic-text mb-1.5 group-hover:text-cyan-300 transition-colors">{svc.title}</h4>
+                    <p className="text-xs text-cosmic-muted leading-relaxed mb-4">{svc.desc}</p>
+                  </div>
+
+                  <button
+                    onClick={() => onNavigate(svc.id)}
+                    className="w-full py-2.5 rounded-xl border border-cosmic-border bg-cosmic-surface/80 hover:bg-cyan-500 hover:text-black hover:border-cyan-400 text-xs font-bold text-cosmic-text transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <span>{svc.cta}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             );
           })}

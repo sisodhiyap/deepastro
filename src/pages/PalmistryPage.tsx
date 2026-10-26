@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Hand, Upload, CheckCircle2, ShieldAlert, Sparkles, Image, ArrowRight, Camera, RefreshCw, Smartphone, Cpu, Check } from 'lucide-react';
 import { PalmCameraModal } from '../components/palmistry/PalmCameraModal.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 export const PalmistryPage: React.FC = () => {
   const [handType, setHandType] = useState<'Left' | 'Right'>('Right');
@@ -128,13 +130,23 @@ export const PalmistryPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Cinematic Palmistry Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.palmistrySacredGeometry}
+        variant="banner"
+        priority={true}
+        titleOverride="Sacred Hastarekha & Biometric Line Geometry"
+        badgeOverride="SAMUDRIKA SHASTRA · MULTIMODAL VISION AI"
+        descriptionOverride="Instant high-resolution chiromancy analysis mapping energy meridians, mounts, and lines of destiny."
+      />
+
       {/* Title */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
           <Hand className="w-3.5 h-3.5" /> Hastarekha & Samudrika Shastra
         </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
+        <h1 className="text-2xl sm:text-3xl font-display font-black text-cosmic-text">
           Palmistry Multimodal Vision AI
         </h1>
         <p className="text-xs text-cosmic-muted">

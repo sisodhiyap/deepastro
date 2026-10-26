@@ -37,6 +37,8 @@ import { NakshatrasView } from '../components/astrology/NakshatrasView.js';
 import { TransitsRadarView } from '../components/astrology/TransitsRadarView.js';
 import { WealthDeepDiveView } from '../components/astrology/WealthDeepDiveView.js';
 import { RelationshipsDeepDiveView } from '../components/astrology/RelationshipsDeepDiveView.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 // Module-level Error Boundary to protect My Cosmos layout
 interface ErrorBoundaryProps {
@@ -453,6 +455,16 @@ export const MyCosmosPage: React.FC<{ onNavigate?: (tab: string) => void }> = ()
               {/* 1. COSMIC OVERVIEW */}
               {activeSubView === 'overview' && (
                 <div className="space-y-6">
+                  {/* Cosmic Neural Observatory Banner */}
+                  <FeatureArtworkBanner
+                    artwork={DEEPASTRO_ARTWORK.cosmicIntelligence}
+                    variant="banner"
+                    priority={true}
+                    titleOverride="Cosmic Intelligence & Personal Life Graph"
+                    badgeOverride="INTELLIGENCE FABRIC 3.0 · VERIFIED TRANSITS"
+                    descriptionOverride="Autonomous multidimensional synthesis uniting planetary telemetry, life context, and verified predictive graphs."
+                  />
+
                   {/* Astronomical Snapshot Card */}
                   <div className="p-6 rounded-2xl bg-[#111827] border border-slate-800 space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">

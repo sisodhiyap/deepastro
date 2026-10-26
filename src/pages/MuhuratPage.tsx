@@ -20,6 +20,8 @@ import {
   Shield,
   RefreshCw,
 } from 'lucide-react';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 interface MuhuratActivity {
   id: string;
@@ -212,7 +214,17 @@ export const MuhuratPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-10 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Shubh Muhurat Kala Chronometer Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.muhuratTimeMatrix}
+        variant="banner"
+        priority={true}
+        titleOverride="Shubh Muhurat & Sacred Kala Chronometer"
+        badgeOverride="ABHIJIT & SHUBH KALA RADAR · CHOGHADIYA"
+        descriptionOverride="Precision astronomical chronometer determining auspicious timing for marriage, property, business, and milestone ventures."
+      />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">

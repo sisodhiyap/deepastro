@@ -22,6 +22,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { StoredBirthProfile, getBirthProfile, getCalculatedChart } from '../utils/birthStorage.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 interface AIAstrologerPageProps {
   profile?: StoredBirthProfile;
@@ -582,6 +584,15 @@ Chant the universal peace mantra: *Om Shanti Shanti Shanti* or offer gratitude e
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-100">
+      {/* Celestial AI Astrologer Sanctuary Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.aiAstrologerSanctuary}
+        variant="hero"
+        priority={true}
+        titleOverride="Celestial AI Astrologer Sanctuary"
+        badgeOverride="NEURAL JYOTISH ORACLE · EVIDENCE-DRIVEN v6.0"
+        descriptionOverride="Explainable cosmic reasoning engine powered by deterministic astronomical calculations, classical Vedic canons, and verifiable evidence graphs."
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800/80 pb-5">
         <div>

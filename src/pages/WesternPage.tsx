@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Compass, Sparkles, Eye, ShieldCheck, Heart, User, Layers, RefreshCw, AlertTriangle, BookOpen } from 'lucide-react';
 import { getBirthProfile } from '../utils/birthStorage.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 export const WesternPage: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'chart' | 'aspects' | 'synastry' | 'archetypes'>('chart');
@@ -86,6 +88,15 @@ export const WesternPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#06070A] text-slate-100 p-4 md:p-8 space-y-6">
+      {/* Western Tropical Astrology Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.westernTropicalMatrix}
+        variant="banner"
+        priority={true}
+        titleOverride="Western Tropical Astrology & Aspect Geometry"
+        badgeOverride="TROPICAL ZODIAC · ASPECT GEOMETRY"
+        descriptionOverride="High-precision Tropical coordinates, Placidus cusps, geometric aspect mechanics, and psychological archetypes."
+      />
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2A3441] pb-6">
         <div>

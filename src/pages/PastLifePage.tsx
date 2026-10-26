@@ -7,6 +7,8 @@ import { KarmicPatternsCard } from '../components/astrology/KarmicPatternsCard';
 import { SoulLessonsCard } from '../components/astrology/SoulLessonsCard';
 import { LifePurposeCard } from '../components/astrology/LifePurposeCard';
 import { getBirthProfile, getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 // --- Inline Birth Profile Form ---
 const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
@@ -355,6 +357,18 @@ export const PastLifePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#04060B] text-slate-100 p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8 w-full max-w-full overflow-x-hidden">
+      {/* Akashic Records & Karmic Reincarnation Artwork Banner */}
+      <div className="max-w-5xl mx-auto">
+        <FeatureArtworkBanner
+          artwork={DEEPASTRO_ARTWORK.pastLifeKarma}
+          variant="banner"
+          priority={true}
+          titleOverride="Akashic Records & Karmic Reincarnation Wheel"
+          badgeOverride="SOULTRACE ENGINE v2.0 · AKASHIC ACCESS"
+          descriptionOverride="Discover karmic themes, symbolic soul progressions, and spiritual debts reflected in your sidereal planetary chart."
+        />
+      </div>
+
       {/* Top Header & Navigation Bar */}
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>

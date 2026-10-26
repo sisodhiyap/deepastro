@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { getCalculatedChart, getBirthProfile, onChartUpdated } from '../utils/birthStorage.js';
 import { generateDynamicLalKitabRemedies, DynamicLalKitabRemedy } from '../utils/lalKitabEngine.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
 
 export const LalKitabPage: React.FC = () => {
   const [chart, setChart] = useState<any>(() => getCalculatedChart());
@@ -66,7 +68,17 @@ export const LalKitabPage: React.FC = () => {
   const nativeName = birthProfile?.name || chart?.birthData?.name || chart?.input?.name || 'Your Birth Chart';
 
   return (
-    <div className="space-y-10 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn">
+      {/* Lal Kitab Remedial Altar Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.lalKitabRemedialAltar}
+        variant="banner"
+        priority={true}
+        titleOverride="Lal Kitab Red Book Remedies & Elemental Altar"
+        badgeOverride="1952 SAMHITA · ELEMENTAL ALCHEMY"
+        descriptionOverride="Ancient pragmatic astrological measures customized strictly for your planetary house placements and elemental balance."
+      />
+
       {/* Title */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-bold text-orange-400 uppercase tracking-wider">
