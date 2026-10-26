@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Sun, Moon, AlertTriangle, CheckCircle2, Sparkles, MapPin, RefreshCw } from 'lucide-react';
 import { getBirthProfile } from '../utils/birthStorage.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 export const PanchangPage: React.FC = () => {
   const [panchang, setPanchang] = useState<any>(null);
@@ -57,34 +59,29 @@ export const PanchangPage: React.FC = () => {
 
   return (
     <div className="space-y-10 animate-fadeIn">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-            <Calendar className="w-3.5 h-3.5" /> Pancha Anga
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-            Vedic Panchang & Shubh Muhurat
-          </h1>
-          <p className="text-xs text-cosmic-muted">
-            Daily solar and lunar calendar coordinates, Rahu Kalam, and auspicious windows.
-          </p>
-        </div>
-
-        {/* Date and Location Indicator */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cosmic-surface border border-cosmic-border text-xs text-cosmic-muted">
+      {/* 27 Nakshatras & Solilunar Panchang Feature Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.nakshatraCosmicKnowledge}
+        variant="banner"
+        priority={false}
+        asH1={true}
+        titleOverride="27 Nakshatras & Vedic Panchang"
+        badgeOverride="27 NAKSHATRAS & KALA SHASTRA"
+        descriptionOverride="Daily solar and lunar calendar coordinates, Rahu Kalam, Nakshatra padas, and auspicious timing windows."
+      >
+        <div className="flex flex-wrap items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/30">
+          <div className="flex items-center gap-1.5 text-xs text-cosmic-muted">
             <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="truncate max-w-[150px]">{locationLabel}</span>
+            <span className="truncate max-w-[140px] text-slate-200">{locationLabel}</span>
           </div>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-cosmic-surface border border-cosmic-border text-xs text-cosmic-text focus:outline-none focus:border-cyan-400"
+            className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-cosmic-text focus:outline-none focus:border-cyan-400"
           />
         </div>
-      </div>
+      </FeatureArtworkBanner>
 
       {isLoading ? (
         <div className="py-20 text-center space-y-3">

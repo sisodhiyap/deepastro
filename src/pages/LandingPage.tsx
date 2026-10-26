@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { Logo } from '../components/brand/Logo.js';
 import { NavTabId } from '../components/layout/Sidebar.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 interface LandingPageProps {
   onNavigate: (tab: NavTabId) => void;
@@ -96,7 +98,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       {/* Hero Section */}
       <section className="relative space-y-6 pt-4 pb-8 overflow-hidden w-full text-left">
         {/* Atmospheric ambient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[350px] bg-gradient-to-tr from-cyan-500/15 via-indigo-500/10 to-violet-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-0 right-0 mx-auto w-full max-w-[450px] h-[250px] bg-gradient-to-tr from-cyan-500/15 via-indigo-500/10 to-violet-600/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/40 bg-cosmic-card/60 backdrop-blur-md shadow-glow-cyan/20">
           <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
@@ -148,6 +150,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <span>Multi-Model AI Cross-Checking</span>
           </div>
         </div>
+      </section>
+
+      {/* Preserved Homepage Hero Showcase Artwork */}
+      <section className="w-full">
+        <FeatureArtworkBanner
+          artwork={DEEPASTRO_ARTWORK.hero}
+          variant="hero"
+          priority={true}
+          titleOverride="DeepAstro Celestial Observatory"
+          badgeOverride="CANONICAL VEDIC HERITAGE"
+          descriptionOverride="Ancient Vedic wisdom, precise planetary geometry, and modern AI intelligence united in one personal cosmic operating system."
+        />
       </section>
 
       {/* Services Grid */}

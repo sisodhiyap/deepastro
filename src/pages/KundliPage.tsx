@@ -40,6 +40,8 @@ import {
 import { useAstrologicalCalculation } from '../hooks/useAstrologicalCalculation.js';
 import { CalculationProgressModal } from '../components/astrology/CalculationProgressModal.js';
 import { PlaceSelector } from '../components/common/PlaceSelector.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 const CITY_COORDS: Record<string, { lat: number; lng: number; tz: number }> = {
   delhi: { lat: 28.6139, lng: 77.209, tz: 5.5 },
@@ -463,18 +465,16 @@ export const KundliPage: React.FC = () => {
         message={calcMessage}
         progressPercent={progressPercent}
       />
-      {/* Page Title */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5" /> Deterministic Vedic Engine
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-          Vedic Kundli & Planetary Geometry
-        </h1>
-        <p className="text-xs text-cosmic-muted">
-          Lahiri Ayanamsha (Chitra Paksha) sidereal ephemeris with complete divisional charts.
-        </p>
-      </div>
+      {/* Vedic Kundli Feature Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.kundliVedicChart}
+        variant="banner"
+        priority={false}
+        asH1={true}
+        titleOverride="Vedic Kundli & Planetary Geometry"
+        badgeOverride="DETERMINISTIC VEDIC ENGINE"
+        descriptionOverride="Lahiri Ayanamsha (Chitra Paksha) sidereal ephemeris with complete divisional charts and Shodashavarga."
+      />
 
       {/* Birth Input Controls */}
       <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 shadow-cosmic-card space-y-5">

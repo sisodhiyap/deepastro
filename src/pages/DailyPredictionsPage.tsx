@@ -29,6 +29,8 @@ import { KundliBrainQuestionOracle } from '../components/astrology/KundliBrainQu
 import { UniversalDailyPredictionCard } from '../components/astrology/UniversalDailyPredictionCard.js';
 import { useAstrologicalCalculation } from '../hooks/useAstrologicalCalculation.js';
 import { CalculationProgressModal } from '../components/astrology/CalculationProgressModal.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 export const DailyPredictionsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'thisWeek' | 'thisMonth'>('today');
@@ -287,17 +289,16 @@ export const DailyPredictionsPage: React.FC = () => {
           progressPercent={progressPercent}
         />
 
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-            <Sun className="w-3.5 h-3.5" /> Real-Time Transit Intelligence (Gochara)
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-black text-cosmic-text">
-            Personalized Daily Predictions
-          </h1>
-          <p className="text-xs text-cosmic-muted">
-            Dynamic astronomical transits cross-referenced against your natal Lagna, Moon, and active Vimshottari Dasha.
-          </p>
-        </div>
+        {/* Planetary Insights & Transits Feature Artwork Banner */}
+        <FeatureArtworkBanner
+          artwork={DEEPASTRO_ARTWORK.planetaryInsightsTransits}
+          variant="banner"
+          priority={false}
+          asH1={true}
+          titleOverride="Personalized Daily Predictions & Transit Gochara"
+          badgeOverride="REAL-TIME GOCHARA TELEMETRY"
+          descriptionOverride="Dynamic astronomical transits cross-referenced against your natal Lagna, Moon, and active Vimshottari Dasha."
+        />
 
         <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-[#0e162e] to-cosmic-surface p-6 sm:p-8 space-y-6 shadow-glow-cyan/20">
           <div className="flex items-center gap-3 border-b border-cosmic-border/60 pb-4">
@@ -399,18 +400,15 @@ export const DailyPredictionsPage: React.FC = () => {
         chart={chart}
       />
 
-      {/* Real-Time Transit Intelligence Sub-Header */}
-      <div className="space-y-1 pt-4 border-t border-slate-800/80">
-        <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-          <Sun className="w-3.5 h-3.5" /> Real-Time Transit Intelligence (Gochara)
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-display font-black text-cosmic-text">
-          Deep Transit Weather & House Activations
-        </h2>
-        <p className="text-xs text-cosmic-muted">
-          Dynamic astronomical transits cross-referenced against your natal Lagna ({chart.ascendant?.details?.signName || chart.lagna?.signName}), Moon in {moonSign}, and active Vimshottari Dasha.
-        </p>
-      </div>
+      {/* Real-Time Planetary Insights & Transits Feature Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.planetaryInsightsTransits}
+        variant="banner"
+        priority={false}
+        titleOverride="Real-Time Planetary Transits & Gochara Telemetry"
+        badgeOverride="REAL-TIME GOCHARA TELEMETRY"
+        descriptionOverride={`Dynamic astronomical transits cross-referenced against your natal Lagna (${chart?.ascendant?.details?.signName || chart?.lagna?.signName || 'Lagna'}), Moon in ${moonSign || 'Moon'}, and active Vimshottari Dasha.`}
+      />
 
       {/* Cosmic Pulse Cards: Moon, Dasha, Transits, Muhurat */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

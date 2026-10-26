@@ -25,6 +25,8 @@ import { CosmicStoryCardModal } from '../components/astrology/CosmicStoryCardMod
 import { CosmicSOSModal } from '../components/astrology/CosmicSOSModal.js';
 import { NavTabId } from '../components/layout/Sidebar.js';
 import { getBirthProfile, getCalculatedChart } from '../utils/birthStorage.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 export type CosmicHubTabId =
   | 'vibe'
@@ -593,19 +595,15 @@ export const CosmicHubPage: React.FC<CosmicHubPageProps> = ({ onNavigate, userNa
       {/* TAB 3: 🌌 LIVE SKY & TRANSITS (TimePassages Style) */}
       {activeTab === 'sky' && (
         <div className="space-y-8 animate-fadeIn">
-          {/* Header */}
-          <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface/60 p-6 sm:p-8 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-              <Compass className="w-3.5 h-3.5" />
-              Live Sidereal Astronomical Ephemeris (Lahiri)
-            </div>
-            <h2 className="text-xl sm:text-2xl font-display font-extrabold text-white">
-              Real-Time Planetary Coordinates in the Sky
-            </h2>
-            <p className="text-xs sm:text-sm text-cosmic-muted max-w-xl">
-              Direct astronomical positions of the 9 Navagrahas calculated via VSOP87 & ELP-2000 theory for this exact moment.
-            </p>
-          </div>
+          {/* Real-Time Planetary Insights & Transits Feature Artwork Banner */}
+          <FeatureArtworkBanner
+            artwork={DEEPASTRO_ARTWORK.planetaryInsightsTransits}
+            variant="banner"
+            priority={false}
+            titleOverride="Real-Time Planetary Coordinates & Transits in the Sky"
+            badgeOverride="LIVE SIDEREAL EPHEMERIS (LAHIRI)"
+            descriptionOverride="Direct astronomical positions of the 9 Navagrahas calculated via VSOP87 & ELP-2000 theory for this exact moment."
+          />
 
           {/* Planetary Radar Cards */}
           {liveSky.length === 0 ? (

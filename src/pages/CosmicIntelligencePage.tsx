@@ -18,6 +18,8 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { NavTabId } from '../components/layout/Sidebar.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 interface CosmicIntelligencePageProps {
   onNavigate?: (tab: NavTabId) => void;
@@ -146,40 +148,26 @@ export const CosmicIntelligencePage: React.FC<CosmicIntelligencePageProps> = ({
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-10 animate-fadeIn">
-      {/* Top Banner */}
-      <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-950/30 via-cosmic-surface to-indigo-950/20 p-8 relative overflow-hidden shadow-xl">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <Brain className="w-64 h-64 text-cyan-400" />
+      {/* Cosmic Intelligence Cinematic Feature Artwork Banner */}
+      <FeatureArtworkBanner
+        artwork={DEEPASTRO_ARTWORK.cosmicIntelligence}
+        variant="hero"
+        priority={false}
+        asH1={true}
+        titleOverride="My Cosmic Intelligence"
+        badgeOverride="INTELLIGENCE FABRIC 3.0"
+        descriptionOverride="Deterministic astronomical calculations cross-referenced with your confirmed life context, recurring pattern discovery, and sovereign decision intelligence."
+      >
+        <div className="hidden lg:flex items-center gap-3 text-xs font-mono text-cosmic-muted bg-slate-950/70 backdrop-blur-md px-3.5 py-2 rounded-xl border border-cyan-500/30">
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <ShieldCheck className="w-4 h-4" /> Truth Core Immutable
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-1.5 text-cyan-400">
+            <Activity className="w-4 h-4" /> Multi-System Evidence Fusion
+          </span>
         </div>
-
-        <div className="space-y-4 max-w-2xl relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-mono font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            DeepAstro Intelligence Fabric 3.0
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-white tracking-tight">
-            My Cosmic Intelligence
-          </h1>
-          <p className="text-sm text-cosmic-muted leading-relaxed">
-            Deterministic astronomical calculations cross-referenced with your confirmed life context,
-            recurring pattern discovery, and sovereign decision intelligence.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-mono text-cosmic-muted">
-            <span className="flex items-center gap-1.5 text-emerald-400">
-              <ShieldCheck className="w-4 h-4" /> Truth Core Immutable
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5 text-cyan-400">
-              <Activity className="w-4 h-4" /> Multi-System Evidence Fusion
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5 text-indigo-400">
-              <GitBranch className="w-4 h-4" /> Zero-Inference Safety
-            </span>
-          </div>
-        </div>
-      </div>
+      </FeatureArtworkBanner>
 
       {/* Sub-Navigation Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-cosmic-border/60 pb-3">

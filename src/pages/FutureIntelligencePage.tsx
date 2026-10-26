@@ -42,7 +42,9 @@ import {
 } from 'lucide-react';
 import { FutureConsentModal } from '../components/future/FutureConsentModal';
 import { FutureTimelineDashboard } from '../components/future/FutureTimelineDashboard';
-import { getOrFetchBirthProfile, saveBirthProfile } from '../utils/birthStorage.js';
+import { getOrFetchBirthProfile, saveBirthProfile, getCalculatedChart } from '../utils/birthStorage.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 
 // --- Inline Birth Profile Form ---
 const BirthProfileForm: React.FC<{ onSaved: () => void }> = ({ onSaved }) => {
@@ -704,23 +706,26 @@ export const FutureIntelligencePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Quote Card with Cosmic Winding Road */}
-          <div className="lg:col-span-5">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1322] via-[#0f172a] to-[#18112e] border border-cyan-500/20 p-6 sm:p-8 shadow-2xl shadow-cyan-950/40 group">
-              {/* Cosmic golden winding road glow */}
-              <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-gradient-to-br from-amber-400/20 via-cyan-400/10 to-transparent blur-2xl pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-36 h-36 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-amber-500/20 via-blue-500/10 to-transparent pointer-events-none" />
-
-              <div className="relative space-y-4">
-                <p className="text-lg sm:text-xl font-serif italic text-slate-200 leading-relaxed tracking-wide">
+          {/* Right Showcase Card with Cosmic Future Intelligence Timeline Road */}
+          <div className="lg:col-span-5 min-w-0">
+            <FeatureArtworkBanner
+              artwork={DEEPASTRO_ARTWORK.futureIntelligence}
+              variant="card"
+              priority={false}
+              showCaption={false}
+              className="w-full min-h-[220px] shadow-2xl shadow-cyan-950/40 border-amber-500/30"
+              imageClassName="object-cover"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-[#06070a]/95 via-[#06070a]/40 to-transparent p-5 flex flex-col justify-end">
+                <p className="text-base sm:text-lg font-serif italic text-amber-200 leading-snug drop-shadow-md">
                   "A better future is not just predicted, it is consciously created."
                 </p>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs font-mono">
-                  <span className="text-cyan-400 font-bold tracking-widest uppercase">— DEEPASTRO</span>
-                  <span className="text-slate-500 font-sans">Cosmic Agency Protocol</span>
+                <div className="flex items-center justify-between pt-2 mt-2 border-t border-slate-700/60 text-[11px] font-mono">
+                  <span className="text-cyan-300 font-bold tracking-widest uppercase">— DEEPASTRO</span>
+                  <span className="text-slate-400 font-sans">Cosmic Agency Protocol</span>
                 </div>
               </div>
-            </div>
+            </FeatureArtworkBanner>
           </div>
         </div>
 

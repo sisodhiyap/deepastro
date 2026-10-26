@@ -22,6 +22,8 @@ import { TarotShuffleAnimation } from '../components/tarot/TarotShuffleAnimation
 import { TarotResponsiveLayout } from '../components/tarot/TarotResponsiveLayout.js';
 import { useAuth } from '../context/AuthContext.js';
 import { getCalculatedChart, getBirthProfile } from '../utils/birthStorage.js';
+import { DEEPASTRO_ARTWORK } from '../constants/deepastroAssets.js';
+import { FeatureArtworkBanner } from '../components/common/FeatureArtworkBanner.js';
 import {
   Sparkles,
   RotateCw,
@@ -366,7 +368,17 @@ export const TarotPage: React.FC = () => {
 
       {/* ─── LANDING ─── */}
       {stage === 'landing' && (
-        <div className="max-w-4xl mx-auto py-8 flex flex-col items-center text-center">
+        <div className="max-w-4xl mx-auto py-6 space-y-6 flex flex-col items-center text-center">
+          {/* Tarot & Spiritual Guidance Cinematic Feature Artwork Banner */}
+          <FeatureArtworkBanner
+            artwork={DEEPASTRO_ARTWORK.tarotSpiritualGuidance}
+            variant="hero"
+            priority={false}
+            titleOverride="DeepAstro Sacred Tarot & Divination Altar"
+            badgeOverride="78 SACRED CARDS · CRYPTO RNG"
+            descriptionOverride="Astrologically contextualized archetypal reflection. Your planetary coordinates anchor the reading, revealing your highest intuitive clarity."
+          />
+
           {/* Deck Visual */}
           <div className="relative my-8 group cursor-pointer" onClick={handleStartShuffle}>
             <div className="absolute -inset-8 bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-purple-500/20 rounded-full blur-3xl opacity-60 group-hover:opacity-90 transition-opacity" />
