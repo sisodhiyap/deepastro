@@ -3,6 +3,7 @@ import { Search, Bell, Sparkles, Menu, ShieldCheck, User, Activity, RefreshCw, K
 import { ThemeToggle } from '../common/ThemeToggle.js';
 import { FeedbackModal } from '../common/FeedbackModal.js';
 import { NavTabId } from './Sidebar.js';
+import { Logo } from '../brand/Logo.js';
 
 interface TopNavProps {
   onToggleMobileMenu: () => void;
@@ -86,6 +87,11 @@ export const TopNav: React.FC<TopNavProps> = ({
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        {/* Mobile Brand Logo */}
+        <div className="lg:hidden flex items-center cursor-pointer" onClick={() => onNavigate('home')}>
+          <Logo size="sm" showTagline={false} />
+        </div>
 
         {/* Global Search Bar */}
         <div className="relative max-w-xs sm:max-w-md w-full hidden sm:block">

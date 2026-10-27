@@ -1,74 +1,102 @@
 import React from 'react';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showTagline?: boolean;
+  variant?: 'lockup' | 'icon-only' | 'full-graphic';
   className?: string;
+  onClick?: () => void;
 }
 
-export const Logo: React.FC<LogoProps> = ({ size = 'md', showTagline = false, className = '' }) => {
+export const Logo: React.FC<LogoProps> = ({
+  size = 'md',
+  showTagline = false,
+  variant = 'lockup',
+  className = '',
+  onClick,
+}) => {
   const iconSizes = {
-    sm: 'w-7 h-7',
-    md: 'w-9 h-9',
-    lg: 'w-12 h-12',
+    xs: 'w-6 h-6',
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-14 h-14',
+    xl: 'w-20 h-20',
   };
 
   const titleSizes = {
-    sm: 'text-lg',
-    md: 'text-2xl',
-    lg: 'text-3xl',
+    xs: 'text-sm',
+    sm: 'text-base',
+    md: 'text-xl sm:text-2xl',
+    lg: 'text-2xl sm:text-3xl',
+    xl: 'text-4xl',
   };
 
+  const taglineSizes = {
+    xs: 'text-[7px]',
+    sm: 'text-[8px]',
+    md: 'text-[9px] sm:text-[10px]',
+    lg: 'text-[11px]',
+    xl: 'text-xs',
+  };
+
+  if (variant === 'full-graphic') {
+    return (
+      <div
+        onClick={onClick}
+        className={`flex items-center justify-center select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      >
+        <img
+          src="/images/deepastro-logo.png"
+          alt="DeepAstro — Explore Your Cosmic Path"
+          className="w-auto h-auto max-h-24 object-contain filter drop-shadow-[0_4px_16px_rgba(245,158,11,0.25)] transition-transform duration-300 hover:scale-[1.02]"
+          loading="eager"
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-3 select-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
+    >
+      {/* Celestial 'D' Emblem with Ambient Golden/Cosmic Halo */}
       <div className={`relative ${iconSizes[size]} flex-shrink-0 flex items-center justify-center`}>
-        {/* Glowing atmospheric halo */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-500/30 via-indigo-500/20 to-violet-500/30 blur-[6px] animate-pulse-glow" />
+        {/* Ambient atmospheric glow */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500/25 via-blue-500/20 to-indigo-500/30 blur-[6px] animate-pulse-glow" />
         
-        <svg viewBox="0 0 48 48" fill="none" className="w-full h-full relative z-10 drop-shadow-md">
-          <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="1.5" className="text-cosmic-border" />
-          {/* Orbital path */}
-          <ellipse
-            cx="24"
-            cy="24"
-            rx="18"
-            ry="9"
-            stroke="url(#logoGrad1)"
-            strokeWidth="1.5"
-            transform="rotate(-30 24 24)"
-          />
-          {/* Central Star Core */}
-          <circle cx="24" cy="24" r="5.5" fill="url(#logoGrad2)" />
-          <path
-            d="M24 10L25.5 19L34 20.5L27 25L28.5 34L24 28L19.5 34L21 25L14 20.5L22.5 19Z"
-            fill="#F8FAFC"
-            opacity="0.85"
-          />
-          <circle cx="36" cy="16" r="2" fill="#00E5FF" />
-          <defs>
-            <linearGradient id="logoGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#00E5FF" />
-              <stop offset="50%" stopColor="#F5C76A" />
-              <stop offset="100%" stopColor="#8B5CF6" />
-            </linearGradient>
-            <radialGradient id="logoGrad2" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#00E5FF" />
-              <stop offset="100%" stopColor="#6366F1" />
-            </radialGradient>
-          </defs>
-        </svg>
+        <img
+          src="/images/deepastro-icon.png"
+          alt="DeepAstro Emblem"
+          className="w-full h-full object-contain relative z-10 filter drop-shadow-[0_2px_10px_rgba(245,158,11,0.35)] transition-transform duration-300 hover:scale-105"
+          onError={(e) => {
+            // Fallback SVG if image not yet loaded
+            const target = e.currentTarget;
+            target.style.display = 'none';
+          }}
+        />
       </div>
 
-      <div className="flex flex-col">
-        <span className={`font-display font-extrabold tracking-wider text-cosmic-text uppercase flex items-center gap-1.5 ${titleSizes[size]}`}>
-          DEEP<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-violet-400">ASTRO</span>
-        </span>
-        {showTagline && (
-          <span className="text-[10px] tracking-widest uppercase font-medium text-cosmic-muted">
-            Decode Your Life. Discover Your Cosmos.
-          </span>
-        )}
-      </div>
+      {variant !== 'icon-only' && (
+        <div className="flex flex-col min-w-0">
+          <div className={`font-display font-black tracking-wider uppercase flex items-center gap-1.5 leading-none ${titleSizes[size]}`}>
+            <span className="text-slate-100 tracking-[0.12em] font-serif">
+              DEEP
+            </span>
+            <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent font-serif tracking-[0.14em] drop-shadow-[0_2px_8px_rgba(245,158,11,0.3)] flex items-center gap-1">
+              ASTRO
+              <span className="text-amber-400 text-[0.6em] leading-none select-none">✦</span>
+            </span>
+          </div>
+          {showTagline && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className={`tracking-[0.22em] uppercase font-semibold text-amber-300/80 ${taglineSizes[size]}`}>
+                EXPLORE YOUR COSMIC PATH
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

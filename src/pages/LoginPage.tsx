@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext.js';
 import { useAuth } from '../context/AuthContext.js';
+import { Logo } from '../components/brand/Logo.js';
 
 interface LoginPageProps {
   onSuccess: (user: any) => void;
@@ -213,6 +214,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onNavigateLandi
         {/* Center Card */}
         <div className="w-full max-w-[440px] my-auto py-4 sm:py-6">
           <div className="bg-[#0c101a]/95 border border-[#1a2333] rounded-[24px] p-5 sm:p-9 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(14,165,233,0.06)] backdrop-blur-xl">
+            {/* Brand Logo */}
+            <div className="mb-6 flex justify-center sm:justify-start">
+              <Logo size="md" showTagline={true} />
+            </div>
+
             {/* Heading */}
             <div className="text-center sm:text-left mb-6">
               <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">

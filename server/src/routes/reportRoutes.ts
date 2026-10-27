@@ -114,7 +114,7 @@ router.post('/generate', optionalAuth, async (req: AuthenticatedRequest, res: Re
       remedies: kundli.remedies,
       branding: {
         appName: 'DeepAstro',
-        tagline: 'Decode Your Life. Discover Your Cosmos.',
+        tagline: 'Explore Your Cosmic Path',
         copyright: '© 2026 DeepAstro. All Rights Reserved.',
         creator: 'Designed & Created by Prashant Sisodhiya',
         generatedAt: new Date().toISOString(),

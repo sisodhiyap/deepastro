@@ -18,6 +18,10 @@ scratch/
 data/artifacts/
 *.local
 
+# Local Databases & Media
+*.db
+deepastro-screenshots/
+
 # Logs
 logs/
 *.log

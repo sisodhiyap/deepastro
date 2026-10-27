@@ -190,7 +190,7 @@ export const ContactPage: React.FC = () => {
 
           <div className="rounded-3xl border border-cosmic-border bg-cosmic-surface p-6 sm:p-7 text-xs space-y-2 text-cosmic-muted leading-relaxed">
             <h4 className="text-xs font-bold text-cosmic-text">Platform Credits</h4>
-            <p>DeepAstro &bull; Decode Your Life. Discover Your Cosmos.</p>
+            <p>DeepAstro &bull; Explore Your Cosmic Path</p>
             <p className="font-bold text-cosmic-text">
               Designed & Created by <span className="text-cyan-400">Prashant Sisodhiya</span>
             </p>
