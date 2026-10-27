@@ -96,6 +96,39 @@ export interface SubscriptionRecord {
   status: 'active' | 'past_due' | 'canceled';
   currentPeriodStart: string;
   currentPeriodEnd: string;
+  gateway?: 'razorpay' | 'stripe';
+  lastPaymentId?: string;
+}
+
+export interface BillingDetails {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
+export interface PaymentInvoiceRecord {
+  id: string;
+  invoiceNumber: string;
+  userId: string;
+  planId: 'PREMIUM' | 'PRO';
+  planName: string;
+  amount: number;
+  currency: 'INR' | 'USD';
+  gateway: 'razorpay' | 'stripe';
+  method: 'upi_qr' | 'gpay' | 'card' | 'netbanking';
+  status: 'PAID' | 'PENDING' | 'FAILED';
+  billingDetails: BillingDetails;
+  transactionId: string;
+  orderId: string;
+  createdAt: string;
+  paidAt: string;
+  cardLast4?: string;
+  upiId?: string;
 }
 
 export interface AIUsageRecord {
@@ -479,6 +512,7 @@ class DatabaseStore {
   public predictionErrors: Map<string, PredictionErrorRecord> = new Map();
   public improvementProposals: Map<string, ImprovementProposalRecord> = new Map();
   public engineVersions: Map<string, EngineVersionRecord> = new Map();
+  public invoices: Map<string, PaymentInvoiceRecord> = new Map();
   public featureFlags: Record<string, boolean> = {
     kundli: true,
     matching: true,
@@ -518,6 +552,16 @@ class DatabaseStore {
 
   public getBirthProfile(userId: string): BirthProfileRecord | undefined {
     return Array.from(this.birthProfiles.values()).find((b) => b.userId === userId);
+  }
+
+  public addInvoice(invoice: PaymentInvoiceRecord): void {
+    this.invoices.set(invoice.id, invoice);
+  }
+
+  public getInvoices(userId: string): PaymentInvoiceRecord[] {
+    return Array.from(this.invoices.values())
+      .filter((inv) => inv.userId === userId || inv.billingDetails.email.toLowerCase() === userId.toLowerCase())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   public getSubscription(userId: string): SubscriptionRecord {

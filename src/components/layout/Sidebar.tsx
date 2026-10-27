@@ -145,20 +145,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`w-64 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-hidden select-none shrink-0 ${className}`}
+      className={`w-64 sm:w-72 h-screen relative border-r-2 border-amber-400/50 shadow-[4px_0_35px_rgba(245,158,11,0.22)] bg-cosmic-surface/95 backdrop-blur-2xl flex flex-col justify-between overflow-hidden select-none shrink-0 ${className}`}
     >
       <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-amber-500/20 via-amber-400 to-amber-600/20 shadow-[0_0_16px_rgba(245,199,106,0.85)] pointer-events-none z-30" />
       <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/8 via-amber-500/3 to-transparent pointer-events-none blur-xl z-0" />
 
       {/* Brand Header (Pinned) */}
-      <div className="relative z-10 p-4 sm:p-5 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10 shrink-0">
-        <div className="flex items-center justify-between">
-          <Logo size="md" showTagline={true} />
+      <div className="relative z-10 px-3.5 py-3 sm:px-4 sm:py-4 border-b border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/10 shrink-0">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <Logo size="sm" showTagline={true} />
+          </div>
           {onClose && (
             <button
               onClick={onClose}
               aria-label="Close Navigation"
-              className="lg:hidden p-1.5 rounded-lg border border-amber-500/30 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors touch-target-min flex items-center justify-center"
+              className="lg:hidden p-1.5 rounded-lg border border-amber-500/30 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors touch-target-min flex items-center justify-center shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
